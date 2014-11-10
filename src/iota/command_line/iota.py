@@ -50,17 +50,17 @@ if __name__ == "__main__":
             gs_logger.info("\nTarget file {0} contents:\n".format(gs_params.target))
             gs_logger.info(phil_file_contents)
 
-            # 			if gs_params.flag_random == True:
-            # 				input_list = random.sample(img_list, 5)
-            # 				gs_logger.info('Selected the following random images for analysis:')
-            # 				for item in input_list: gs_logger.info(item)
-            # 				gs_logger.info('\nSpot-finding parameter grid search: {0} input files, spot height: {1} - {2}, spot area: {3} - {4} \n'.format(len(input_list), int(gs_params.grid_search.h_min/2), int(gs_params.grid_search.h_max/2), int(gs_params.grid_search.a_min*2), int(gs_params.grid_search.a_max*2)))
+            #                       if gs_params.flag_random == True:
+            #                               input_list = random.sample(img_list, 5)
+            #                               gs_logger.info('Selected the following random images for analysis:')
+            #                               for item in input_list: gs_logger.info(item)
+            #                               gs_logger.info('\nSpot-finding parameter grid search: {0} input files, spot height: {1} - {2}, spot area: {3} - {4} \n'.format(len(input_list), int(gs_params.grid_search.h_min/2), int(gs_params.grid_search.h_max/2), int(gs_params.grid_search.a_min*2), int(gs_params.grid_search.a_max*2)))
             #
-            # 			else:
-            # 				input_list = img_list
-            # 				for folder in input_dir_list: gs_logger.info(str(os.path.abspath(folder)))
-            # 				gs_logger.info('Found image files in the following folder(s):')
-            # 				gs_logger.info('\nSpot-finding parameter grid search: {0} input files, spot height: {1} - {2}, spot area: {3} - {4} \n'.format(len(input_list), gs_params.grid_search.h_min, gs_params.grid_search.h_max, gs_params.grid_search.a_min, gs_params.grid_search.a_max))
+            #                       else:
+            #                               input_list = img_list
+            #                               for folder in input_dir_list: gs_logger.info(str(os.path.abspath(folder)))
+            #                               gs_logger.info('Found image files in the following folder(s):')
+            #                               gs_logger.info('\nSpot-finding parameter grid search: {0} input files, spot height: {1} - {2}, spot area: {3} - {4} \n'.format(len(input_list), gs_params.grid_search.h_min, gs_params.grid_search.h_max, gs_params.grid_search.a_min, gs_params.grid_search.a_max))
 
             input_list = img_list
             gs_logger.info("Found image files in the following folder(s):")
