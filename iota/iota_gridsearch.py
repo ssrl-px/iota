@@ -1,34 +1,38 @@
-# Indexing and integration of raw images over a grid
+from __future__ import division
+
+"""
+Author      : Lyubimov, A.Y.
+Created     : 10/10/2014
+Description : Runs cxi.index with signal/spot height and area grid search
+"""
+
 import os
 import logging
-from iota_select import read_pickle
-import shutil
+
+from xfel.clustering.singleframe import SingleFrame
 from subprocess import check_output
 
-logger = logging.getLogger("gs_log")
+
+gs_logger = logging.getLogger("gs_log")
 
 # Indexing and integration w/ grid search of spotfinding parameters
-def cxi_index(current_img, log_dir, gs_params):
+def index_integrate(current_img, log_dir, gs_params):
 
     # generate filenames, etc.
     path = os.path.dirname(current_img)
     img_filename = os.path.split(current_img)[1]
 
-    if (
-        os.path.relpath(path, os.path.abspath(gs_params.input)) == "."
-    ):  # in case of all input in one dir
+    if os.path.relpath(path, os.path.abspath(gs_params.input)) == ".":
         input_dir = os.path.abspath(gs_params.input)
         output_dir = os.path.abspath(gs_params.output)
-    else:  # in case of input in tree
-        input_dir = (
-            os.path.abspath(gs_params.input)
-            + "/"
-            + os.path.relpath(path, os.path.abspath(gs_params.input))
+    else:
+        input_dir = "{0}/{1}".format(
+            os.path.abspath(gs_params.input),
+            os.path.relpath(path, os.path.abspath(gs_params.input)),
         )
-        output_dir = (
-            os.path.abspath(gs_params.output)
-            + "/"
-            + os.path.relpath(path, os.path.abspath(gs_params.input))
+        output_dir = "{0}/{1}".format(
+            os.path.abspath(gs_params.output),
+            os.path.relpath(path, os.path.abspath(gs_params.input)),
         )
 
     current_output_dir = "{0}/tmp_{1}".format(output_dir, img_filename.split(".")[0])
@@ -74,28 +78,38 @@ def cxi_index(current_img, log_dir, gs_params):
                 current_output_dir, sig_height, spot_area, img_filename
             )
             if os.path.isfile(current_file):
-                pickle_res, sg, unit_cell, num_obs, num_strong_obs = read_pickle(
-                    gs_params, current_file
-                )
-                int_status = "integrated with res = {:>6.2f} - {:<5.2f}, s.g.: {:^{wsg}}, u.c.: {:>6.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}".format(
-                    pickle_res[0],
-                    pickle_res[1],
-                    sg,
-                    unit_cell[0],
-                    unit_cell[1],
-                    unit_cell[2],
-                    unit_cell[3],
-                    unit_cell[4],
-                    unit_cell[5],
-                    wsg=len(str(sg)),
+                observations = SingleFrame(
+                    current_file, os.path.split(current_file)[1]
+                ).miller_array
+                pickle_res = observations.d_max_min()
+                pg = observations.space_group_info()
+                unit_cell = observations.unit_cell().parameters()
+                int_status = (
+                    "integrated with res = {:>6.2f} - {:<5.2f}, "
+                    "s.g.: {:^{wsg}}, u.c.: {:>6.2f}, {:>6.2f}, {:>6.2f}, "
+                    "{:>6.2f}, {:>6.2f}, {:>6.2f}".format(
+                        pickle_res[0],
+                        pickle_res[1],
+                        pg,
+                        unit_cell[0],
+                        unit_cell[1],
+                        unit_cell[2],
+                        unit_cell[3],
+                        unit_cell[4],
+                        unit_cell[5],
+                        wsg=len(str(pg)),
+                    )
                 )
             else:
                 int_status = "not integrated"
-            grid_search_output = "{:^{width}}: h = {:<3}, a = {:<3} ---> {}".format(
-                current_img,
-                sig_height,
-                spot_area,
-                int_status,
-                width=len(current_img) + 2,
-            )
-            logger.info(grid_search_output)
+                grid_search_output = (
+                    "{:^{width}}: h = {:<3}, "
+                    "a = {:<3} ---> {}".format(
+                        current_img,
+                        sig_height,
+                        spot_area,
+                        int_status,
+                        width=len(current_img) + 2,
+                    )
+                )
+                gs_logger.info(grid_search_output)
