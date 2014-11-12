@@ -1,9 +1,17 @@
 from __future__ import division
-import iotbx.phil
 
-# from libtbx.utils import Usage, Sorry
-import sys, os, shutil
-import logging
+"""
+Author      : Lyubimov, A.Y.
+Created     : 10/10/2014
+Description : IOTA I/O module. Reads PHIL input, creates output directories, etc.
+"""
+
+
+import sys
+import os
+import shutil
+
+import iotbx.phil
 
 master_phil = iotbx.phil.parse(
     """
@@ -13,19 +21,19 @@ description = Integration optimization and transfer app (IOTA) input file
   .multiple = False
   .optional = True
 input = None
-        .type = path
-        .multiple = False
-        .help = Path to folder with raw data in pickle format. Can be a tree w/ subfolders
-        .optional = False
+  .type = path
+  .multiple = False
+  .help = Path to folder with raw data in pickle format. Can be a tree w/ subfolders
+  .optional = False
 output = iota_output
-        .type = str
-        .help = Base name for output folder
-        .optional = False
+  .type = str
+  .help = Base name for output folder
+  .optional = False
 target = target.phil
-        .type = str
-        .multiple = False
-        .help = Target (.phil) file with integration parameters
-        .optional = False
+  .type = str
+  .multiple = False
+  .help = Target (.phil) file with integration parameters
+  .optional = False
 flag_random = False
   .type = bool
   .help = Activate grid search / selection of random sample & analysis of parameters
@@ -33,8 +41,8 @@ grid_search
   .help = "Parameters for the grid search."
 {
   flag_on = True
-      .type = bool
-      .help = Set to False to turn post-refinement in this section off.
+    .type = bool
+    .help = Set to False to run selection of pickles only.
   a_min = 1
     .type = int
     .help = Minimum spot area.
@@ -47,6 +55,16 @@ grid_search
   h_max = 10
     .type = int
     .help = Maximum spot height.
+}
+selection_res_limit
+  .help = "Resolution limit for pickle selection."
+{
+  d_min = 6.0
+    .type = float
+    .help = Highest resolution limit.
+  d_max = 15.0
+    .type = float
+    .help = Lowest resolution limit.
 }
 flag_prefilter = True
   .type = bool
@@ -130,9 +148,7 @@ def make_lists(input_dir, output_dir):
     for input_entry in input_list:
         path = os.path.dirname(input_entry)
 
-        if (
-            os.path.relpath(path, abs_inp_path) == "."
-        ):  # in case of all input in one dir
+        if os.path.relpath(path, abs_inp_path) == ".":  # in case of input in one dir
             input_dir = abs_inp_path
             if input_dir not in input_dir_list:
                 input_dir_list.append(input_dir)
@@ -149,20 +165,6 @@ def make_lists(input_dir, output_dir):
     return input_list, input_dir_list, output_dir_list, abs_out_path + "/logs"
 
 
-# Setup for log files & display
-def setup_logger(logger_name, log_file, level=logging.INFO):
-    l = logging.getLogger(logger_name)
-    formatter = logging.Formatter("%(message)s")
-    fileHandler = logging.FileHandler(log_file, mode="w")
-    fileHandler.setFormatter(formatter)
-    streamHandler = logging.StreamHandler()
-    streamHandler.setFormatter(formatter)
-
-    l.setLevel(level)
-    l.addHandler(fileHandler)
-    l.addHandler(streamHandler)
-
-
 # Make output directories preserving the tree structure
 def make_dirs(output_dir_list, log_dir):
 
@@ -175,12 +177,18 @@ def make_dirs(output_dir_list, log_dir):
             os.makedirs(output_dir)
 
         # make output directory for selected pickles
-        best_output_dir = output_dir + "/selected"
-        if os.path.exists(best_output_dir):
-            shutil.rmtree(best_output_dir)
-            os.makedirs(best_output_dir)
-        else:
-            os.makedirs(best_output_dir)
+        best_output_dirs = [
+            output_dir + "/best_by_total",
+            output_dir + "/best_by_strong",
+            output_dir + "/best_by_uc",
+            output_dir + "/best_by_offset",
+        ]
+        for best_output_dir in best_output_dirs:
+            if os.path.exists(best_output_dir):
+                shutil.rmtree(best_output_dir)
+                os.makedirs(best_output_dir)
+            else:
+                os.makedirs(best_output_dir)
 
         # make log folder for cxi.index logs (one per integration attempt)
         index_log_dir = output_dir + "/logs"
@@ -196,3 +204,20 @@ def make_dirs(output_dir_list, log_dir):
         os.makedirs(log_dir)
     else:
         os.makedirs(log_dir)
+
+
+# Make output directories preserving the tree structure
+def make_selected_dirs(output_dir_list, log_dir):
+
+    # Make output directory structure
+    for output_dir in output_dir_list:
+        # make output directory for selected pickles
+        best_output_dirs = [
+            output_dir + "/best_by_total",
+            output_dir + "/best_by_strong",
+            output_dir + "/best_by_uc",
+            output_dir + "/best_by_offset",
+        ]
+        for best_output_dir in best_output_dirs:
+            if not os.path.exists(best_output_dir):
+                os.makedirs(best_output_dir)
