@@ -73,9 +73,9 @@ if __name__ == "__main__":
             for folder in input_dir_list:
                 gs_logger.info(str(os.path.abspath(folder)))
             gs_logger.info(
-                "\nSpot-finding parameter grid search: \
-                    {0} input files, spot height: {1} - {2}, \
-                    spot area: {3} - {4} \n".format(
+                "\nSpot-finding parameter grid search: "
+                "{0} input files, spot height: {1} - {2}, "
+                "spot area: {3} - {4} \n".format(
                     len(input_list),
                     gs_params.grid_search.h_min,
                     gs_params.grid_search.h_max,
@@ -116,17 +116,13 @@ if __name__ == "__main__":
 
         for output_dir in output_dir_list:
             ps_logger.info(
-                "Found integrated pickles \
-                                                                under {0}".format(
-                    os.path.abspath(output_dir)
-                )
+                "Found integrated pickles "
+                "under {0}".format(os.path.abspath(output_dir))
             )
 
         ps_logger.info(
-            "Selected by most reflections \
-                                                                with I / sigI > {0}".format(
-                gs_params.min_sigma
-            )
+            "Selected by most reflections "
+            "with I / sigI > {0}".format(gs_params.min_sigma)
         )
 
         if gs_params.flag_prefilter == True:
@@ -135,10 +131,7 @@ if __name__ == "__main__":
             prefilter = "OFF"
 
         ps_logger.info(
-            "Space group / unit cell prefilter \
-                                                                turned {0} \n\n".format(
-                prefilter
-            )
+            "Space group / unit cell prefilter " "turned {0} \n\n".format(prefilter)
         )
         ps_logger.info("{:-^100} \n".format(" STARTING SELECTION "))
 
