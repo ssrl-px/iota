@@ -95,9 +95,6 @@ if __name__ == "__main__":
 
             gs_logger.info("\n\nIOTA grid search version {0}".format(gs_version))
 
-        else:
-            inp.make_selected_dirs(output_dir_list, log_dir)
-
         # ------------------ Pickle Selection ------------------
 
         # Setup pickle selection logger
