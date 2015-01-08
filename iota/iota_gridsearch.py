@@ -46,6 +46,7 @@ def index_integrate(current_img, log_dir, gs_params):
         os.makedirs(index_log_dir)
 
     # Indexing / integration against the grid of spotfinding parameters
+    int_success = False
     for sig_height in range(
         gs_params.grid_search.h_min, gs_params.grid_search.h_max + 1
     ):
@@ -79,6 +80,7 @@ def index_integrate(current_img, log_dir, gs_params):
                 current_output_dir, sig_height, spot_area, img_filename
             )
             if os.path.isfile(current_file):
+                int_success = True
                 observations = SingleFrame(
                     current_file, os.path.split(current_file)[1]
                 ).miller_array
@@ -111,3 +113,9 @@ def index_integrate(current_img, log_dir, gs_params):
                 width=len(current_img) + 2,
             )
             gs_logger.info(grid_search_output)
+
+    if int_success == False:
+        with open(
+            "{}/not_integrated.lst".format(os.path.abspath(gs_params.output)), "a"
+        ) as not_integrated_list:
+            not_integrated_list.write("{}\n".format(current_img))
