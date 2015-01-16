@@ -3,8 +3,8 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 01/05/2015
-Description : IOTA command-line module. Version 0.7
+Last Changed: 01/16/2015
+Description : IOTA command-line module. Version 0.81
 """
 
 import os
@@ -12,7 +12,7 @@ import sys
 import logging
 from datetime import datetime
 
-from libtbx.easy_mp import pool_map
+from libtbx.easy_mp import parallel_map
 
 import prime.iota.iota_input as inp
 import prime.iota.iota_gridsearch as gs
@@ -24,16 +24,12 @@ def index_mproc_wrapper(current_img):
     return gs.index_integrate(current_img, log_dir, gs_params)
 
 
-def sel_mproc_wrapper(output_entry):
-    return best_file_selection(gs_params, output_entry, log_dir)
-
-
 # ---------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
 
-    gs_version = "0.8"
-    ps_version = "0.8"
+    gs_version = "0.81"
+    ps_version = "0.81"
 
     print "\n{}".format(datetime.now())
     print "Starting IOTA ... \n\n"
@@ -59,6 +55,7 @@ if __name__ == "__main__":
         input_dir_list, output_dir_list, log_dir = inp.make_dir_lists(
             input_list, gs_params.input, gs_params.output
         )
+        inp.make_dirs(output_dir_list, log_dir)
         mp_input_list, mp_output_list = inp.make_mp_input(
             input_list, log_dir, gs_params
         )
@@ -79,8 +76,6 @@ if __name__ == "__main__":
 
         # Check for grid search toggle, only do it turned on
         if gs_params.grid_search.flag_on == True:
-
-            inp.make_dirs(output_dir_list, log_dir)
 
             # Setup grid search logger
             gs_logger = logging.getLogger("gs_log")
@@ -119,9 +114,8 @@ if __name__ == "__main__":
             gs_logger.info("{:-^100} \n\n".format(" STARTING GRID SEARCH "))
 
             # run grid search on multiple processes
-
-            pool_map(
-                args=mp_input_list,
+            parallel_map(
+                iterable=mp_input_list,
                 func=index_mproc_wrapper,
                 processes=gs_params.n_processors,
             )
@@ -160,14 +154,8 @@ if __name__ == "__main__":
         )
         ps_logger.info("{:-^100} \n".format(" STARTING SELECTION "))
 
-        # for output_entry in mp_output_list:
-        #     best_file_selection(gs_params, output_entry, log_dir)
-
-        pool_map(
-            args=mp_output_list,
-            func=sel_mproc_wrapper,
-            processes=gs_params.n_processors,
-        )
+        for output_entry in mp_output_list:
+            best_file_selection(gs_params, output_entry, log_dir)
 
         # This section checks for output and summarizes file integration and
         # selection results
