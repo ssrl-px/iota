@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 01/15/2015
+Last Changed: 01/16/2015
 Description : IOTA pickle selection module. Selects the best integration results from a
               set of pickles derived from a single image.
 """
@@ -218,7 +218,7 @@ def best_file_selection(gs_params, output_entry, log_dir):
                 sref = len([val for val in I_over_sigI if val >= gs_params.min_sigma])
 
                 info_line = (
-                    "  {:<{pwidth}}{:>7.2f} - {:<5.2f}{:^15}{:>6.2f},"
+                    "  {:<{pwidth}}{:>7.2f} - {:<5.2f}{:^15}{:>6.2f}, "
                     "{:>6.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}, "
                     "{:>6.2f}{:^12}{:^10}".format(
                         pickle_name,
