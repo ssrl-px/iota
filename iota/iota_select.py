@@ -9,7 +9,6 @@ Description : IOTA pickle selection module. Selects the best integration results
 """
 
 import os
-import shutil
 import numpy as np
 import logging
 

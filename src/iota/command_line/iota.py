@@ -4,7 +4,7 @@ from __future__ import division
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
 Last Changed: 01/16/2015
-Description : IOTA command-line module. Version 0.81
+Description : IOTA command-line module. Version 0.82
 """
 
 import os
@@ -28,8 +28,8 @@ def index_mproc_wrapper(current_img):
 
 if __name__ == "__main__":
 
-    gs_version = "0.81"
-    ps_version = "0.81"
+    gs_version = "0.82"
+    ps_version = "0.82"
 
     print "\n{}".format(datetime.now())
     print "Starting IOTA ... \n\n"
@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
             with open(gs_params.target, "r") as phil_file:
                 phil_file_contents = phil_file.read()
-            gs_logger.info("\nTarget file {0} contents:\n".format(gs_params.target))
+            gs_logger.info("\nTarget file ({0}) contents:\n".format(gs_params.target))
             gs_logger.info(phil_file_contents)
 
             gs_logger.info("Found image files in the following folder(s):")
