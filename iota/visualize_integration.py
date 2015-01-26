@@ -31,6 +31,12 @@ def make_png(image_pickle, integration_pickle, file_name=None, res=300):
         predictions.as_double().as_numpy_array().reshape(2, len(predictions), order="F")
     )
 
+    # Get some other useful info from integration pickle
+    point_group = int_d["pointgroup"]
+    unit_cell = int_d["current_orientation"][0].unit_cell().parameters()
+    unit_cell = ", ".join("{:.1f}".format(u) for u in unit_cell)
+    mosaicity = int_d["mosaicity"]
+
     # Create the figure
     fig = plt.figure(figsize=(6, 6))
 
@@ -42,7 +48,7 @@ def make_png(image_pickle, integration_pickle, file_name=None, res=300):
     ax.imshow(image, origin=None)
 
     # 2nd set of axes for the predictions
-    ax2 = fig.add_axes(ax.get_position(), frameon=False)
+    ax2 = fig.add_axes(ax.get_position(), frameon=False)  # superimposed axes
     ax2.set_xlim(0, len(img_data[1]))
     ax2.set_ylim(0, len(img_data[0]))
     ax2.set_aspect("equal")
@@ -59,4 +65,9 @@ def make_png(image_pickle, integration_pickle, file_name=None, res=300):
         markeredgewidth=0.3,
     )
 
+    plt.title(
+        "Unit cell: {} ({}) \nNominal mosaicity: {}".format(
+            point_group, unit_cell, mosaicity
+        )
+    )
     plt.savefig(file_name, dpi=res, format="png")
