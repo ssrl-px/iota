@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 01/16/2015
+Last Changed: 01/26/2015
 Description : Runs cxi.index with signal/spot height and area grid search
 """
 
@@ -105,6 +105,7 @@ def index_integrate(mp_entry, log_dir, gs_params):
         )
     else:
         int_status = "not integrated"
+
     grid_search_output = "{:^{width}}: h = {:<3}, " "a = {:<3} ---> {}".format(
         current_img, sig_height, spot_area, int_status, width=len(current_img) + 2
     )

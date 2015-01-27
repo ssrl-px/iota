@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 def make_png(
-    image_pickle, integration_pickle, file_name=None, res=300, show_spots=True
+    image_pickle, integration_pickle, file_name=None, res=600, show_spots=True
 ):
     """Write a png file visualizing integration results.
 
@@ -56,7 +56,7 @@ def make_png(
     ax.set_xlim(0, len(img_data[1]))
     ax.set_ylim(0, len(img_data[0]))
     ax.set_aspect("equal")
-    ax.imshow(image, origin=None, cap="Greys")
+    ax.imshow(image, origin=None, cmap="Greys")
 
     # 2nd set of axes for the predictions
     ax2 = fig.add_axes(ax.get_position(), frameon=False)  # superimposed axes
