@@ -159,8 +159,6 @@ def best_file_selection(gs_params, output_entry, log_dir):
         ps_log_output.append(
             "No integrated images found " "in {}:\n".format(abs_tmp_dir)
         )
-        # ps_logger.info('No integrated images found ' \
-        #                'in {}:\n'.format(abs_tmp_dir))
         with open(
             "{}/not_integrated.lst".format(os.path.abspath(gs_params.output)), "a"
         ) as no_int:
@@ -174,9 +172,6 @@ def best_file_selection(gs_params, output_entry, log_dir):
                 "Discarded all {0} integrated pickles "
                 "in {1}:\n".format(len(total_tmp_pickles), abs_tmp_dir)
             )
-            # ps_logger.info('Discarded all {0} integrated pickles ' \
-            #                'in {1}:\n'.format(len(total_tmp_pickles), abs_tmp_dir))
-
             with open(
                 "{}/prefilter_fail.lst".format(os.path.abspath(gs_params.output)), "a"
             ) as bad_int:
@@ -191,10 +186,6 @@ def best_file_selection(gs_params, output_entry, log_dir):
                     len(acceptable_pickles), len(total_tmp_pickles), abs_tmp_dir
                 )
             )
-            # ps_logger.info('Selecting from {0} out '\
-            #                'of {1} integrated pickles ' \
-            #                'in {2}:\n'.format(len(acceptable_pickles),
-            #                len(total_tmp_pickles), abs_tmp_dir))
             filename = str(os.path.split(acceptable_pickles[0])[1])
             categories = " {:^{pwidth}}{:^16}{:^15}{:^45}" "{:^12}{:^10}".format(
                 "Filename",
@@ -210,8 +201,6 @@ def best_file_selection(gs_params, output_entry, log_dir):
             )
             ps_log_output.append(categories)
             ps_log_output.append(line)
-            # ps_logger.info(categories)
-            # ps_logger.info(line)
 
             # Report pickle stats. Mark selected pickle with asterisk for posterity
             for pickle in acceptable_pickles:
@@ -251,7 +240,6 @@ def best_file_selection(gs_params, output_entry, log_dir):
                     )
                 )
                 ps_log_output.append(info_line)
-                # ps_logger.info(info_line)
 
                 if gs_params.pred_img.type == "all":
                     viz.make_png(input_file, pickle)
@@ -379,8 +367,6 @@ def best_file_selection(gs_params, output_entry, log_dir):
                     )
                 )
                 ps_log_output.append(info_line)
-                # ps_logger.info(info_line)
 
         ps_log_output.append("\n")
-
         ps_logger.info("\n".join(ps_log_output))
