@@ -3,8 +3,8 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 01/29/2015
-Description : IOTA command-line module. Version 0.86
+Last Changed: 02/19/2015
+Description : IOTA command-line module. Version 0.9
 """
 
 import os
@@ -19,10 +19,12 @@ import prime.iota.iota_gridsearch as gs
 import prime.iota.iota_select as ps
 from prime.iota.iota_select import best_file_selection
 
+import cProfile, pstats, StringIO
 
 # Multiprocessor wrapper for grid search module
 def index_mproc_wrapper(current_img):
-    return gs.index_integrate(current_img, log_dir, gs_params)
+    return gs.integrate_one_image(current_img, log_dir, gs_params)
+    # return gs.index_integrate(current_img, log_dir, gs_params)
 
 
 # Multiprocessor wrapper for selection module
@@ -33,9 +35,11 @@ def selection_mproc_wrapper(output_entry):
 # ---------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
+    pr = cProfile.Profile()
+    pr.enable()
 
-    gs_version = "0.86"
-    ps_version = "0.86"
+    gs_version = "0.90"
+    ps_version = "0.90"
 
     print "\n{}".format(datetime.now())
     print "Starting IOTA ... \n\n"
@@ -51,7 +55,7 @@ if __name__ == "__main__":
         # Check for list of files and extract a) list of files, b) input paths,
         # and c) output paths that will override earlier lists
         if gs_params.input_list == None:
-            input_list = inp.make_input_list(gs_params.input)
+            input_list = inp.make_input_list(gs_params)
         else:
             with open(gs_params.input_list, "r") as listfile:
                 listfile_contents = listfile.read()
@@ -126,6 +130,7 @@ if __name__ == "__main__":
                 processes=gs_params.n_processors,
             )
 
+            print "FINISHED GRID SEARCH"
             gs_logger.info("\n\nIOTA grid search version {0}".format(gs_version))
 
         # ------------------ Pickle Selection ------------------
@@ -234,3 +239,10 @@ if __name__ == "__main__":
         ps_logger.info("pickles in final selection:   {}".format(final_count))
 
         ps_logger.info("\n\nIOTA pickle select version {0}".format(ps_version))
+
+    pr.disable()
+    s = StringIO.StringIO()
+    sortby = "tottime"
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats(0.05)
+    print s.getvalue()
