@@ -159,7 +159,7 @@ def integrate_one_image(mp_entry, n_int, log_dir, save_pickle, gs_params):
         with open(result_file, "a") as res_file:
             res_file.write(
                 "{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},"
-                "\n".format(
+                "{13}\n".format(
                     img_filename,
                     spot_height,
                     spot_area,
@@ -172,6 +172,7 @@ def integrate_one_image(mp_entry, n_int, log_dir, save_pickle, gs_params):
                     uc[5],
                     len(spots),
                     res,
+                    mosaicity,
                     mos_quality,
                 )
             )
@@ -399,17 +400,9 @@ def exp_integrate_one(mp_entry, log_dir, n_int, gs_params):
         ]
 
         int_status = (
-            "RES: {:>4.2f} SPOTS: {:>{len_spots}} DOM: {:>8.2f} "
+            "RES: {:>4.2f} SPOTS: {:>5} DOM: {:>8.2f} "
             "MOS: {:>6.4f} MQ:{:>6.2f} RMSD: {:>4.2f}"
-            "".format(
-                resol,
-                num_spots,
-                dom_size,
-                mosaicity,
-                mos_quality,
-                pos_rmsd,
-                len_spots=len(str(num_spots)),
-            )
+            "".format(resol, num_spots, dom_size, mosaicity, mos_quality, pos_rmsd)
         )
 
         if gs_params.pred_img.flag:
