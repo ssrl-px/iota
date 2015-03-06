@@ -103,6 +103,7 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
             int(item[10]),
             float(item[11]),
             float(item[12]),
+            float(item[13]),
         ]
         int_list.append(result_line)
 
@@ -140,11 +141,11 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
                 "of {1} integration results for "
                 "{2}:\n".format(len(acceptable_results), len(int_list), input_file)
             )
-            categories = "{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^12}" "".format(
-                "h", "a", "res", "s.g.", "unit cell", "int. spots", "mos. qual."
+            categories = "{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^12}{:^12}" "".format(
+                "H", "A", "RES", "SG.", "UNIT CELL", "SPOTS", "MOS", "MQ"
             )
-            line = "{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^12}{:-^12}" "".format(
-                "", "", "", "", "", "", ""
+            line = "{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^12}{:-^12}{:^12}" "".format(
+                "", "", "", "", "", "", "", ""
             )
             ps_log_output.append(categories)
             ps_log_output.append(line)
@@ -155,13 +156,15 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
 
             mosaicities = []
             for acc in acceptable_results:
-                pickle_name = acc[0]
                 cell = (
                     "{:>8.2f}, {:>8.2f}, {:>8.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}"
                     "".format(acc[4], acc[5], acc[6], acc[7], acc[8], acc[9])
                 )
-                info_line = "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.2f}" "".format(
-                    acc[1], acc[2], acc[11], acc[3], cell, acc[10], acc[12]
+                info_line = (
+                    "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.2f}{:^12.2f}"
+                    "".format(
+                        acc[1], acc[2], acc[11], acc[3], cell, acc[10], acc[12], acc[13]
+                    )
                 )
                 ps_log_output.append(info_line)
                 mosaicities.append(float(acc[12]))
@@ -177,23 +180,21 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
             # Output selected file information
             ps_log_output.append("\nSelected:")
 
-            pickle_name = best[0]
+            cell = (
+                "{:>8.2f}, {:>8.2f}, {:>8.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}"
+                "".format(best[4], best[5], best[6], best[7], best[8], best[9])
+            )
             info_line = (
-                "{:^6}{:^6}{:^7.2f}{:^15}{:>6.2f}, "
-                "{:>6.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}, "
-                "{:>6.2f}{:^12}{:^10.2f}".format(
+                "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.2f}{:^12.2f}"
+                "".format(
                     best[1],
                     best[2],
                     best[11],
                     best[3],
-                    best[4],
-                    best[5],
-                    best[6],
-                    best[7],
-                    best[8],
-                    best[9],
+                    cell,
                     best[10],
                     best[12],
+                    best[13],
                 )
             )
             ps_log_output.append(info_line)
