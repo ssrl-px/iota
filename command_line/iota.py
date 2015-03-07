@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 02/19/2015
+Last Changed: 03/06/2015
 Description : IOTA command-line module. Version 0.9
 """
 
@@ -38,6 +38,11 @@ def selection_mproc_wrapper(output_entry):
 # Multiprocessor wrapper for final integration module
 def final_mproc_wrapper(current_img):
     return gs.exp_integrate_one(current_img, log_dir, len(sel_clean), gs_params)
+
+
+# Multiprocessor wrapper for single image integration module
+def single_mproc_wrapper(current_img):
+    return gs.exp_integrate_one(current_img, log_dir, n_int, gs_params)
 
 
 def experimental_mproc_wrapper(single_entry):
@@ -273,86 +278,8 @@ def run_pickle_selection(gs_params, mp_output_list):
     return selection_results
 
 
-def print_summary(gs_params):
-    """Prints summary by reading contents of files listing a) images not
-    integrated b) images that failed unit cell filter c) total images input d)
-    final images successfully processed.
-
-    Appends summary to general log file. Also outputs some of it on stdout.
-
-    input: gs_params - parameters from *.param file in PHIL format
-    """
-
-    summary = []
-    int_fail_count = 0
-    bad_int_count = 0
-    final_count = 0
-
-    print "\n\n{:-^80}\n".format("SUMMARY")
-    inp.main_log(logfile, "\n\n{:-^80}\n".format("SUMMARY"))
-
-    with (open("{0}/logs/progress.log".format(gs_params.output), "r")) as prog_log:
-        prog_content = prog_log.read()
-
-    for item in prog_content.splitlines():
-        print item
-    print "\n\n"
-
-    if gs_params.random_sample.flag_on == True:
-        summary.append(
-            "raw images processed:         {}".format(gs_params_random_sample.number)
-        )
-    else:
-        summary.append("raw images processed:         {}".format(len(input_list)))
-
-    if os.path.isfile(
-        "{0}/not_integrated.lst".format(os.path.abspath(gs_params.output))
-    ):
-        with open(
-            "{0}/not_integrated.lst".format(os.path.abspath(gs_params.output)), "r"
-        ) as int_fail_list:
-            int_fail_list_contents = int_fail_list.read()
-            int_fail_count = len(int_fail_list_contents.splitlines())
-
-    if os.path.isfile(
-        "{0}/prefilter_fail.lst".format(os.path.abspath(gs_params.output))
-    ):
-        with open(
-            "{0}/prefilter_fail.lst".format(os.path.abspath(gs_params.output)), "r"
-        ) as bad_int_list:
-            bad_int_list_contents = bad_int_list.read()
-            bad_int_count = len(bad_int_list_contents.splitlines())
-
-    if os.path.isfile("{0}/selected.lst".format(os.path.abspath(gs_params.output))):
-        with open(
-            "{0}/selected.lst".format(os.path.abspath(gs_params.output)), "r"
-        ) as sel_list:
-            sel_list_contents = sel_list.read()
-            sel_count = len(sel_list_contents.splitlines())
-
-    if os.path.isfile("{0}/integrated.lst".format(os.path.abspath(gs_params.output))):
-        with open(
-            "{0}/integrated.lst".format(os.path.abspath(gs_params.output)), "r"
-        ) as final_list:
-            final_list_contents = final_list.read()
-            final_count = len(final_list_contents.splitlines())
-
-    summary.append("raw images not integrated:    {}".format(int_fail_count))
-    summary.append("images failed prefilter:      {}".format(bad_int_count))
-    summary.append("images in selection:          {}".format(sel_count))
-    summary.append("final integrated pickles:     {}".format(final_count))
-    summary.append("\n\nIOTA version {0}".format(iota_version))
-
-    for item in summary:
-        print item
-        inp.main_log(logfile, "{}".format(item))
-
-    inp.main_log(logfile, "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now()))
-
-
 def final_integration(sel_clean, gs_params):
 
-    final_table = []
     if os.path.isfile("{0}/logs/progress.log".format(gs_params.output)):
         os.remove("{0}/logs/progress.log".format(gs_params.output))
 
@@ -368,20 +295,6 @@ def final_integration(sel_clean, gs_params):
     else:
         inp.main_log(logfile, "\n\n{:-^80}\n".format("FINAL INTEGRATION, NO PLOTS"))
 
-        #   if gs_params.advanced.single_img:
-    #     current_img = sel_clean[0][0]
-    #     if current_img == None:
-    #       print "ERROR: No image found! Check input."
-    #     selection_results = []
-    #     for sig_height in range(gs_params.grid_search.h_min,
-    #                           gs_params.grid_search.h_max + 1):
-    #       for spot_area in range (gs_params.grid_search.a_min,
-    #                               gs_params.grid_search.a_max + 1):
-    #         mp_item = [current_img, sig_height, sig_height, spot_area]
-    #         selection_results.append(mp_item)
-    #     sel_clean = [entry for entry in selection_results \
-    #                        if entry != [] and entry != None]
-
     cmd.Command.start("Integrating with selected spotfinding parameters")
     result_objects = parallel_map(
         iterable=sel_clean,
@@ -393,6 +306,11 @@ def final_integration(sel_clean, gs_params):
 
     clean_results = [results for results in result_objects if results != []]
 
+    return clean_results
+
+
+def print_results(clean_results):
+
     images = [results[0] for results in clean_results]
     spot_heights = [int(results[1]) for results in clean_results]
     spot_areas = [int(results[2]) for results in clean_results]
@@ -402,6 +320,14 @@ def final_integration(sel_clean, gs_params):
     mosaicities = [float(results[6]) for results in clean_results]
     rmsds = [float(results[7]) for results in clean_results]
 
+    a = [results[8][0] for results in clean_results]
+    b = [results[8][1] for results in clean_results]
+    c = [results[8][2] for results in clean_results]
+    alpha = [results[8][3] for results in clean_results]
+    beta = [results[8][4] for results in clean_results]
+    gamma = [results[8][5] for results in clean_results]
+
+    final_table = []
     final_table.append("\n\n{:-^80}\n".format("ANALYSIS OF RESULTS"))
     final_table.append("Total images:          {}".format(len(images)))
     final_table.append(
@@ -434,6 +360,26 @@ def final_integration(sel_clean, gs_params):
     final_table.append(
         "Avg. positional RMSD:  {:<8.3f}  std. dev:    {:<6.2f}"
         "".format(np.mean(rmsds), np.std(rmsds))
+    )
+    final_table.append(
+        "Avg. unit cell:        "
+        "{:<6.2f} ({:>4.2f}), {:<6.2f} ({:>4.2f}), "
+        "{:<6.2f} ({:>4.2f}), {:<6.2f} ({:>4.2f}), "
+        "{:<6.2f} ({:>4.2f}), {:<6.2f} ({:>4.2f})"
+        "".format(
+            np.mean(a),
+            np.std(a),
+            np.mean(b),
+            np.std(b),
+            np.mean(c),
+            np.std(c),
+            np.mean(alpha),
+            np.std(alpha),
+            np.mean(beta),
+            np.std(beta),
+            np.mean(gamma),
+            np.std(gamma),
+        )
     )
 
     bad_mos_list = [
@@ -492,6 +438,118 @@ def final_integration(sel_clean, gs_params):
         inp.main_log(logfile, item)
 
 
+def print_summary(gs_params):
+    """Prints summary by reading contents of files listing a) images not
+    integrated b) images that failed unit cell filter c) total images input d)
+    final images successfully processed.
+
+    Appends summary to general log file. Also outputs some of it on stdout.
+
+    input: gs_params - parameters from *.param file in PHIL format
+    """
+
+    summary = []
+    int_fail_count = 0
+    bad_int_count = 0
+    final_count = 0
+
+    print "\n\n{:-^80}\n".format("SUMMARY")
+    inp.main_log(logfile, "\n\n{:-^80}\n".format("SUMMARY"))
+
+    with (open("{0}/logs/progress.log".format(gs_params.output), "r")) as prog_log:
+        prog_content = prog_log.read()
+
+    if gs_params.random_sample.flag_on == True:
+        summary.append(
+            "raw images processed:         {}".format(gs_params_random_sample.number)
+        )
+    else:
+        summary.append("raw images processed:         {}".format(len(input_list)))
+
+    if os.path.isfile(
+        "{0}/not_integrated.lst".format(os.path.abspath(gs_params.output))
+    ):
+        with open(
+            "{0}/not_integrated.lst".format(os.path.abspath(gs_params.output)), "r"
+        ) as int_fail_list:
+            int_fail_list_contents = int_fail_list.read()
+            int_fail_count = len(int_fail_list_contents.splitlines())
+
+    if os.path.isfile(
+        "{0}/prefilter_fail.lst".format(os.path.abspath(gs_params.output))
+    ):
+        with open(
+            "{0}/prefilter_fail.lst".format(os.path.abspath(gs_params.output)), "r"
+        ) as bad_int_list:
+            bad_int_list_contents = bad_int_list.read()
+            bad_int_count = len(bad_int_list_contents.splitlines())
+
+    if os.path.isfile("{0}/selected.lst".format(os.path.abspath(gs_params.output))):
+        with open(
+            "{0}/selected.lst".format(os.path.abspath(gs_params.output)), "r"
+        ) as sel_list:
+            sel_list_contents = sel_list.read()
+            sel_count = len(sel_list_contents.splitlines())
+
+    if os.path.isfile("{0}/integrated.lst".format(os.path.abspath(gs_params.output))):
+        with open(
+            "{0}/integrated.lst".format(os.path.abspath(gs_params.output)), "r"
+        ) as final_list:
+            final_list_contents = final_list.read()
+            final_count = len(final_list_contents.splitlines())
+
+    summary.append("raw images not integrated:    {}".format(int_fail_count))
+    summary.append("images failed prefilter:      {}".format(bad_int_count))
+    summary.append("images in selection:          {}".format(sel_count))
+    summary.append("final integrated pickles:     {}".format(final_count))
+    summary.append("\n\nIOTA version {0}".format(iota_version))
+
+    for item in summary:
+        print item
+        inp.main_log(logfile, "{}".format(item))
+
+    inp.main_log(logfile, "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now()))
+
+
+def single_image_mode(gs_params):
+
+    current_img = gs_params.advanced.single_img
+
+    # Remove old output if found
+    if os.path.exists(os.path.abspath(gs_params.output)):
+        cmd.Command.start("Found old folder {}... deleting...".format(gs_params.output))
+        shutil.rmtree(os.path.abspath(gs_params.output))
+        cmd.Command.end("Deleted old folder {} -- DONE".format(gs_params.output))
+
+    # Make main output directory and log directory
+    os.makedirs(os.path.abspath(gs_params.output))
+    os.makedirs("{}/logs".format(os.path.abspath(gs_params.output)))
+
+    inp.make_dirs([current_img], gs_params)
+
+    single_mp_list = []
+    for sig_height in range(
+        gs_params.grid_search.h_min, gs_params.grid_search.h_max + 1
+    ):
+        for spot_area in range(
+            gs_params.grid_search.a_min, gs_params.grid_search.a_max + 1
+        ):
+            mp_entry = [current_img, sig_height, sig_height, spot_area]
+            single_mp_list.append(mp_entry)
+
+    cmd.Command.start("Processing single image ")
+    int_results = parallel_map(
+        iterable=single_mp_list,
+        func=single_mproc_wrapper,
+        processes=gs_params.n_processors,
+    )
+    cmd.Command.end("Processing single image -- DONE ")
+
+    single_img_results = [entry for entry in int_results if entry != []]
+
+    return single_img_results
+
+
 # ============================================================================ #
 
 if __name__ == "__main__":
@@ -503,6 +561,17 @@ if __name__ == "__main__":
 
     # read parameters from *.param file
     gs_params, txt_out = inp.process_input(sys.argv[1:])
+
+    if gs_params.advanced.single_img != None:
+        log_dir = "{}/logs".format(gs_params.output)
+        logfile = "{}/iota.log".format(log_dir)
+        n_int = (gs_params.grid_search.a_max - gs_params.grid_search.a_min + 1) * (
+            gs_params.grid_search.h_max - gs_params.grid_search.h_min + 1
+        )
+        single_img_results = single_image_mode(gs_params)
+
+        print_results(single_img_results)
+        sys.exit()
 
     # generate input
     (
@@ -532,4 +601,5 @@ if __name__ == "__main__":
     sel_clean = [entry for entry in selection_results if entry != None and entry != []]
 
     final_int = final_integration(sel_clean, gs_params)  # final integration
+    print_results(final_int)
     print_summary(gs_params)  # print summary
