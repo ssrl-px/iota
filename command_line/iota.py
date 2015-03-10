@@ -42,7 +42,7 @@ def final_mproc_wrapper(current_img):
 
 # Multiprocessor wrapper for single image integration module
 def single_mproc_wrapper(current_img):
-    return gs.exp_integrate_one(current_img, log_dir, n_int, gs_params)
+    return gs.int_single_image(current_img, log_dir, n_int, gs_params)
 
 
 def experimental_mproc_wrapper(single_entry):
@@ -459,7 +459,7 @@ def print_summary(gs_params):
     with (open("{0}/logs/progress.log".format(gs_params.output), "r")) as prog_log:
         prog_content = prog_log.read()
 
-    if gs_params.random_sample.flag_on == True:
+    if gs_params.advanced.random_sample.flag_on == True:
         summary.append(
             "raw images processed:         {}".format(gs_params_random_sample.number)
         )
@@ -514,6 +514,7 @@ def print_summary(gs_params):
 def single_image_mode(gs_params):
 
     current_img = gs_params.advanced.single_img
+    img_filename = os.path.basename(current_img).split(".")[0]
 
     # Remove old output if found
     if os.path.exists(os.path.abspath(gs_params.output)):
@@ -525,7 +526,11 @@ def single_image_mode(gs_params):
     os.makedirs(os.path.abspath(gs_params.output))
     os.makedirs("{}/logs".format(os.path.abspath(gs_params.output)))
 
-    inp.make_dirs([current_img], gs_params)
+    output_dir = os.path.abspath(gs_params.output)
+    tmp_output_dir = os.path.abspath("{0}/tmp_{1}" "".format(output_dir, img_filename))
+    if not os.path.exists(tmp_output_dir):
+        os.makedirs(tmp_output_dir)
+    print tmp_output_dir
 
     single_mp_list = []
     for sig_height in range(
