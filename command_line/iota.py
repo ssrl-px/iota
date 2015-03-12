@@ -37,7 +37,7 @@ def selection_mproc_wrapper(output_entry):
 
 # Multiprocessor wrapper for final integration module
 def final_mproc_wrapper(current_img):
-    return gs.exp_integrate_one(current_img, log_dir, len(sel_clean), gs_params)
+    return gs.final_integrate_one(current_img, log_dir, len(sel_clean), gs_params)
 
 
 # Multiprocessor wrapper for single image integration module
@@ -46,7 +46,7 @@ def single_mproc_wrapper(current_img):
 
 
 def experimental_mproc_wrapper(single_entry):
-    return gs.integrate_selected_image(single_entry, log_dir, gs_params)
+    return gs.exp_integrate_one(single_entry, log_dir, n_int, gs_params)
 
 
 def generate_input(gs_params):
@@ -78,6 +78,12 @@ def generate_input(gs_params):
         with open(gs_params.input_list, "r") as listfile:
             listfile_contents = listfile.read()
         input_list = listfile_contents.splitlines()
+
+    h_min = gs_params.grid_search.h_avg - gs_params.grid_search.h_std
+    h_max = gs_params.grid_search.h_avg + gs_params.grid_search.h_std
+    a_min = gs_params.grid_search.a_avg - gs_params.grid_search.a_std
+    a_max = gs_params.grid_search.a_avg + gs_params.grid_search.a_std
+    gs_range = [h_min, h_max, a_min, a_max]
 
     # If grid-search turned on, check for existing output directory and remove
     if gs_params.grid_search.flag_on == True:
@@ -118,10 +124,11 @@ def generate_input(gs_params):
 
     # Make input/output lists for multiprocessing
     cmd.Command.start("Generating multiprocessing input")
-    mp_input_list, mp_output_list = inp.make_mp_input(input_list, gs_params)
+    mp_input_list, mp_output_list = inp.make_mp_input(input_list, gs_params, gs_range)
     cmd.Command.end("Generating multiprocessing input -- DONE")
 
     return (
+        gs_range,
         input_list,
         input_dir_list,
         output_dir_list,
@@ -135,7 +142,7 @@ def generate_input(gs_params):
 # =========================== EXPERIMENTAL SECTION =========================== #
 
 
-def advanced_input(gs_params):
+def advanced_input(gs_range, gs_params):
     """This is for various debugging / experimental stuff.
 
     Runs one image only.
@@ -147,25 +154,27 @@ def advanced_input(gs_params):
     if gs_params.advanced.single_img:
         random_number = random.randrange(0, len(input_list))
         trial_list.append(input_list[random_number])
-    elif gs_params.random_sample.flag_on:
+    elif gs_params.advanced.random_sample.flag_on:
         for i in range(0, gs_params.random_sample.number + 1):
             random_number = random.randrange(0, len(input_list))
             trial_list.append(input_list[random_number])
     else:
         trial_list = input_list
 
-    mp_trial_list, mp_trial_output_list = inp.make_mp_input(trial_list, gs_params)
+    log_dir = "{}/logs".format(os.path.abspath(gs_params.output))
+    input_dir_list, output_dir_list = inp.make_dir_lists(trial_list, gs_params)
+    mp_trial_list, mp_trial_output_list = inp.make_mp_input(
+        trial_list, gs_params, gs_range
+    )
 
     # gs.debug_integrate_one(mp_trial_list[0], log_dir, gs_params)
-    # gs.integrate_one_image(mp_trial_list[0], len(mp_input_list), log_dir, gs_params)
+    gs.exp_integrate_one(mp_trial_list[0], log_dir, 1, gs_params)
 
     # run grid search on multiple processes
-    parallel_map(
-        iterable=mp_trial_list,
-        func=experimental_mproc_wrapper,
-        processes=gs_params.n_processors,
-        preserve_exception_message=False,
-    )
+    #   parallel_map(iterable=mp_trial_list,
+    #                func=experimental_mproc_wrapper,
+    #                processes=gs_params.n_processors,
+    #                preserve_exception_message=False)
 
     print "END OF RUN"
 
@@ -173,7 +182,9 @@ def advanced_input(gs_params):
 # ============================================================================ #
 
 
-def run_grid_search(txt_out, gs_params, input_dir_list, input_list, mp_input_list):
+def run_grid_search(
+    txt_out, gs_params, gs_range, input_dir_list, input_list, mp_input_list
+):
     """Runs grid search in multiprocessing mode.
 
     input: txt_out - text of *.param file, preserved for analysis
@@ -202,11 +213,7 @@ def run_grid_search(txt_out, gs_params, input_dir_list, input_list, mp_input_lis
         "\nSpot-finding parameter grid search: "
         "{0} input files, spot height: {1} - {2}, "
         "spot area: {3} - {4} \n".format(
-            len(input_list),
-            gs_params.grid_search.h_min,
-            gs_params.grid_search.h_max,
-            gs_params.grid_search.a_min,
-            gs_params.grid_search.a_max,
+            len(input_list), gs_range[0], gs_range[1], gs_range[2], gs_range[3]
         ),
     )
     inp.main_log(logfile, "{:-^100} \n\n".format(" STARTING GRID SEARCH "))
@@ -239,8 +246,8 @@ def run_pickle_selection(gs_params, mp_output_list):
         os.remove("{}/prefilter_fail.lst".format(gs_params.output))
     if os.path.isfile("{}/selected.lst".format(gs_params.output)):
         os.remove("{}/selected.lst".format(gs_params.output))
-    if os.path.isfile("{}/selected.lst".format(gs_params.output)):
-        os.remove("{}/prefilter_fail.lst".format(gs_params.output))
+    if os.path.isfile("{}/integrated.lst".format(gs_params.output)):
+        os.remove("{}/integrated.lst".format(gs_params.output))
     if os.path.isfile("{0}/logs/progress.log".format(gs_params.output)):
         os.remove("{0}/logs/progress.log".format(gs_params.output))
 
@@ -533,12 +540,16 @@ def single_image_mode(gs_params):
     print tmp_output_dir
 
     single_mp_list = []
-    for sig_height in range(
-        gs_params.grid_search.h_min, gs_params.grid_search.h_max + 1
-    ):
-        for spot_area in range(
-            gs_params.grid_search.a_min, gs_params.grid_search.a_max + 1
-        ):
+
+    for sig_height in range(h_min, h_max + 1):
+        for spot_area in range(a_min, a_max + 1):
+            mp_item = [
+                current_img,
+                sig_height,
+                sig_height,
+                spot_area,
+                current_output_dir,
+            ]
             mp_entry = [current_img, sig_height, sig_height, spot_area]
             single_mp_list.append(mp_entry)
 
@@ -559,7 +570,7 @@ def single_image_mode(gs_params):
 
 if __name__ == "__main__":
 
-    iota_version = "1.03"
+    iota_version = "1.10"
 
     print "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
     print "Starting IOTA ... \n\n"
@@ -570,9 +581,9 @@ if __name__ == "__main__":
     if gs_params.advanced.single_img != None:
         log_dir = "{}/logs".format(gs_params.output)
         logfile = "{}/iota.log".format(log_dir)
-        n_int = (gs_params.grid_search.a_max - gs_params.grid_search.a_min + 1) * (
-            gs_params.grid_search.h_max - gs_params.grid_search.h_min + 1
-        )
+        h_std = gs_params.grid_search.h_std
+        a_std = gs_params.grid_search.a_std
+        n_int = (h_std * 2 + 1) * (a_std * 2 + 1)
         single_img_results = single_image_mode(gs_params)
 
         print_results(single_img_results)
@@ -580,6 +591,7 @@ if __name__ == "__main__":
 
     # generate input
     (
+        gs_range,
         input_list,
         input_dir_list,
         output_dir_list,
@@ -591,15 +603,18 @@ if __name__ == "__main__":
 
     # debugging/experimental section - anything goes here
     if gs_params.advanced.debug:
-        gs.integrate_one_image(
-            mp_input_list[0], len(mp_input_list), log_dir, False, gs_params
-        )
-        print "debugging... {}".format(mp_input_list[0])
+        h_std = gs_params.grid_search.h_std
+        a_std = gs_params.grid_search.a_std
+        n_int = (h_std * 2 + 1) * (a_std * 2 + 1)
+        advanced_input(gs_range, gs_params)
+        sys.exit()
         sys.exit()
 
     # run grid search
     if gs_params.grid_search.flag_on:
-        run_grid_search(txt_out, gs_params, input_dir_list, input_list, mp_input_list)
+        run_grid_search(
+            txt_out, gs_params, gs_range, input_dir_list, input_list, mp_input_list
+        )
 
     # run pickle selection
     selection_results = run_pickle_selection(gs_params, mp_output_list)
