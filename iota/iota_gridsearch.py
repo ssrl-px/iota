@@ -213,8 +213,10 @@ def integrate_image(mp_entry, current_log_file, arguments, ptitle, n_int, gs_par
         except ValueError:
             import traceback
 
-            print int_final, int_final["I_Observations"]
+            print
+            print current_img
             raise Exception("".join(traceback.format_exception(*sys.exc_info())))
+            sys.exit()
 
     # write integration logfile
     with open(current_log_file, "a") as index_logfile:
@@ -245,11 +247,11 @@ def integrate_image(mp_entry, current_log_file, arguments, ptitle, n_int, gs_par
         prog_content = prog_log.read()
         prog_count = len(prog_content.splitlines())
     gs_prog = cmd.ProgressBar(title=ptitle, estimate_time=False, spinner=False)
-    if prog_count == n_int:
-        gs_prog.finished()
-    else:
+    if prog_count < n_int:
         prog_step = 100 / n_int
         gs_prog.update(prog_count * prog_step)
+    else:
+        gs_prog.finished()
 
     return int_results, int_status
 
