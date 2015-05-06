@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 04/01/2015
+Last Changed: 05/05/2015
 Description : IOTA pickle selection module. Selects the best integration results
               from grid search output.
 """
@@ -16,9 +16,16 @@ import csv
 import dials.util.command_line as cmd
 
 
-# Selects only integrated pickles that fit sg / uc parameters specified in the .phil
-# file. Also checks that the low-res cutoff is beyond 10A.
 def prefilter(gs_params, int_list):
+    """Unit cell pre-filter. Applies hard space-group constraint and stringent
+    unit cell parameter restraints to filter out integration results that
+    deviate. Optional step. Unit cell tolerance user-defined.
+
+    input: gs_params - global parameters
+           int_list - list of integration results
+
+    output: acceptable_results - list of acceptable integration results
+    """
 
     acceptable_results = []
     if gs_params.flag_prefilter == True:
@@ -58,18 +65,48 @@ def prefilter(gs_params, int_list):
     return acceptable_results
 
 
-# Main selection module. Looks through integrated pickles in a specified folder and
-# copies the best ones to a file. Outputs a list to log file and marks the selected
-# pickle file.
-def best_file_selection(gs_params, output_entry, log_dir, n_int):
+def selection_grid_search(acceptable_results):
+    """First round of selection for results from the initial spotfinding grid
+    search.
+
+    input:  acceptable_results - a list of acceptable pickles
+    output: best - selected entry
+            lowest_mos_std - standard deviation for lowest 25% of mosaicities
+    """
+    # Select the 25% with lowest mosaicities, then select for most spots
+    sorted_entries = sorted(acceptable_results, key=lambda i: i["mos"])
+    subset = [
+        j[1] for j in enumerate(sorted_entries) if j[0] <= len(sorted_entries) * 0.25
+    ]
+    sub_spots = [sp["strong"] for sp in subset]
+
+    best = subset[np.argmax(sub_spots)]
+    return best
+
+
+def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
+    """Evaluates integration results per image and selects the best one based
+    on most bright spots and lowest 25% mosaicity (for grid search), and most
+    bright spots (for mosaicity scan)
+
+    input: sel_type - type of input, unused at the moment (there for later)
+           gs_params - global parameters
+           output_entry - list of filename & other parameters for selection
+           log_dir - main log directory
+           n_int - number of total selection operations (for progress bar)
+
+    output: selection_result - list of attributes of selection result
+    """
 
     logfile = "{}/iota.log".format(log_dir)
 
     abs_tmp_dir = output_entry[0]
     input_file = output_entry[1]
-    result_file = os.path.join(abs_tmp_dir, output_entry[2])
     ps_log_output = []
     selection_result = []
+
+    if sel_type == "grid":
+        result_file = "{}/int_gs_{}.lst".format(abs_tmp_dir, output_entry[2])
 
     # apply prefilter if specified and make a list of acceptable pickles
     if not os.path.isfile(result_file):
@@ -136,7 +173,7 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
             categories = "{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^12}{:^12}" "".format(
                 "H", "A", "RES", "SG.", "UNIT CELL", "SPOTS", "MOS", "MQ"
             )
-            line = "{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^12}{:-^12}{:^12}" "".format(
+            line = "{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^16}{:-^18}{:^18}" "".format(
                 "", "", "", "", "", "", "", ""
             )
             ps_log_output.append(categories)
@@ -159,7 +196,7 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
                     )
                 )
                 info_line = (
-                    "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.2f}"
+                    "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.4f}"
                     "".format(
                         acc["sph"],
                         acc["spa"],
@@ -191,7 +228,7 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
             )
 
             info_line = (
-                "\nAVG:    {:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.2f}"
+                "\nAVG:    {:^9.2f}{:^8}{:^55}{:^12.2f}{:^12.4f}{:^12.4f}"
                 "".format(avg_res, "", avg_cell, avg_spots, avg_mos, avg_mq)
             )
             ps_log_output.append(info_line)
@@ -213,33 +250,28 @@ def best_file_selection(gs_params, output_entry, log_dir, n_int):
                 )
             )
 
-            info_line = "STD:    {:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.2f}" "".format(
-                std_res, "", std_cell, std_spots, std_mos, std_mq
+            info_line = (
+                "STD:    {:^9.2f}{:^8}{:^55}{:^12.2f}{:^12.4f}{:^12.4f}"
+                "".format(std_res, "", std_cell, std_spots, std_mos, std_mq)
             )
             ps_log_output.append(info_line)
 
-            # Select the 25% with lowest mosaicities, then select for most spots
-            sorted_entries = sorted(acceptable_results, key=lambda i: i["mos"])
-            subset = [
-                j[1]
-                for j in enumerate(sorted_entries)
-                if j[0] <= len(sorted_entries) * 0.25
-            ]
-            sub_spots = [sp["strong"] for sp in subset]
-
-            best = subset[np.argmax(sub_spots)]
-
-            with open(
-                "{}/selected.lst".format(os.path.abspath(gs_params.output)), "a"
-            ) as sel_int:
-                sel_int.write("{}\n".format(input_file))
+            # Selection by round
+            if sel_type == "grid":
+                prog_label = "SPOTFINDING SELECTION"
+                best = selection_grid_search(acceptable_results)
+                with open(
+                    "{}/gs_selected.lst" "".format(os.path.abspath(gs_params.output)),
+                    "a",
+                ) as sel_int:
+                    sel_int.write("{}\n".format(input_file))
 
             selection_result = [
                 input_file,
+                abs_tmp_dir,
                 best["sih"],
                 best["sph"],
                 best["spa"],
-                abs_tmp_dir,
             ]
 
             # Output selected file information

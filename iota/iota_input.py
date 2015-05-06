@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 04/10/2015
+Last Changed: 05/05/2015
 Description : IOTA I/O module. Reads PHIL input, creates output directories,
               creates input lists and organizes starting parameters, also
               creates reasonable IOTA and PHIL defaults if selected
@@ -87,7 +87,7 @@ n_processors = 32
   .type = int
   .help = No. of processing units
 advanced
-  .help = "Advanced options, mostly for debugging."
+  .help = "Advanced, debugging and experimental options."
 {
   single_img = None
     .type = str
@@ -101,6 +101,9 @@ advanced
   debug = False
     .type = bool
     .help = Used for various debugging purposes.
+  experimental = False
+    .type = bool
+    .help = Set to true to run the experimental section of codes
   save_tmp_pickles = False
     .type = bool
     .help = If True, saves pickle for each integration attempt in grid search.
@@ -304,11 +307,7 @@ def make_mp_input(input_list, gs_params, gs_range):
         current_output_dir = "{0}/tmp_{1}".format(
             output_dir, img_filename.split(".")[0]
         )
-        mp_output_entry = [
-            current_output_dir,
-            current_img,
-            "int_{}.lst".format(img_filename.split(".")[0]),
-        ]
+        mp_output_entry = [current_output_dir, current_img, img_filename.split(".")[0]]
         mp_output.append(mp_output_entry)
 
         # Create input list w/ filename and spot-finding params
@@ -321,10 +320,10 @@ def make_mp_input(input_list, gs_params, gs_range):
             for spot_area in range(a_min, a_max + 1):
                 mp_item = [
                     current_img,
+                    current_output_dir,
                     sig_height,
                     sig_height,
                     spot_area,
-                    current_output_dir,
                 ]
                 mp_input.append(mp_item)
 
