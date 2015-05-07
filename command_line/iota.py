@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 05/05/2015
+Last Changed: 05/06/2015
 Description : IOTA command-line module. Version 1.31
 """
 
@@ -105,7 +105,7 @@ def run_integration(int_type, gs_params, mp_input_list):
             iterable=mp_input_list,
             func=final_mproc_wrapper,
             processes=gs_params.n_processors,
-            preserve_exception_message=True,
+            preserve_exception_message=False,
         )
         cmd.Command.end("Final integration -- DONE ")
 
@@ -204,22 +204,17 @@ def dry_run():
     inp.write_defaults(os.path.abspath(os.path.curdir), txt_out)
 
 
-def experimental(gs_params, log_dir):
+def experimental(mp_input_list, gs_params, log_dir):
     """EXPERIMENTAL SECTION: Contains stuff I just want to try out without
     running the whole darn thing."""
-    import prime.iota.iota_index as ix
-
-    sample_img = gs_params.advanced.single_img
-    print "Have image {}".format(sample_img)
-
-    ix.spotfinding_param_search(sample_img, gs_params)
+    pass
 
 
 # ============================================================================ #
 
 if __name__ == "__main__":
 
-    iota_version = "1.31"
+    iota_version = "1.32"
 
     print "\n\n"
     print "     IIIIII          OOOO         TTTTTTTTTT           A              "
@@ -280,7 +275,7 @@ if __name__ == "__main__":
     # debugging/experimental section - anything goes here
     if gs_params.advanced.experimental:
         print "IOTA will run in EXPERIMENTAL mode:\n"
-        experimental(gs_params, log_dir)
+        experimental(mp_input_list, gs_params, log_dir)
         sys.exit()
 
     # run grid search
@@ -290,6 +285,10 @@ if __name__ == "__main__":
     # run pickle selection
     selection_results = run_selection("grid", gs_params, mp_output_list)
     sel_clean = [entry for entry in selection_results if entry != None and entry != []]
+    if sel_clean == []:
+        print "\nNO IMAGES INTEGRATED! Check input and try again.\n"
+        inp.main_log(logfile, "\nNO IMAGES INTEGRATED!\n")
+        sys.exit()
 
     # run final integration
     final_int = run_integration("final", gs_params, sel_clean)
