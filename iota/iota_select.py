@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 05/05/2015
+Last Changed: 05/07/2015
 Description : IOTA pickle selection module. Selects the best integration results
               from grid search output.
 """
@@ -11,9 +11,8 @@ Description : IOTA pickle selection module. Selects the best integration results
 import os, sys, traceback
 from prime.iota.iota_input import main_log
 import numpy as np
-import csv
 
-import dials.util.command_line as cmd
+import csv
 
 
 def prefilter(gs_params, int_list):
@@ -84,7 +83,7 @@ def selection_grid_search(acceptable_results):
     return best
 
 
-def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
+def best_file_selection(sel_type, gs_params, output_entry, log_dir):
     """Evaluates integration results per image and selects the best one based
     on most bright spots and lowest 25% mosaicity (for grid search), and most
     bright spots (for mosaicity scan)
@@ -93,7 +92,6 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
            gs_params - global parameters
            output_entry - list of filename & other parameters for selection
            log_dir - main log directory
-           n_int - number of total selection operations (for progress bar)
 
     output: selection_result - list of attributes of selection result
     """
@@ -170,11 +168,12 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
                 "of {1} integration results for "
                 "{2}:\n".format(len(acceptable_results), len(int_list), input_file)
             )
-            categories = "{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^12}{:^12}" "".format(
-                "H", "A", "RES", "SG.", "UNIT CELL", "SPOTS", "MOS", "MQ"
+            categories = "{:^4}{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^12}{:^12}" "".format(
+                "S", "H", "A", "RES", "SG.", "UNIT CELL", "SPOTS", "MOS", "MQ"
             )
-            line = "{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^16}{:-^18}{:^18}" "".format(
-                "", "", "", "", "", "", "", ""
+            line = (
+                "{:-^4}{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^16}{:-^18}{:^18}"
+                "".format("", "", "", "", "", "", "", "", "")
             )
             ps_log_output.append(categories)
             ps_log_output.append(line)
@@ -196,8 +195,9 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
                     )
                 )
                 info_line = (
-                    "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.4f}"
+                    "{:^4}{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.4f}"
                     "".format(
+                        acc["sih"],
                         acc["sph"],
                         acc["spa"],
                         acc["res"],
@@ -288,8 +288,9 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
                 )
             )
             info_line = (
-                "{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.2f}"
+                "{:^4}{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.2f}"
                 "".format(
+                    best["sih"],
                     best["sph"],
                     best["spa"],
                     best["res"],
@@ -304,22 +305,5 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir, n_int):
 
         ps_log_output.append("\n")
         main_log(logfile, "\n".join(ps_log_output))
-
-    # Progress bar for selection
-    with (open("{0}/logs/progress.log".format(gs_params.output), "a")) as prog_log:
-        prog_log.write("{}\n".format(int_summary))
-
-    with (open("{0}/logs/progress.log".format(gs_params.output), "r")) as prog_log:
-        prog_content = prog_log.read()
-        prog_count = len(prog_content.splitlines())
-
-    gs_prog = cmd.ProgressBar(
-        title="PICKLE SELECTION", estimate_time=False, spinner=False
-    )
-    if prog_count < n_int:
-        prog_step = 100 / n_int
-        gs_prog.update(prog_count * prog_step)
-    else:
-        gs_prog.finished()
 
     return selection_result
