@@ -3,8 +3,8 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 05/06/2015
-Description : IOTA command-line module. Version 1.41
+Last Changed: 05/19/2015
+Description : IOTA command-line module. Version 1.50
 """
 
 import os
@@ -14,13 +14,13 @@ import shutil
 from datetime import datetime
 
 from libtbx.easy_mp import parallel_map
-import dials.util.command_line as cmd
 
 import prime.iota.iota_input as inp
 import prime.iota.iota_gridsearch as gs
 import prime.iota.iota_select as ps
 import prime.iota.iota_analysis as ia
 import prime.iota.iota_cmd as cmd
+import prime.iota.iota_conversion as i2p
 
 # Multiprocessor wrapper for grid search module
 def index_mproc_wrapper(current_img):
@@ -44,7 +44,7 @@ def sel_grid_mproc_wrapper(output_entry):
     prog_count = mp_output_list.index(output_entry)
     n_int = len(mp_output_list)
 
-    gs_prog = cmd.ProgressBar(title="GRID SEARCH")
+    gs_prog = cmd.ProgressBar(title="SELECTING")
     if prog_count < n_int:
         prog_step = 100 / n_int
         gs_prog.update(prog_count * prog_step, prog_count)
@@ -60,7 +60,7 @@ def final_mproc_wrapper(current_img):
     prog_count = sel_clean.index(current_img)
     n_int = len(sel_clean)
 
-    gs_prog = cmd.ProgressBar(title="GRID SEARCH")
+    gs_prog = cmd.ProgressBar(title="INTEGRATING")
     if prog_count < n_int:
         prog_step = 100 / n_int
         gs_prog.update(prog_count * prog_step, prog_count)
@@ -68,6 +68,22 @@ def final_mproc_wrapper(current_img):
         gs_prog.finished()
 
     return gs.integration("final", current_img, log_dir, gs_params)
+
+
+def conversion_wrapper(img_entry):
+    """Multiprocessor wrapper, for raw image to pickle conversion."""
+
+    prog_count = raw_input_list.index(img_entry)
+    n_img = len(raw_input_list)
+
+    gs_prog = cmd.ProgressBar(title="CONVERTING IMAGES")
+    if prog_count < n_img:
+        prog_step = 100 / n_img
+        gs_prog.update(prog_count * prog_step, prog_count)
+    else:
+        gs_prog.finished()
+
+    return i2p.convert_image(img_entry[0], img_entry[1], square, True)
 
 
 # ============================================================================ #
@@ -275,6 +291,9 @@ def check_options(args):
         print "\nExiting...\n\n"
         sys.exit()
 
+    if args.c:
+        sys.exit()
+
 
 def experimental(mp_input_list, gs_params, log_dir):
     """EXPERIMENTAL SECTION: Contains stuff I just want to try out without
@@ -286,7 +305,7 @@ def experimental(mp_input_list, gs_params, log_dir):
 
 if __name__ == "__main__":
 
-    iota_version = "1.41"
+    iota_version = "1.50"
     now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
     logo = (
         "\n\n"
@@ -327,6 +346,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Split output into separate files based on space group",
     )
+    parser.add_argument(
+        "-c",
+        action="store_true",
+        help="Convert files only & output to temp input folder",
+    )
 
     args = parser.parse_args()
     print logo
@@ -357,17 +381,45 @@ if __name__ == "__main__":
             print "ERROR: Invalid input! Need parameter filename or data folder."
             sys.exit()
 
-    # generate input
+    initial_input_list = inp.make_input_list(gs_params)
+    input_list = [
+        i for i in initial_input_list if i.endswith(("pickle", "mccd", "cbf"))
+    ]
+
+    # Check if input needs to be converted to pickle format; also check if input
+    # images need to be cropped / padded to be square, w/ beam center in the
+    # center of image. If these steps are needed, carry them out
+    img_check = i2p.check_image(input_list[0])
+    if img_check == "image" or img_check == "raw pickle":
+        square = gs_params.advanced.square_mode
+        converted_img_list, input_folder = inp.make_raw_input(input_list, gs_params)
+        raw_input_list = zip(input_list, converted_img_list)
+
+        cmd.Command.start("Converting {} images".format(len(raw_input_list)))
+        parallel_map(
+            iterable=raw_input_list,
+            func=conversion_wrapper,
+            processes=gs_params.n_processors,
+        )
+        cmd.Command.end("Converting {} images -- DONE ".format(len(raw_input_list)))
+
+        input_list = converted_img_list
+    elif img_check == "converted pickle":
+        input_folder = gs_params.input
+    else:
+        print "ERROR: Unknown image format. Please check your input"
+        sys.exit()
+
+    # generate general input
     (
         gs_range,
-        input_list,
         input_dir_list,
         output_dir_list,
         log_dir,
         logfile,
         mp_input_list,
         mp_output_list,
-    ) = inp.generate_input(gs_params)
+    ) = inp.generate_input(gs_params, input_list, input_folder)
 
     check_options(args)
 
@@ -396,9 +448,12 @@ if __name__ == "__main__":
     # run final integration
     final_int = run_integration("final", gs_params, sel_clean)
 
-    if gs_params.advanced.clean_up_output:
-        output_cleanup(gs_params)
-
     # print final integration results and summary
     ia.print_results(final_int, gs_range, logfile)
     ia.print_summary(gs_params, len(input_list), logfile, iota_version, now)
+
+    if gs_params.advanced.clean_up_output:
+        if os.path.isfile(
+            os.path.abspath("{}/integrated.lst".format(gs_params.output))
+        ):
+            output_cleanup(gs_params)
