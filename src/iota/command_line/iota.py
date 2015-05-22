@@ -383,7 +383,7 @@ if __name__ == "__main__":
 
     initial_input_list = inp.make_input_list(gs_params)
     input_list = [
-        i for i in initial_input_list if i.endswith(("pickle", "mccd", "cbf"))
+        i for i in initial_input_list if i.endswith(("pickle", "mccd", "cbf", "img"))
     ]
 
     # Check if input needs to be converted to pickle format; also check if input
@@ -410,6 +410,8 @@ if __name__ == "__main__":
         print "ERROR: Unknown image format. Please check your input"
         sys.exit()
 
+    check_options(args)
+
     # generate general input
     (
         gs_range,
@@ -420,8 +422,6 @@ if __name__ == "__main__":
         mp_input_list,
         mp_output_list,
     ) = inp.generate_input(gs_params, input_list, input_folder)
-
-    check_options(args)
 
     iota_start(txt_out, gs_params, gs_range, input_dir_list, input_list, mp_input_list)
 
