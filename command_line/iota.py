@@ -3,8 +3,8 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 06/09/2015
-Description : IOTA command-line module. Version 1.60
+Last Changed: 06/11/2015
+Description : IOTA command-line module. Version 1.61
 """
 
 help_message = (
@@ -295,7 +295,7 @@ def experimental(mp_input_list, gs_params, log_dir):
 
 if __name__ == "__main__":
 
-    iota_version = "1.60"
+    iota_version = "1.61"
     now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
     logo = (
         "\n\n"
@@ -393,7 +393,7 @@ if __name__ == "__main__":
     input_list = inp.make_input_list(gs_params)
 
     if args.l:
-        list_file = os.path.abspath("{}/input.lst".format(gs_params.output))
+        list_file = os.path.abspath("{}/input.lst".format(os.curdir))
         print "\nIOTA will run in LIST INPUT ONLY mode"
         print "Input list in {} \n\n".format(list_file)
         with open(list_file, "a") as lf:
@@ -414,6 +414,13 @@ if __name__ == "__main__":
             converted_img_list, input_folder = inp.make_raw_input(input_list, gs_params)
             raw_input_list = zip(input_list, converted_img_list)
 
+            # initiate image conversion log
+            conv_logfile = os.path.join(input_folder, "conversion.log")
+            start_line = "\n\n{:-^80}\n".format("IMAGE CONVERSION LOG")
+            with open(conv_logfile, "a") as conversion_log:
+                conversion_log.write("{}\n".format(start_line))
+
+            # convert images
             cmd.Command.start("Converting {} images".format(len(raw_input_list)))
             parallel_map(
                 iterable=raw_input_list,
@@ -441,8 +448,8 @@ if __name__ == "__main__":
                 preserve_order=True,
             )
             cmd.Command.end(
-                "Image triage ({} images have diffraction) -- DONE"
-                "".format(len(accepted_img))
+                "Image triage ({}/{} images have diffraction) -- DONE"
+                "".format(len(accepted_img), len(input_list))
             )
 
             if len(accepted_img) > 0:
