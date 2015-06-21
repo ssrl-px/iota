@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/07/2015
-Last Changed: 06/13/2015
+Last Changed: 06/20/2015
 Description : Analyzes integration results and outputs them in an accessible
               format. Includes unit cell analysis by hierarchical clustering
               (Zeldin, et al., Acta Cryst D, 2013). In case of multiple clusters
@@ -154,6 +154,10 @@ def print_results(clean_results, gs_range, logfile):
         "Avg. mosaicity:        {:<8.3f}  std. dev:    {:<6.2f}"
         "".format(np.mean(mosaicities), np.std(mosaicities))
     )
+
+    for item in final_table:
+        print item
+        inp.main_log(logfile, item)
 
 
 def unit_cell_analysis(cluster_threshold, logfile, int_pickle_file):
