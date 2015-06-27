@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 06/24/2015
+Last Changed: 06/26/2015
 Description : IOTA pickle selection module. Selects the best integration results
               from grid search output.
 """
@@ -122,7 +122,7 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
     output: selection_result - list of attributes of selection result
     """
 
-    logfile = "{}/iota.log".format(os.curdir)
+    logfile = os.path.abspath(gs_params.logfile)
 
     abs_tmp_dir = output_entry[0]
     input_file = output_entry[1]
@@ -166,7 +166,6 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
             ("strong", int),
             ("res", float),
             ("mos", float),
-            ("mq", float),
         ]
 
         for i in int_list:
@@ -194,12 +193,11 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
                 "of {1} integration results for "
                 "{2}:\n".format(len(acceptable_results), len(int_list), input_file)
             )
-            categories = "{:^4}{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^12}{:^12}" "".format(
-                "S", "H", "A", "RES", "SG.", "UNIT CELL", "SPOTS", "MOS", "MQ"
+            categories = "{:^4}{:^4}{:^4}{:^9}{:^8}{:^55}{:^12}{:^14}" "".format(
+                "S", "H", "A", "RES", "SG.", "UNIT CELL", "SPOTS", "MOS"
             )
-            line = (
-                "{:-^4}{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^16}{:-^18}{:^18}"
-                "".format("", "", "", "", "", "", "", "", "")
+            line = "{:-^4}{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^16}{:-^14}" "".format(
+                "", "", "", "", "", "", "", ""
             )
             ps_log_output.append(categories)
             ps_log_output.append(line)
@@ -221,7 +219,7 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
                     )
                 )
                 info_line = (
-                    "{:^4}{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.4f}"
+                    "{:^4}{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^14.8f}"
                     "".format(
                         acc["sih"],
                         acc["sph"],
@@ -231,7 +229,6 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
                         cell,
                         acc["strong"],
                         acc["mos"],
-                        acc["mq"],
                     )
                 )
                 ps_log_output.append(info_line)
@@ -240,7 +237,6 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
             avg_res = np.mean([item["res"] for item in acceptable_results])
             avg_spots = np.mean([item["strong"] for item in acceptable_results])
             avg_mos = np.mean([item["mos"] for item in acceptable_results])
-            avg_mq = np.mean([item["mq"] for item in acceptable_results])
             avg_cell = (
                 "{:>8.2f}, {:>8.2f}, {:>8.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}"
                 "".format(
@@ -253,9 +249,8 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
                 )
             )
 
-            info_line = (
-                "\nAVG:    {:^9.2f}{:^8}{:^55}{:^12.2f}{:^12.4f}{:^12.4f}"
-                "".format(avg_res, "", avg_cell, avg_spots, avg_mos, avg_mq)
+            info_line = "\nAVG:        {:^9.2f}{:^8}{:^55}{:^12.2f}{:^14.8f}" "".format(
+                avg_res, "", avg_cell, avg_spots, avg_mos
             )
             ps_log_output.append(info_line)
 
@@ -263,7 +258,6 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
             std_res = np.std([item["res"] for item in acceptable_results])
             std_spots = np.std([item["strong"] for item in acceptable_results])
             std_mos = np.std([item["mos"] for item in acceptable_results])
-            std_mq = np.std([item["mq"] for item in acceptable_results])
             std_cell = (
                 "{:>8.2f}, {:>8.2f}, {:>8.2f}, {:>6.2f}, {:>6.2f}, {:>6.2f}"
                 "".format(
@@ -276,9 +270,8 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
                 )
             )
 
-            info_line = (
-                "STD:    {:^9.2f}{:^8}{:^55}{:^12.2f}{:^12.4f}{:^12.4f}"
-                "".format(std_res, "", std_cell, std_spots, std_mos, std_mq)
+            info_line = "STD:        {:^9.2f}{:^8}{:^55}{:^12.2f}{:^14.8f}" "".format(
+                std_res, "", std_cell, std_spots, std_mos
             )
             ps_log_output.append(info_line)
 
@@ -312,19 +305,15 @@ def best_file_selection(sel_type, gs_params, output_entry, log_dir):
                     best["gamma"],
                 )
             )
-            info_line = (
-                "{:^4}{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^12.4f}{:^12.2f}"
-                "".format(
-                    best["sih"],
-                    best["sph"],
-                    best["spa"],
-                    best["res"],
-                    best["sg"],
-                    cell,
-                    best["strong"],
-                    best["mos"],
-                    best["mq"],
-                )
+            info_line = "{:^4}{:^4}{:^4}{:^9.2f}{:^8}{:^55}{:^12}{:^14.8f}" "".format(
+                best["sih"],
+                best["sph"],
+                best["spa"],
+                best["res"],
+                best["sg"],
+                cell,
+                best["strong"],
+                best["mos"],
             )
             ps_log_output.append(info_line)
 

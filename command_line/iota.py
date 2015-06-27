@@ -3,8 +3,8 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 06/24/2015
-Description : IOTA command-line module. Version 1.70
+Last Changed: 06/26/2015
+Description : IOTA command-line module. Version 1.71
 """
 
 help_message = (
@@ -109,7 +109,7 @@ def conversion_wrapper(img_entry):
     else:
         gs_prog.finished()
 
-    return i2p.convert_image(img_entry[0], img_entry[1], square, beamstop, beam_center)
+    return i2p.convert_image(img_entry[0], img_entry[1], gs_params)
 
 
 def triage_mproc_wrapper(current_img):
@@ -295,7 +295,7 @@ def experimental(mp_input_list, gs_params, log_dir):
 
 if __name__ == "__main__":
 
-    iota_version = "1.70"
+    iota_version = "1.71"
     now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
     logo = (
         "\n\n"
@@ -413,6 +413,10 @@ if __name__ == "__main__":
         print "\nExiting...\n\n"
         iota_exit(iota_version, now)
 
+    # Initiate log file
+    logfile = os.path.abspath(gs_params.logfile)
+    inp.main_log_init(logfile)
+
     # Check if input needs to be converted to pickle format; also check if input
     # images need to be cropped / padded to be square, w/ beam center in the
     # center of image. If these steps are needed, carry them out
@@ -421,20 +425,10 @@ if __name__ == "__main__":
             input_list[0], gs_params.image_conversion.square_mode
         )
         if img_check == "image" or img_check == "raw pickle":
-            square = gs_params.image_conversion.square_mode
-            beamstop = gs_params.image_conversion.beamstop
-            beam_center = [
-                gs_params.image_conversion.beam_center.x,
-                gs_params.image_conversion.beam_center.y,
-            ]
             converted_img_list, input_folder = inp.make_raw_input(input_list, gs_params)
             raw_input_list = zip(input_list, converted_img_list)
 
-            # initiate image conversion log
-            conv_logfile = os.path.join(input_folder, "conversion.log")
-            start_line = "\n\n{:-^80}\n".format("IMAGE CONVERSION LOG")
-            with open(conv_logfile, "a") as conversion_log:
-                conversion_log.write("{}\n".format(start_line))
+            inp.main_log(logfile, "\n\n{:-^100}\n".format("IMAGE CONVERSION"))
 
             # convert images
             cmd.Command.start("Converting {} images".format(len(raw_input_list)))
@@ -460,11 +454,18 @@ if __name__ == "__main__":
 
     if (args.t or gs_params.image_triage.flag_on) and gs_params.grid_search.flag_on:
         cmd.Command.start("Image triage")
-        accepted_img = parallel_map(
+        inp.main_log(logfile, "\n{:-^100}\n".format("IMAGE TRIAGE"))
+        triage_list = parallel_map(
             iterable=input_list,
             func=triage_mproc_wrapper,
             processes=gs_params.n_processors,
             preserve_order=True,
+        )
+        accepted_img = [i for i in triage_list if i != None]
+        inp.main_log(
+            logfile,
+            "\nCOMPLETE! {} out of {} files have diffraction\n\n"
+            "".format(len(accepted_img), len(input_list)),
         )
         cmd.Command.end(
             "Image triage ({}/{} images have diffraction) -- DONE"
@@ -485,7 +486,6 @@ if __name__ == "__main__":
         input_dir_list,
         output_dir_list,
         log_dir,
-        logfile,
         mp_input_list,
         mp_output_list,
     ) = inp.generate_input(gs_params, input_list, input_folder)
