@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 06/29/2015
+Last Changed: 07/08/2015
 Description : IOTA command-line module. Version 1.72
 """
 
@@ -295,7 +295,7 @@ def experimental(mp_input_list, gs_params, log_dir):
 
 if __name__ == "__main__":
 
-    iota_version = "1.72"
+    iota_version = "1.73"
     now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
     logo = (
         "\n\n"
@@ -406,7 +406,7 @@ if __name__ == "__main__":
         list_file = os.path.abspath("{}/input.lst".format(os.curdir))
         print "\nIOTA will run in LIST INPUT ONLY mode"
         print "Input list in {} \n\n".format(list_file)
-        with open(list_file, "a") as lf:
+        with open(list_file, "w") as lf:
             for input_file in input_list:
                 print input_file
                 lf.write("{}\n".format(input_file))
@@ -441,7 +441,9 @@ if __name__ == "__main__":
 
             input_list = converted_img_list
         elif img_check == "converted pickle":
-            input_folder = gs_params.input
+            input_folder = os.path.abspath(
+                os.path.dirname(os.path.commonprefix(input_list))
+            )
         else:
             print "ERROR: Unknown image format. Please check your input"
             iota_exit(iota_version, now)
@@ -477,6 +479,7 @@ if __name__ == "__main__":
             input_list = [i for i in input_list if i in accepted_img]
         else:
             print "No images with usable diffraction found!"
+            sys.exit()
     else:
         blank_img = []
 
