@@ -32,12 +32,7 @@ beam stop shadow.
 
 """
 )
-import os
-import sys
-
 from libtbx.easy_mp import parallel_map
-
-import prime.iota.iota_input as inp
 from prime.iota.iota_init import InitAll
 from prime.iota.iota_analysis import Analyzer
 import prime.iota.iota_image as img
@@ -254,5 +249,3 @@ if __name__ == "__main__":
     analysis.make_prime_input(init.int_base)
 
     misc.iota_exit(iota_version)
-
-################################################################################

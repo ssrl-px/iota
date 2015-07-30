@@ -32,12 +32,8 @@ beam stop shadow.
 
 """
 )
-import os
-import sys
 
 from libtbx.easy_mp import parallel_map
-
-import prime.iota.iota_input as inp
 from prime.iota.iota_init import InitAll
 from prime.iota.iota_analysis import Analyzer
 import prime.iota.iota_image as img
@@ -105,13 +101,17 @@ if __name__ == "__main__":
     )
     cmd.Command.end("Processing {} images -- DONE ".format(len(init.input_list)))
 
+    final_objects = [
+        i
+        for i in img_objects
+        if i.triage == "accepted" and i.prefilter == True and i.final["final"] != None
+    ]
+
     # Analysis of integration results
-    analysis = Analyzer(img_objects, init.logfile, iota_version, init.now)
+    analysis = Analyzer(final_objects, init.logfile, iota_version, init.now)
     analysis.print_results()
     analysis.unit_cell_analysis(init.params.advanced.cluster_threshold, init.int_base)
     analysis.print_summary(init.int_base)
     analysis.make_prime_input(init.int_base)
 
     misc.iota_exit(iota_version)
-
-################################################################################
