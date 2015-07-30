@@ -1,7 +1,6 @@
 import os
 import sys
 import argparse
-import shutil
 from datetime import datetime
 
 import prime.iota.iota_input as inp

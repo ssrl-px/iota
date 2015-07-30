@@ -9,7 +9,6 @@ Description : Runs cctbx.xfel integration module either in grid-search or final
 """
 
 import os
-import csv
 import sys
 import numpy as np
 

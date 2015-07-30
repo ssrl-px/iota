@@ -10,7 +10,6 @@ Description : Converts raw image to pickle files; crops or pads pickle to place
 """
 
 import os
-import sys
 import math
 
 from scitbx.array_family import flex
@@ -19,10 +18,8 @@ import dxtbx
 from cPickle import load
 from libtbx import easy_pickle as ep
 from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
-from libtbx.easy_mp import parallel_map
 
 import prime.iota.iota_misc as misc
-import prime.iota.iota_cmd as cmd
 import prime.iota.iota_vis_integration as viz
 
 
