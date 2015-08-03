@@ -157,6 +157,7 @@ class Integrator(object):
                 mos_quality = round(
                     int_AD14["mosaic_model_area_under_green_curve_sampled"], 6
                 )
+                mos_quality_nks = int_AD14["ewald_proximal_volume"]
 
                 # Assemble output for log file and/or integration result file
                 p_cell = (
