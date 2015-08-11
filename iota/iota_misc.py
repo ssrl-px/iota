@@ -32,6 +32,15 @@ class Capturing(list):
         sys.stderr = self._stderr
 
 
+def get_mpi_rank_and_size():
+    from mpi4py import MPI
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()  # each process in MPI has a unique id, 0-indexed
+    size = comm.Get_size()  # size: number of processes running in this job
+    return rank, size
+
+
 def main_log(logfile, entry, print_tag=False):
     """Write main log (so that I don't have to repeat this every time).
 
@@ -107,10 +116,11 @@ def make_image_path(raw_img, input_base, base_path):
     return dest_folder
 
 
-def iota_exit(iota_version):
-    from datetime import datetime
+def iota_exit(iota_version, silent=False):
+    if not silent:
+        from datetime import datetime
 
-    now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
-    print "\n\nIOTA version {0}".format(iota_version)
-    print "{}\n".format(now)
+        now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
+        print "\n\nIOTA version {0}".format(iota_version)
+        print "{}\n".format(now)
     sys.exit()
