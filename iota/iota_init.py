@@ -286,6 +286,7 @@ class InitAll(object):
                     )
             # If user provided gibberish
             else:
+                print carg
                 print "ERROR: Invalid input! Need parameter filename or data folder."
                 misc.iota_exit(self.iver)
 
