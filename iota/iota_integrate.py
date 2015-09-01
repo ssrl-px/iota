@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 08/31/2015
+Last Changed: 09/01/2015
 Description : Runs cctbx.xfel integration module either in grid-search or final
               integration mode. Has options to output diagnostic visualizations.
               Includes selector class for best integration result selection
@@ -237,6 +237,7 @@ class Selector(object):
         uc=None,
         min_ref=0,
         min_res=None,
+        select_by="mosaicity",
     ):
 
         self.grid = grid
@@ -370,7 +371,11 @@ class Selector(object):
                     log_entry.append(info_line)
 
                 # Perform selection
-                sorted_entries = sorted(acceptable_results, key=lambda i: i["mos"])
+                if self.select_by == "mosaicity:
+                    sorted_entries = sorted(acceptable_results, key=lambda i: i["mos"])
+                elif self.select_by == "epv":
+                    sorted_entries = sorted(acceptable_results, key=lambda i: i["epv"])
+
                 subset = [
                     j[1]
                     for j in enumerate(sorted_entries)
