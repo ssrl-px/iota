@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/07/2015
-Last Changed: 07/29/2015
+Last Changed: 08/31/2015
 Description : Analyzes integration results and outputs them in an accessible
               format. Includes unit cell analysis by hierarchical clustering
               (Zeldin, et al., Acta Cryst D, 2013). In case of multiple clusters
@@ -34,13 +34,7 @@ class Analyzer(object):
 
         self.prime_data_path = None
         self.all_objects = all_objects
-        self.final_objects = [
-            i
-            for i in all_objects
-            if i.triage == "accepted"
-            and i.prefilter == True
-            and i.final["final"] != None
-        ]
+        self.final_objects = [i for i in all_objects if i.fail == None]
         self.logfile = logfile
 
         self.cons_pg = None
@@ -95,6 +89,39 @@ class Analyzer(object):
 
         for item in final_table:
             misc.main_log(self.logfile, item, True)
+
+    def show_heatmap(self, show=True, hm_file=None):
+        from matplotlib import pyplot as plt
+
+        ch = max(self.h) - min(self.h) + 1
+        ca = max(self.a) - min(self.a) + 1
+        ints = [(i.final["sph"], i.final["spa"]) for i in self.final_objects]
+        ic = Counter(ints)
+
+        hm_data = np.zeros((ch, ca))
+        for i in ic.items():
+            hm_data[i[0][0] - min(self.h), i[0][1] - min(self.a)] = i[1]
+
+        rows = range(min(self.h), max(self.h) + 1)
+        cols = range(min(self.a), max(self.a) + 1)
+        row_labels = [str(i) for i in rows]
+        col_labels = [str(j) for j in cols]
+
+        fig, ax = plt.subplots()
+        fig.canvas.draw()
+        heatmap = plt.pcolor(hm_data, cmap="Reds")
+        plt.colorbar()
+        ax.set_yticks(np.arange(len(rows)) + 0.5, minor=False)
+        ax.set_xticks(np.arange(len(cols)) + 0.5, minor=False)
+        ax.set_yticklabels(row_labels, minor=False)
+        ax.set_xticklabels(col_labels, minor=False)
+
+        if show:
+            plt.show()
+
+        if hm_file != None:
+            print "Saving to {}".format(hm_file)
+            fig.savefig(hm_file, format="png", bbox_inches=0)
 
     def unit_cell_analysis(self, cluster_threshold, output_dir):
         """Calls unit cell analysis module, which uses hierarchical clustering
@@ -263,7 +290,7 @@ class Analyzer(object):
             "raw images read in:                  {}" "".format(len(self.all_objects))
         )
 
-        no_diff_objects = [i for i in self.all_objects if i.triage == "rejected"]
+        no_diff_objects = [i for i in self.all_objects if i.fail == "failed triage"]
         summary.append(
             "raw images with no diffraction:      {}" "".format(len(no_diff_objects))
         )
@@ -272,7 +299,7 @@ class Analyzer(object):
                 for obj in no_diff_objects:
                     bif.write("{}\n".format(obj.conv_img))
 
-        diff_objects = [i for i in self.all_objects if i.triage == "accepted"]
+        diff_objects = [i for i in self.all_objects if i.fail != "failed triage"]
         summary.append(
             "raw images with diffraction:         {}" "".format(len(diff_objects))
         )
@@ -281,7 +308,9 @@ class Analyzer(object):
                 for obj in diff_objects:
                     ilf.write("{}\n".format(obj.conv_img))
 
-        not_int_objects = [i for i in diff_objects if len(i.grid) == 0]
+        not_int_objects = [
+            i for i in self.all_objects if i.fail == "failed grid search"
+        ]
         summary.append(
             "raw images not integrated:           {}" "".format(len(not_int_objects))
         )
@@ -290,8 +319,9 @@ class Analyzer(object):
                 for obj in not_int_objects:
                     nif.write("{}\n".format(obj.conv_img))
 
-        int_objects = [i for i in diff_objects if len(i.grid) != 0]
-        prefilter_fail_objects = [i for i in int_objects if not i.prefilter]
+        prefilter_fail_objects = [
+            i for i in self.all_objects if i.fail == "failed prefilter"
+        ]
         summary.append(
             "images failed prefilter:             {}"
             "".format(len(prefilter_fail_objects))
