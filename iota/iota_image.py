@@ -451,6 +451,7 @@ class SingleImage(object):
         else:
             self.fail = None
 
+        # Generate names for output folders and files:
         if not self.params.image_conversion.convert_only:
             self.gs_path = misc.make_image_path(
                 self.conv_img, self.input_base, self.gs_base
@@ -471,6 +472,9 @@ class SingleImage(object):
             )
             self.final["final"] = self.fin_file
             self.final["img"] = self.conv_img
+            self.int_log = os.path.join(
+                self.fin_path, os.path.basename(self.conv_img).split(".")[0] + ".log"
+            )
             if self.viz_base != None:
                 self.viz_path = misc.make_image_path(
                     self.raw_img, self.input_base, self.viz_base
@@ -480,21 +484,17 @@ class SingleImage(object):
                     os.path.basename(self.conv_img).split(".")[0] + "_int.png",
                 )
 
-            # Generate output folders and files:
-            # Grid search subfolder or final integration subfolder
-            if not os.path.isdir(self.gs_path):
-                os.makedirs(self.gs_path)
-            if not os.path.isdir(self.fin_path):
-                os.makedirs(self.fin_path)
-
-            # Grid search / integration log file
-            self.int_log = os.path.join(
-                self.fin_path, os.path.basename(self.conv_img).split(".")[0] + ".log"
-            )
-
-            # Visualization subfolder
-            if self.viz_path != None and not os.path.isdir(self.viz_path):
-                os.makedirs(self.viz_path)
+            # Create actual folders
+            try:
+                if not os.path.isdir(self.gs_path):
+                    os.makedirs(self.gs_path)
+                if not os.path.isdir(self.fin_path):
+                    os.makedirs(self.fin_path)
+                if self.viz_base != None:
+                    if not os.path.isdir(self.viz_path):
+                        os.makedirs(self.viz_path)
+            except OSError:
+                pass
 
         return self
 
@@ -576,7 +576,7 @@ class SingleImage(object):
                 self.fin_file,
                 self.params.selection.min_sigma,
                 self.params.target,
-                self.params.advanced.charts,
+                self.params.analysis.charts,
                 self.viz_path,
                 self.int_log,
                 tag,
@@ -629,9 +629,9 @@ class SingleImage(object):
                 )
                 self.log_info.append(log_entry)
 
-                if self.params.advanced.viz == "integration":
+                if self.params.analysis.viz == "integration":
                     viz.make_png(self.final["img"], self.final["final"], self.viz_file)
-                elif self.params.advanced.viz == "cv_vectors":
+                elif self.params.analysis.viz == "cv_vectors":
                     viz.cv_png(self.final["img"], self.final["final"], self.viz_file)
 
             # Save image object to file
