@@ -302,6 +302,7 @@ class InitAll(object):
         self.int_base = misc.set_base_dir("integration")
         self.gs_base = os.path.join(self.int_base, "grid_search")
         self.fin_base = os.path.join(self.int_base, "final")
+        self.tmp_base = os.path.join(self.int_base, "tmp")
         if (
             self.params.analysis.viz != "None"
             or self.params.analysis.heatmap != "None"
@@ -316,6 +317,7 @@ class InitAll(object):
             os.makedirs(self.int_base)
             os.makedirs(self.gs_base)
             os.makedirs(self.fin_base)
+            os.makedirs(self.tmp_base)
 
         # Check for -l option, output list of input files and exit
         if self.args.list:
