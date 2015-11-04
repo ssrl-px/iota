@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 09/01/2015
+Last Changed: 11/02/2015
 Description : Runs cctbx.xfel integration module either in grid-search or final
               integration mode. Has options to output diagnostic visualizations.
               Includes selector class for best integration result selection
@@ -33,6 +33,8 @@ class Integrator(object):
         log=None,
         tag="grid search",
         tmp_base=None,
+        gain=1,
+        single_image=False,
     ):
 
         self.img = source_image
@@ -44,6 +46,7 @@ class Integrator(object):
         self.int_log = log
         self.charts = charts
         self.tmp_base = tmp_base
+        self.single_image = single_image
 
         self.args = [
             "target={}".format(self.target),
@@ -56,6 +59,7 @@ class Integrator(object):
             "rmsd_tolerance=5.0",
             "mosflm_rmsd_tolerance=5.0",
             "difflimit_sigma_cutoff=2.0",
+            "integration.detector_gain={}".format(gain),
             "indexing.verbose_cv=True",
         ]
 
@@ -149,18 +153,12 @@ class Integrator(object):
             int_results = {"info": int_status}
         else:
             try:
-                # Unit cell / resolution:
-                #        uc = int_final['cell'].split()
-                #        cell = (float(uc[0]), float(uc[1]), float(uc[2]),
-                #                float(uc[3]), float(uc[4]), float(uc[5]))
                 obs = int_final["results"][0].get_obs(int_final["spacegroup"])
                 cell = obs.unit_cell().parameters()
                 sg = int_final["spacegroup"]
                 res = round(int_final["I_Observations"].d_min(), 4)
 
                 # Calculate number of spots w/ high I / sigmaI
-                #        Is = int_final['I_Observations'].data()
-                #        sigmas = int_final['I_Observations'].sigmas()
                 Is = obs.data()
                 sigmas = obs.sigmas()
                 I_over_sigI = Is / sigmas
@@ -201,7 +199,6 @@ class Integrator(object):
                     "info": int_status,
                     "ok": True,
                 }
-
             except ValueError:
                 import traceback
 
@@ -211,7 +208,7 @@ class Integrator(object):
                 sys.exit()
 
         # write integration logfile
-        if self.tag == "integration":
+        if self.tag == "integrate":
             misc.main_log(
                 self.int_log,
                 "{:-^100}\n{:-^100}\n{:-^100}\n"
@@ -236,6 +233,20 @@ class Integrator(object):
             misc.main_log(self.int_log, item)
 
         misc.main_log(self.int_log, "\n[ {:^100} ]\n\n".format(int_status))
+
+        # In single-image mode, write a file with h, k, l, I, sigma
+        if self.single_image == True and self.tag == "integrate":
+            hklI_filename = "{}.{}".format(
+                os.path.basename(self.out_img).split(".")[0], "hkli"
+            )
+            hklI_file = os.path.join(os.path.dirname(self.out_img), hklI_filename)
+            hklI = zip(obs.indices(), obs.data(), obs.sigmas())
+            for i in hklI:
+                with open(hklI_file, "a") as f:
+                    entry = "{},{},{},{},{}".format(
+                        i[0][0], i[0][1], i[0][2], i[1], i[2]
+                    )
+                    f.write("{}\n".format(entry))
 
         return int_results
 
