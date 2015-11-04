@@ -350,7 +350,7 @@ class SingleImage(object):
                     )
                     sorted_dispersion = sorted_dispersion.select(inlier_sel)
                     self.gain = sorted_dispersion[nint(len(sorted_dispersion) / 2)]
-                except:
+                except IndexError:
                     self.gain = 1.0
             else:
                 self.gain = 1.0
