@@ -172,8 +172,6 @@ class Analyzer(object):
             counter = 1
 
             # run hierarchical clustering analysis
-            print self.pickles
-            exit()
             ucs = Cluster.from_files(self.pickles, use_b=True)
             clusters, _ = ucs.ab_cluster(
                 cluster_threshold,
