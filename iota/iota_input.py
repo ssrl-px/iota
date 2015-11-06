@@ -266,7 +266,7 @@ def process_input(args, phil_args, input_file, mode="auto", now=None):
 
     # Check -s option to bypass grid search and run selection/integration only
     if args.select:
-        params.selection.select_only.flag_on = True
+        params.cctbx.selection.select_only.flag_on = True
 
     final_phil = master_phil.format(python_object=params)
 
