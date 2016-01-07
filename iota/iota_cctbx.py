@@ -116,6 +116,7 @@ class Integrator(object):
 
             try:
                 easy_run.fully_buffered(command, join_stdout_stderr=True).show_stdout()
+                print "XXXXXXXXXXXXXXXXXX"
                 if not os.path.exists(tmppath):
                     raise Exception("Indexing failed for an unknown reason")
 
