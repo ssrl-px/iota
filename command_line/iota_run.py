@@ -5,11 +5,11 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 02/05/2016
-Description : IOTA command-line module. Version 2.25
+Last Changed: 02/24/2016
+Description : IOTA command-line module. Version 2.31
 """
 
-iota_version = "2.25"
+iota_version = "2.31"
 help_message = (
     "\n{:-^70}"
     "".format("Integration Optimization, Triage and Analysis")
@@ -40,6 +40,7 @@ beam stop shadow.
 
 """
 )
+
 from prime.iota.iota_analysis import Analyzer
 from prime.iota.iota_init import InitAll
 import prime.iota.iota_image as img
@@ -62,7 +63,7 @@ def gs_importer_wrapper(input_entry):
     return img_object.import_int_file(init)
 
 
-def conversion_wrapper(input_entry):
+def img_importer_wrapper(input_entry):
     """Multiprocessor wrapper for image conversion."""
     prog_count = input_entry[0]
     n_img = input_entry[1]
@@ -74,7 +75,7 @@ def conversion_wrapper(input_entry):
     else:
         gs_prog.finished()
     img_object = img.SingleImage(input_entry, init)
-    return img_object.convert_image()
+    return img_object.import_image()
 
 
 def processing_wrapper(input_entry):
@@ -124,7 +125,7 @@ if __name__ == "__main__":
         ]
         img_objects = parallel_map(
             iterable=img_list,
-            func=conversion_wrapper,
+            func=img_importer_wrapper,
             processes=init.params.n_processors,
         )
 
@@ -136,20 +137,21 @@ if __name__ == "__main__":
         )
 
         # Exit if none of the images have diffraction
-        if len(acc_img_objects) == 0:
-            misc.main_log(init.logfile, "No images have diffraction!", True)
-            misc.iota_exit(iota_version)
-        else:
-            misc.main_log(
-                init.logfile,
-                "{} out of {} images have diffraction (at "
-                "least {} Bragg peaks)"
-                "".format(
-                    len(acc_img_objects),
-                    len(img_objects),
-                    init.params.image_triage.min_Bragg_peaks,
-                ),
-            )
+        if init.params.image_triage.flag_on:
+            if len(acc_img_objects) == 0:
+                misc.main_log(init.logfile, "No images have diffraction!", True)
+                misc.iota_exit(iota_version)
+            else:
+                misc.main_log(
+                    init.logfile,
+                    "{} out of {} images have diffraction (at "
+                    "least {} Bragg peaks)"
+                    "".format(
+                        len(acc_img_objects),
+                        len(img_objects),
+                        init.params.image_triage.min_Bragg_peaks,
+                    ),
+                )
 
         # Check for -c option and exit if true
         if init.params.image_conversion.convert_only:
@@ -163,9 +165,9 @@ if __name__ == "__main__":
     cmd.Command.end("Processing {} images -- DONE ".format(len(img_objects)))
 
     # DIALS TESTING SWITCH
-    if init.params.advanced.integrate_with == "dials":
-        print "\n DIALS trial finished, exiting... \n"
-        misc.iota_exit(iota_version)
+    # if init.params.advanced.integrate_with == 'dials':
+    #  print '\n DIALS trial finished, exiting... \n'
+    #  misc.iota_exit(iota_version)
 
     # Analysis of integration results
     final_objects = [i for i in img_objects if i.fail == None]
