@@ -57,7 +57,7 @@ def parse_command_args(iver, help_message):
         "-d",
         "--default",
         action="store_true",
-        help="Generate default iota.param and target.phil files and stop",
+        help="Generate default settings files and stop",
     )
     parser.add_argument(
         "-p",
@@ -412,12 +412,16 @@ class InitAll(object):
         misc.main_log(self.logfile, "{:-^100} \n".format(" SETTINGS FOR THIS RUN "))
         misc.main_log(self.logfile, self.txt_out)
 
+        if self.params.advanced.integrate_with == "cctbx":
+            target_file = self.params.cctbx.target
+        elif self.params.advanced.integrate_with == "dials":
+            target_file = self.params.dials.target
         misc.main_log(
             self.logfile,
             "{:-^100} \n\n"
-            "".format(" TARGET FILE ({}) CONTENTS " "".format(self.params.target)),
+            "".format(" TARGET FILE ({}) CONTENTS " "".format(target_file)),
         )
-        with open(self.params.target, "r") as phil_file:
+        with open(target_file, "r") as phil_file:
             phil_file_contents = phil_file.read()
         misc.main_log(self.logfile, phil_file_contents)
 
