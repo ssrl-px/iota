@@ -60,7 +60,7 @@ phil_scope = parse(
       .help = Output integration results for each color data to separate cctbx.xfel-style pickle files
   }
 
-  include scope dials.algorithms.peak_finding.spotfinder_factory.phil_scope
+  include scope dials.algorithms.spot_finding.factory.phil_scope
   include scope dials.algorithms.indexing.indexer.index_only_phil_scope
   include scope dials.algorithms.refinement.refiner.phil_scope
   include scope dials.algorithms.integration.integrator.phil_scope
@@ -470,27 +470,17 @@ class Integrator(object):
                 "ok": True,
             }
 
+            # Update final entry with integration results
+            self.final.update(int_results)
+
             # Generate log summary of integration results
+            img_filename = os.path.basename(self.img[0])
+            log_entry.append("DIALS integration:")
             log_entry.append(
-                "{:^9}{:^8}{:^55}{:^12}{:^14}{:^14}"
-                "".format("RES", "SG.", "UNIT CELL", "SPOTS", "MOS", "EPV")
-            )
-            log_entry.append(
-                "{:-^4}{:-^4}{:-^4}{:-^9}{:-^8}{:-^55}{:-^16}{:-^14}{:-^14}"
-                "".format("", "", "", "", "", "", "", "", "")
-            )
-            log_entry.append(
-                "\n{:^9.2f}{:^8}{:^55}{:^12}{:^14.8f}{:^14.8f}\n"
-                "".format(
-                    res,
-                    Bravais_lattice,
-                    p_cell,
-                    strong_spots,
-                    mosaicity,
-                    ewald_proximal_volume,
+                "{:<{width}} --->  {}".format(
+                    img_filename, int_status, width=len(img_filename) + 2
                 )
             )
-            self.final.update(int_results)
 
         else:
             # Generate log summary of integration results

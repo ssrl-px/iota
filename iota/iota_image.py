@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 02/24/2016
+Last Changed: 03/15/2016
 Description : Creates image object. If necessary, converts raw image to pickle
               files; crops or pads pickle to place beam center into center of
               image; masks out beam stop. (Adapted in part from
@@ -61,39 +61,6 @@ class SingleImage(object):
         self.fin_path = None
         self.fin_file = None
         self.viz_path = None
-
-        # Generate integration result dictionary for cctbx.xfel or DIALS
-        if self.params.advanced.integrate_with == "cctbx":
-            if self.params.cctbx.grid_search.type == None:
-                self.params.cctbx.grid_search.area_range = 0
-                self.params.cctbx.grid_search.height_range = 0
-                self.params.cctbx.grid_search.sig_height_search = False
-            if self.params.cctbx.grid_search.type == "smart":
-                self.hrange = 1
-                self.arange = 1
-            else:
-                self.hrange = self.params.cctbx.grid_search.height_range
-                self.arange = self.params.cctbx.grid_search.area_range
-            self.grid_points = []
-            self.generate_grid()
-        elif self.params.advanced.integrate_with == "dials":
-            self.final = {
-                "img": self.conv_img,
-                "a": 0,
-                "b": 0,
-                "c": 0,
-                "alpha": 0,
-                "beta": 0,
-                "gamma": 0,
-                "sg": "",
-                "strong": 0,
-                "res": 0,
-                "mos": 0,
-                "epv": 0,
-                "info": "",
-                "final": None,
-                "program": "dials",
-            }
 
     # ============================== SELECTION-ONLY FUNCTIONS ============================== #
 
@@ -226,8 +193,8 @@ class SingleImage(object):
             if scan is not None:
                 osc_start, osc_range = scan.get_oscillation()
                 if osc_start != osc_range:
-                    data["OSC_START"] = osc_start
-                    data["OSC_RANGE"] = osc_range
+                    data["OSC_START"] = 0  # osc_start
+                    data["OSC_RANGE"] = 0  # osc_start
                     data["TIME"] = scan.get_exposure_times()[0]
         else:
             data = None
@@ -480,11 +447,18 @@ class SingleImage(object):
             )
         )
 
+        # Deactivate image squaring if beam center is in the center of the image
+        # CCTBX.XFEL ONLY (Need a better displacement cutoff)
+        if (
+            self.params.advanced.integrate_with == "dials"
+            or abs(img_data["BEAM_CENTER_X"] - img_data["BEAM_CENTER_Y"]) < 0.1
+        ):
+            self.params.image_conversion.square_mode = "None"
+
         # Check if conversion/modification is required and carry them out
         if (
             img_type == "raw"
             or self.params.image_conversion.square_mode != "None"
-            or abs(img_data["BEAM_CENTER_X"] - img_data["BEAM_CENTER_Y"]) > 0.1
             or self.params.image_conversion.beam_center.x != 0
             or self.params.image_conversion.beam_center.y != 0
             or self.params.image_conversion.beamstop != 0
@@ -573,17 +547,52 @@ class SingleImage(object):
             ep.dump(self.conv_img, img_data)
 
         # Triage image (i.e. check for usable diffraction, using selected method)
-        if self.params.image_triage.flag_on:
+        if str(self.params.image_triage.type).lower() != "none":
             if self.params.advanced.integrate_with == "cctbx":
                 from prime.iota.iota_cctbx import Triage
+
+                triage = Triage(self.conv_img, self.gain, self.params)
+                self.fail, log_entry, self.hmed, self.amed = triage.triage_image()
+
             elif self.params.advanced.integrate_with == "dials":
                 from prime.iota.iota_dials import Triage
-            triage = Triage(self.conv_img, self.gain, self.params)
-            self.fail, log_entry = triage.triage_image()
+
+                triage = Triage(self.conv_img, self.gain, self.params)
+                self.fail, log_entry = triage.triage_image()
+
             self.log_info.append(log_entry)
             self.status = "triaged"
         else:
             self.fail = None
+
+        # Generate integration result dictionary for cctbx.xfel or DIALS
+        if self.params.advanced.integrate_with == "cctbx":
+            if self.params.cctbx.grid_search.type == "smart":
+                self.hrange = 1
+                self.arange = 1
+            else:
+                self.hrange = self.params.cctbx.grid_search.height_range
+                self.arange = self.params.cctbx.grid_search.area_range
+            self.grid_points = []
+            self.generate_grid()
+        elif self.params.advanced.integrate_with == "dials":
+            self.final = {
+                "img": self.conv_img,
+                "a": 0,
+                "b": 0,
+                "c": 0,
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 0,
+                "sg": "",
+                "strong": 0,
+                "res": 0,
+                "mos": 0,
+                "epv": 0,
+                "info": "",
+                "final": None,
+                "program": "dials",
+            }
 
         # Generate names for output folders and files:
         if not self.params.image_conversion.convert_only:
@@ -635,6 +644,12 @@ class SingleImage(object):
             ep.dump(self.obj_file, self)
 
         self.status = "imported"
+
+        # If conversion only option is selected, write conversion info to log
+        if self.params.image_conversion.convert_only:
+            log_entry = "\n".join(self.log_info)
+            misc.main_log(self.main_log, log_entry)
+
         return self
 
     # ================================= IMAGE INTEGRATORS ================================== #
@@ -653,7 +668,7 @@ class SingleImage(object):
                 self.conv_img,
                 self.fin_file,
                 self.params.cctbx.selection.min_sigma,
-                self.params.target,
+                self.params.cctbx.target,
                 self.params.analysis.charts,
                 self.viz_path,
                 self.int_log,
@@ -701,7 +716,7 @@ class SingleImage(object):
                 self.status = "grid search"
 
             elif tag == "split grid":
-                self.log_info.append("\nCCTBX grid search:")
+                self.log_info.append("\nCCTBX INTEGRATION grid search:")
                 int_results = integrator.integrate(self.grid[grid_point])
                 self.grid[grid_point].update(int_results)
                 img_filename = os.path.basename(self.conv_img)
@@ -805,7 +820,7 @@ class SingleImage(object):
                         prev_fail = self.fail
                         self.hmed = self.final["sph"]
                         self.amed = self.final["spa"]
-                        self.grid, self.final = self.generate_grid()
+                        self.generate_grid()
                         self.final["final"] = self.fin_file
                         if len(self.grid) == 0:
                             self.final = prev_final
@@ -843,7 +858,8 @@ class SingleImage(object):
             if self.verbose:
                 log_entry = "\n".join(self.log_info)
                 misc.main_log(self.main_log, log_entry)
-                misc.main_log(self.main_log, "\n{:-^100}\n".format(""))
+                misc.main_log(self.main_log, "\n\n")
+                # misc.main_log(self.main_log, '\n{:-^100}\n'.format(''))
 
         # For DIALS integration (WORK IN PROGRESS)
         elif self.params.advanced.integrate_with == "dials":
