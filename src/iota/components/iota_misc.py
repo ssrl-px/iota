@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 10/28/2015
+Last Changed: 04/13/2015
 Description : Module with miscellaneous useful functions and classes
 """
 

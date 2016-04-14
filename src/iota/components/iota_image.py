@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 03/15/2016
+Last Changed: 04/13/2016
 Description : Creates image object. If necessary, converts raw image to pickle
               files; crops or pads pickle to place beam center into center of
               image; masks out beam stop. (Adapted in part from
@@ -23,8 +23,8 @@ from cPickle import load
 from libtbx import easy_pickle as ep
 from xfel.cxi.cspad_ana.cspad_tbx import dpack, evt_timestamp
 
-import prime.iota.iota_misc as misc
-import prime.iota.iota_vis_integration as viz
+import iota.components.iota_misc as misc
+import iota.components.iota_vis_integration as viz
 
 
 class SingleImage(object):
@@ -549,13 +549,13 @@ class SingleImage(object):
         # Triage image (i.e. check for usable diffraction, using selected method)
         if str(self.params.image_triage.type).lower() != "none":
             if self.params.advanced.integrate_with == "cctbx":
-                from prime.iota.iota_cctbx import Triage
+                from iota.components.iota_cctbx import Triage
 
                 triage = Triage(self.conv_img, self.gain, self.params)
                 self.fail, log_entry, self.hmed, self.amed = triage.triage_image()
 
             elif self.params.advanced.integrate_with == "dials":
-                from prime.iota.iota_dials import Triage
+                from iota.components.iota_dials import Triage
 
                 triage = Triage(self.conv_img, self.gain, self.params)
                 self.fail, log_entry = triage.triage_image()
@@ -662,7 +662,7 @@ class SingleImage(object):
             self.grid = []
             self.final["final"] = None
         else:
-            from prime.iota.iota_cctbx import Integrator
+            from iota.components.iota_cctbx import Integrator
 
             integrator = Integrator(
                 self.conv_img,
@@ -767,7 +767,7 @@ class SingleImage(object):
         """Selects best grid search result using the Selector class."""
 
         if self.fail == None:
-            from prime.iota.iota_cctbx import Selector
+            from iota.components.iota_cctbx import Selector
 
             selector = Selector(
                 self.grid,
@@ -865,7 +865,7 @@ class SingleImage(object):
         elif self.params.advanced.integrate_with == "dials":
 
             # Create DIALS integrator object
-            from prime.iota.iota_dials import Integrator
+            from iota.components.iota_dials import Integrator
 
             integrator = Integrator(
                 self.conv_img,

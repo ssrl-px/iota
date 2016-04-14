@@ -5,11 +5,11 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 03/17/2016
-Description : IOTA command-line module. Version 2.32
+Last Changed: 04/13/2016
+Description : IOTA command-line module. Version 1.0.000P
 """
 
-iota_version = "2.32"
+iota_version = "1.0.000P"
 help_message = (
     "\n{:-^70}"
     "".format("Integration Optimization, Triage and Analysis")
@@ -41,11 +41,11 @@ beam stop shadow.
 """
 )
 
-from prime.iota.iota_analysis import Analyzer
-from prime.iota.iota_init import InitAll
-import prime.iota.iota_image as img
-import prime.iota.iota_cmd as cmd
-import prime.iota.iota_misc as misc
+from iota.components.iota_analysis import Analyzer
+from iota.components.iota_init import InitAll
+import iota.components.iota_image as img
+import iota.components.iota_cmd as cmd
+import iota.components.iota_misc as misc
 from libtbx.easy_mp import parallel_map
 
 

@@ -5,12 +5,12 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 02/25/2016
+Last Changed: 04/13/2016
 Description : IOTA command-line module for running modules in order.
-              Version 2.32
+              Version 1.0.000P
 """
 
-iota_version = "2.32"
+iota_version = "1.0.000P"
 help_message = (
     "\n{:-^70}"
     "".format("Integration Optimization, Triage and Analysis")
@@ -35,11 +35,11 @@ in iota.param, mp_method = mpi)
 )
 
 from libtbx.easy_mp import parallel_map as easy_mp_parallel_map
-from prime.iota.iota_init import InitAll
-from prime.iota.iota_analysis import Analyzer
-import prime.iota.iota_image as img
-import prime.iota.iota_cmd as cmd
-import prime.iota.iota_misc as misc
+from iota.components.iota_init import InitAll
+from iota.components.iota_analysis import Analyzer
+import iota.components.iota_image as img
+import iota.components.iota_cmd as cmd
+import iota.components.iota_misc as misc
 
 
 def parallel_map(
@@ -201,7 +201,7 @@ def run_one_image(image, init, progbar=True):
 if __name__ == "__main__":
 
     import os
-    from prime.iota.iota_init import parse_command_args
+    from iota.components.iota_init import parse_command_args
     from libtbx import easy_pickle as ep
 
     args = parse_command_args(iota_version, help_message).parse_args()

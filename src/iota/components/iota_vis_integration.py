@@ -3,12 +3,13 @@ from __future__ import division
 """
 Author      : Zeldin O.B.
 Created     : 10/12/2014
-Last Changed: 07/29/2015
-Description : Creates a PNG file visualizing integration results.
+Last Changed: 04/13/2015
+Description : Creates a PNG file visualizing integration results. (Testing w/o scipy.)
 """
 
 from libtbx import easy_pickle as ep
-import scipy.misc as spm
+
+# import scipy.misc as spm
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -36,7 +37,7 @@ def make_png(
     img_dict = ep.load(image_pickle)
     img_data = img_dict["DATA"].as_numpy_array()
     # print img_data.max()
-    image = spm.toimage(img_data, high=img_data.max())
+    # image = spm.toimage(img_data, high=img_data.max())
 
     # Load integration pickle, and get coordinates of predictions
     int_d = ep.load(integration_pickle)
@@ -66,7 +67,7 @@ def make_png(
     ax.set_xlim(0, len(img_data[1]))
     ax.set_ylim(0, len(img_data[0]))
     ax.set_aspect("equal")
-    ax.imshow(image, origin=None, cmap="Greys")
+    ax.imshow(img_data, origin=None, cmap="Greys")
 
     # 2nd set of axes for the predictions
     ax2 = fig.add_axes(ax.get_position(), frameon=False)  # superimposed axes
@@ -128,7 +129,7 @@ def cv_png(image_pickle, integration_pickle, file_name=None, res=600, show_spots
     # Load image pickle, and convert to image
     img_dict = ep.load(image_pickle)
     img_data = img_dict["DATA"].as_numpy_array()
-    image = spm.toimage(img_data, high=img_data.max())
+    # image = spm.toimage(img_data, high=img_data.max())
 
     # Load integration pickle, and get coordinates of predictions
     int_d = ep.load(integration_pickle)
@@ -154,7 +155,7 @@ def cv_png(image_pickle, integration_pickle, file_name=None, res=600, show_spots
     ax.set_xlim(0, len(img_data[1]))
     ax.set_ylim(0, len(img_data[0]))
     ax.set_aspect("equal")
-    ax.imshow(image, origin=None, cmap="Greys")
+    ax.imshow(img_data, origin=None, cmap="Greys")
 
     # 2nd set of axes for the predictions
     ax2 = fig.add_axes(ax.get_position(), frameon=False)  # superimposed axes
