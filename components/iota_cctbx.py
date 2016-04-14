@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 02/24/2015
+Last Changed: 04/13/2015
 Description : Runs cctbx.xfel integration module either in grid-search or final
               integration mode. Has options to output diagnostic visualizations.
               Includes selector class for best integration result selection
@@ -18,7 +18,7 @@ import spotfinder
 from spotfinder.array_family import flex
 
 import iota_vis_integration as viz
-import prime.iota.iota_misc as misc
+import iota.components.iota_misc as misc
 from libtbx import easy_pickle, easy_run
 
 

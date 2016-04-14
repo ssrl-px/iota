@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 03/15/2016
+Last Changed: 04/13/2016
 Description : IOTA I/O module. Reads PHIL input, also creates reasonable IOTA
               and PHIL defaults if selected.
 """
@@ -177,6 +177,9 @@ dials
 analysis
   .help = "Analysis / visualization options."
 {
+  run_clustering = False
+    .type = bool
+    .help = Set to True to turn on hierarchical clustering of unit cells
   cluster_threshold = 5000
     .type = int
     .help = threshold value for unit cell clustering

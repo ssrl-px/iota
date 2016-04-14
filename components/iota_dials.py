@@ -3,15 +3,15 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 02/24/2015
+Last Changed: 04/13/2015
 Description : Runs DIALS spotfinding, indexing, refinement and integration
-              modules. So far, only spotfinding works. This is very much a work
-              in progress
+              modules. The entire thing works, but no optimization of parameters
+              is currently available. This is very much a work in progress
 """
 
 import os
 import sys
-import prime.iota.iota_misc as misc
+import iota.components.iota_misc as misc
 from iotbx.phil import parse
 from dials.array_family import flex
 
