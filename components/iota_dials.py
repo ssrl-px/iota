@@ -135,6 +135,7 @@ class Integrator(object):
         final_folder,
         final_filename,
         final,
+        logfile,
         gain=0.32,
         params=None,
     ):
@@ -153,13 +154,6 @@ class Integrator(object):
             self.phil = current_phil.extract()
         else:
             self.phil = phil_scope.extract()
-
-        # Create the parser - probably don't need!
-        #     from dials.util.options import OptionParser
-        #     self.parser = OptionParser(
-        #       phil=current_phil,
-        #       read_datablocks=True,
-        #       read_datablocks_from_images=True)
 
         # Set general file-handling settings
         file_basename = os.path.basename(source_image).split(".")[0]
@@ -182,7 +176,7 @@ class Integrator(object):
             object_folder, file_basename
         )
         self.phil.output.integration_pickle = final_filename
-        self.int_log = "{}/int_{}.log".format(final_folder, file_basename)
+        self.int_log = logfile  # "{}/int_{}.log".format(final_folder, file_basename)
 
         self.img = [source_image]
         self.obj_base = object_folder
