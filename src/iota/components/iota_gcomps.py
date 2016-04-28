@@ -272,7 +272,7 @@ class InputWindow(wx.Panel):
     def onProcessOptions(self, e):
         # For cctbx.xfel options
         if self.int_cbx_choice.GetCurrentSelection() == 0:
-            int_dialog = cctbx_options(
+            int_dialog = CCTBXOptions(
                 self,
                 title="cctbx.xfel Options",
                 style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
@@ -498,7 +498,7 @@ class InputWindow(wx.Panel):
 
         # For DIALS options
         elif self.int_cbx_choice.GetCurrentSelection() == 1:
-            int_dialog = dials_options(
+            int_dialog = DIALSOptions(
                 self,
                 title="DIALS Options",
                 style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
@@ -821,11 +821,11 @@ class ImportWindow(wx.Dialog):
             self.trg_ctr_bragg.Enable()
 
 
-class cctbx_options(wx.Dialog):
+class CCTBXOptions(wx.Dialog):
     # CCTBX.XFEL options
 
     def __init__(self, *args, **kwargs):
-        super(cctbx_options, self).__init__(*args, **kwargs)
+        super(CCTBXOptions, self).__init__(*args, **kwargs)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -1194,11 +1194,11 @@ class cctbx_options(wx.Dialog):
             self.cctbx_ctr_target.SetValue(filepath)
 
 
-class dials_options(wx.Dialog):
+class DIALSOptions(wx.Dialog):
     # DIALS options
 
     def __init__(self, *args, **kwargs):
-        super(dials_options, self).__init__(*args, **kwargs)
+        super(DIALSOptions, self).__init__(*args, **kwargs)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
