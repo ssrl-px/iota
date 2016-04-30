@@ -5,7 +5,7 @@ from __future__ import division
 """
 Author      : Brewster, A.S., Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 11/06/2015
+Last Changed: 04/29/2016
 Description : Script for indexing using run_one_index_core. Designed to be
               called by easy_run.fully_buffered, protecting the calling program
               from boost errors.
@@ -35,6 +35,5 @@ if __name__ == "__main__":
             error_message = "{}: {}".format(e.classname, e[0].replace("\n", " ")[:50])
         else:
             error_message = "{}".format(str(e).replace("\n", " ")[:50])
-        print e
         # save the error message to be picked up by iota
         easy_pickle.dump(tmppath, error_message)
