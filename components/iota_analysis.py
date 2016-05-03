@@ -260,7 +260,8 @@ class Analyzer(object):
 
         final_table = []
         final_table.append("\n\n{:-^80}\n".format("ANALYSIS OF RESULTS"))
-        final_table.append("Total images:          {}".format(len(self.final_objects)))
+        # final_table.append("Total images:          {}".format(len(
+        # self.final_objects)))
 
         if self.params.advanced.integrate_with == "cctbx":
             final_table.append(
