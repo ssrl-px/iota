@@ -271,6 +271,10 @@ def process_input(args, phil_args, input_file, mode="auto", now=None):
         params = master_phil.extract()
         params.description = "IOTA parameters auto-generated on {}".format(now)
         params.input = [input_file]
+        if params.advanced.integrate_with == "dials":
+            params.dials.target = "dials.phil"
+        elif params.advanced.integrate_with == "cctbx":
+            params.cctbx.target = "cctbx.phil"
 
     final_phil = master_phil.format(python_object=params)
 
