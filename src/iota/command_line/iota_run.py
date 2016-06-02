@@ -5,11 +5,19 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 05/03/2016
-Description : IOTA command-line module. Version 1.0.005
+Last Changed: 06/01/2016
+Description : IOTA command-line module.
 """
 
-iota_version = "1.0.005"
+from iota.components.iota_analysis import Analyzer
+from iota.components.iota_init import InitAll
+import iota.components.iota_image as img
+import iota.components.iota_cmd as cmd
+import iota.components.iota_misc as misc
+from libtbx.easy_mp import parallel_map
+
+iota_version = misc.iota_version
+
 help_message = (
     "\n{:-^70}"
     "".format("Integration Optimization, Triage and Analysis")
@@ -41,20 +49,13 @@ beam stop shadow.
 """
 )
 
-from iota.components.iota_analysis import Analyzer
-from iota.components.iota_init import InitAll
-import iota.components.iota_image as img
-import iota.components.iota_cmd as cmd
-import iota.components.iota_misc as misc
-from libtbx.easy_mp import parallel_map
-
 
 class XTermIOTA:
     """Main class that will initalize and run everything."""
 
     def __init__(self):
         self.prog_count = 0
-        self.init = InitAll(iota_version, help_message)
+        self.init = InitAll(help_message)
         self.init.run()
 
     def proc_wrapper(self, input_entry):
@@ -94,8 +95,8 @@ class XTermIOTA:
             msg = "Reading {} image objects".format(len(self.init.gs_img_objects))
             title = "READING IMAGE OBJECTS"
             self.img_list = [
-                [i, len(init.gs_img_objects) + 1, j]
-                for i, j in enumerate(init.gs_img_objects, 1)
+                [i, len(self.init.gs_img_objects) + 1, j]
+                for i, j in enumerate(self.init.gs_img_objects, 1)
             ]
         else:
             msg = "Importing {} images".format(len(self.init.input_list))
@@ -161,7 +162,7 @@ class XTermIOTA:
         if str(self.init.params.image_triage.type).lower() != "none":
             if len(acc_img_objects) == 0:
                 misc.main_log(self.init.logfile, "No images have diffraction!", True)
-                misc.iota_exit(iota_version)
+                misc.iota_exit()
             else:
                 misc.main_log(
                     self.init.logfile,
@@ -176,7 +177,7 @@ class XTermIOTA:
 
         # Check for -c option and exit if true
         if self.init.params.image_conversion.convert_only:
-            misc.iota_exit(iota_version)
+            misc.iota_exit()
 
         # Process Images
         self.stage = "process"
@@ -190,7 +191,7 @@ class XTermIOTA:
             print "No images successfully integrated!"
 
         # Exit IOTA
-        misc.iota_exit(iota_version)
+        misc.iota_exit()
 
 
 # ============================================================================ #
