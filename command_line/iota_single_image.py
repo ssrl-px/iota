@@ -5,11 +5,16 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 04/27/2016
-Description : Single-image IOTA module. Version 1.0.002
+Last Changed: 06/01/2016
+Description : Single-image IOTA module.
 """
 
-iota_version = "1.0.002"
+from iota.components.iota_init import InitAll
+import iota.components.iota_image as img
+import iota.components.iota_cmd as cmd
+import iota.components.iota_misc as misc
+
+iota_version = misc.iota_version
 help_message = (
     "\n{:-^70}"
     "".format("Integration Optimization, Triage and Analysis")
@@ -23,11 +28,6 @@ default parameters, or individual parameters can be changed
 in the command line.
 """
 )
-
-from iota.components.iota_init import InitAll
-import iota.components.iota_image as img
-import iota.components.iota_cmd as cmd
-import iota.components.iota_misc as misc
 
 
 def run_one_image(image, init):
@@ -50,7 +50,7 @@ def run_one_image(image, init):
 if __name__ == "__main__":
 
     # Initialize IOTA parameters and log
-    init = InitAll(iota_version, help_message)
+    init = InitAll(help_message)
     init.run()
 
     # Run single image

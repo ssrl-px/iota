@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 04/13/2015
+Last Changed: 06/01/2015
 Description : Runs DIALS spotfinding, indexing, refinement and integration
               modules. The entire thing works, but no optimization of parameters
               is currently available. This is very much a work in progress
@@ -422,7 +422,7 @@ class Integrator(object):
             obs = self.frame["observations"][0]
             Bravais_lattice = self.frame["pointgroup"]
             cell = obs.unit_cell().parameters()
-            res = obs.d_min()
+            lres, hres = obs.d_max_min()
 
             # Calculate number of spots w/ high I / sigmaI
             Is = obs.data()
@@ -445,7 +445,7 @@ class Integrator(object):
             )
 
             int_status = "RES: {:<4.2f}  NSREF: {:<4}  SG: {:<5}  CELL: {}" "".format(
-                res, strong_spots, Bravais_lattice, p_cell
+                hres, strong_spots, Bravais_lattice, p_cell
             )
 
             int_results = {
@@ -457,7 +457,8 @@ class Integrator(object):
                 "beta": cell[4],
                 "gamma": cell[5],
                 "strong": strong_spots,
-                "res": res,
+                "res": hres,
+                "lres": lres,
                 "mos": mosaicity,
                 "epv": ewald_proximal_volume,
                 "info": int_status,
