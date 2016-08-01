@@ -13,7 +13,7 @@ from cStringIO import StringIO
 
 from datetime import datetime
 
-iota_version = "1.0.008"
+iota_version = "1.0.009"
 now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
 
 # For GUI

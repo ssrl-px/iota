@@ -153,10 +153,11 @@ class SingleImage(object):
         Also estimates gain if turned on.
         """
         # Load raw image or image pickle
+
         try:
             with misc.Capturing() as junk_output:
                 loaded_img = dxtbx.load(self.raw_img)
-        except IOError:
+        except IOError, e:
             loaded_img = None
             pass
 
@@ -693,6 +694,8 @@ class SingleImage(object):
                 tag,
                 self.tmp_base,
                 self.gain,
+                self.params.mp_method,
+                self.params.mp_queue,
                 single_image,
             )
             if tag == "grid search":
