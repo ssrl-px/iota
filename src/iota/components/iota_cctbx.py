@@ -186,6 +186,8 @@ class Integrator(object):
         tag="grid search",
         tmp_base=None,
         gain=1,
+        method="multiprocessing",
+        queue="psanaq",
         single_image=False,
     ):
 
@@ -199,6 +201,8 @@ class Integrator(object):
         self.charts = charts
         self.tmp_base = tmp_base
         self.single_image = single_image
+        self.method = method
+        self.queue = queue
 
         self.args = [
             "target={}".format(self.target),
@@ -260,10 +264,9 @@ class Integrator(object):
             assert not os.path.exists(tmppath)
 
             # invoke the indexer in a way that will protect iota from any crashes
-            command = "iota.bulletproof {} {} {}".format(
+            command = "iota.bulletproof {} {} {}" "".format(
                 tmppath, self.target, " ".join(arguments)
             )
-
             try:
                 easy_run.fully_buffered(command, join_stdout_stderr=True).show_stdout()
                 if not os.path.exists(tmppath):
