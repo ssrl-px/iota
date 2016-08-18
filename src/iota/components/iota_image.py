@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 08/16/2016
+Last Changed: 08/17/2016
 Description : Creates image object. If necessary, converts raw image to pickle
               files; crops or pads pickle to place beam center into center of
               image; masks out beam stop. (Adapted in part from
@@ -723,15 +723,6 @@ class SingleImage(object):
                     )
                     self.log_info.append(log_entry)
                     self.gs_results.append(log_entry)
-
-                # Throw out grid search results that yielded no integration
-                self.grid = [
-                    i
-                    for i in self.grid
-                    if "not integrated" not in i["info"]
-                    and "no data recorded" not in i["info"]
-                ]
-                self.status = "grid search"
 
                 # Throw out grid search results that yielded no integration
                 self.grid = [
