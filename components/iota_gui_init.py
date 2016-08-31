@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 08/18/2016
+Last Changed: 08/23/2016
 Description : IOTA GUI Initialization module
 """
 
@@ -22,6 +22,7 @@ from matplotlib.figure import Figure
 from libtbx.easy_mp import parallel_map
 from libtbx import easy_pickle as ep
 from libtbx import easy_run
+from libtbx.utils import to_unicode
 from cctbx.uctbx import unit_cell
 
 from iota.components.iota_analysis import Analyzer, Plotter
@@ -92,8 +93,8 @@ class ProcessImage:
             return img_object
         else:
             img_object.process()
-            result_file = os.path.splitext(img_object.obj_file)[0] + ".fin"
-            ep.dump(result_file, img_object)
+            # result_file = os.path.splitext(img_object.obj_file)[0] + '.fin'
+            # ep.dump(result_file, img_object)
             return img_object
 
 
@@ -523,7 +524,6 @@ class ProcessingTab(wx.Panel):
         self.nsref_axes.set_ylabel("Strong Spots")
         self.nsref_axes.yaxis.get_major_ticks()[0].label1.set_visible(False)
         self.nsref_axes.yaxis.get_major_ticks()[-1].label1.set_visible(False)
-        # self.res_axes = self.nsref_axes.twinx()
         self.res_axes.set_ylabel("Resolution")
         self.res_axes.yaxis.get_major_ticks()[0].label1.set_visible(False)
         self.res_axes.yaxis.get_major_ticks()[-1].label1.set_visible(False)
@@ -663,8 +663,8 @@ class SummaryTab(wx.Panel):
         self.pg_txt.SetFont(sfont)
         self.uc_txt = wx.StaticText(self, label="79 79 38 90 90 90")
         self.uc_txt.SetFont(sfont)
-        res = "50.0 - 1.53 {}".format(u"\u212B".encode("utf-8"))
-        self.rs_txt = wx.StaticText(self, label=res.decode("utf-8"))
+        res = to_unicode(u"50.0 - 1.53 {}".format(u"\u212B"))
+        self.rs_txt = wx.StaticText(self, label=res)
         self.rs_txt.SetFont(sfont)
         self.xy_txt = wx.StaticText(self, label="X = 224.90 mm, Y = 225.08 mm")
         self.xy_txt.SetFont(sfont)
@@ -836,7 +836,7 @@ class ProcWindow(wx.Frame):
         )
 
         self.logtext = ""
-        self.objects_in_progress = []
+        self.finished_objects = []
         self.read_object_files = []
         self.obj_counter = 0
         self.bookmark = 0
@@ -989,7 +989,7 @@ class ProcWindow(wx.Frame):
 
             # Do analysis
             analysis = Analyzer(
-                self.init, self.objects_in_progress, iota_version, gui_mode=True
+                self.init, self.finished_objects, iota_version, gui_mode=True
             )
             plot = Plotter(self.gparams, self.final_objects, self.init.viz_base)
 
@@ -1029,12 +1029,12 @@ class ProcWindow(wx.Frame):
             self.summary_tab.pg_txt.SetLabel(str(pg))
             unit_cell = " ".join(["{:4.1f}".format(i) for i in uc])
             self.summary_tab.uc_txt.SetLabel(unit_cell)
-            res = "{:4.2f} - {:4.2f} {}".format(
-                np.mean(analysis.lres),
-                np.mean(analysis.hres),
-                u"\u212B".encode("utf-8"),
+            res = to_unicode(
+                u"{:4.2f} - {:4.2f} {}".format(
+                    np.mean(analysis.lres), np.mean(analysis.hres), u"\u212B"
+                )
             )
-            self.summary_tab.rs_txt.SetLabel(res.decode("utf-8"))
+            self.summary_tab.rs_txt.SetLabel(res)
             beamX, beamY = plot.calculate_beam_xy()[:2]
             beamXY = "X = {:4.1f} mm, Y = {:4.1f} mm" "".format(
                 np.median(beamX), np.median(beamY)
@@ -1099,11 +1099,7 @@ class ProcWindow(wx.Frame):
                     "failed triage",
                     "#d73027",
                     len(
-                        [
-                            i
-                            for i in self.objects_in_progress
-                            if i.fail == "failed triage"
-                        ]
+                        [i for i in self.finished_objects if i.fail == "failed triage"]
                     ),
                 ],
                 [
@@ -1112,7 +1108,7 @@ class ProcWindow(wx.Frame):
                     len(
                         [
                             i
-                            for i in self.objects_in_progress
+                            for i in self.finished_objects
                             if i.fail == "failed grid search"
                         ]
                     ),
@@ -1123,7 +1119,7 @@ class ProcWindow(wx.Frame):
                     len(
                         [
                             i
-                            for i in self.objects_in_progress
+                            for i in self.finished_objects
                             if i.fail == "failed prefilter"
                         ]
                     ),
@@ -1134,7 +1130,7 @@ class ProcWindow(wx.Frame):
                     len(
                         [
                             i
-                            for i in self.objects_in_progress
+                            for i in self.finished_objects
                             if i.fail == "failed spotfinding"
                         ]
                     ),
@@ -1145,7 +1141,7 @@ class ProcWindow(wx.Frame):
                     len(
                         [
                             i
-                            for i in self.objects_in_progress
+                            for i in self.finished_objects
                             if i.fail == "failed indexing"
                         ]
                     ),
@@ -1156,7 +1152,7 @@ class ProcWindow(wx.Frame):
                     len(
                         [
                             i
-                            for i in self.objects_in_progress
+                            for i in self.finished_objects
                             if i.fail == "failed integration"
                         ]
                     ),
@@ -1167,8 +1163,8 @@ class ProcWindow(wx.Frame):
                     len(
                         [
                             i
-                            for i in self.objects_in_progress
-                            if i.status == "final" and i.final["final"] != None
+                            for i in self.finished_objects
+                            if i.fail == None and i.final["final"] != None
                         ]
                     ),
                 ],
@@ -1204,8 +1200,8 @@ class ProcWindow(wx.Frame):
                 nsref_y = np.array(
                     [np.nan if i == 0 else i for i in self.nref_list]
                 ).astype(np.double)
-                nsref_ylabel = "Reflections (I / sigI > {})" "".format(
-                    self.gparams.cctbx.selection.min_sigma
+                nsref_ylabel = "Reflections (I/{0}(I) > {1})" "".format(
+                    r"$\sigma$", self.gparams.cctbx.selection.min_sigma
                 )
                 nsref = self.chart_tab.nsref_axes.scatter(
                     nsref_x,
@@ -1214,16 +1210,12 @@ class ProcWindow(wx.Frame):
                     marker="o",
                     edgecolors="black",
                     color="#ca0020",
-                    label=nsref_ylabel,
                     picker=True,
                 )
 
                 nsref_median = np.median([i for i in self.nref_list if i > 0])
-                nsref_mlabel = "Reflections (I / sigI > {}) median" "".format(
-                    self.gparams.cctbx.selection.min_sigma
-                )
                 nsref_med = self.chart_tab.nsref_axes.axhline(
-                    nsref_median, c="#ca0020", ls="--", label=nsref_mlabel
+                    nsref_median, c="#ca0020", ls="--"
                 )
 
                 self.chart_tab.nsref_axes.set_xlim(0, np.nanmax(nsref_x) + 2)
@@ -1231,7 +1223,7 @@ class ProcWindow(wx.Frame):
                 if nsref_ymax == 0:
                     nsref_ymax = 100
                 self.chart_tab.nsref_axes.set_ylim(ymin=0, ymax=nsref_ymax)
-                self.chart_tab.nsref_axes.set_ylabel(nsref_ylabel)
+                self.chart_tab.nsref_axes.set_ylabel(nsref_ylabel, fontsize=11)
                 self.chart_tab.nsref_axes.set_xlabel("Frame")
                 self.chart_tab.nsref_axes.yaxis.get_major_ticks()[0].label1.set_visible(
                     False
@@ -1257,12 +1249,11 @@ class ProcWindow(wx.Frame):
                     marker="o",
                     edgecolors="black",
                     color="#0571b0",
-                    label="Resolution",
                     picker=True,
                 )
                 res_median = np.median([i for i in self.res_list if i > 0])
                 res_med = self.chart_tab.res_axes.axhline(
-                    res_median, c="#0571b0", ls="--", label="Median resolution"
+                    res_median, c="#0571b0", ls="--"
                 )
 
                 self.chart_tab.res_axes.set_xlim(0, np.nanmax(res_x) + 2)
@@ -1272,7 +1263,7 @@ class ProcWindow(wx.Frame):
                     res_ymax = res_ymin + 1
                 self.chart_tab.res_axes.set_ylim(ymin=res_ymin, ymax=res_ymax)
                 res_ylabel = "Resolution ({})".format(r"$\AA$")
-                self.chart_tab.res_axes.set_ylabel(res_ylabel)
+                self.chart_tab.res_axes.set_ylabel(res_ylabel, fontsize=11)
                 self.chart_tab.res_axes.yaxis.get_major_ticks()[0].label1.set_visible(
                     False
                 )
@@ -1280,15 +1271,6 @@ class ProcWindow(wx.Frame):
                     False
                 )
                 plt.setp(self.chart_tab.res_axes.get_xticklabels(), visible=False)
-                labels = [
-                    nsref.get_label(),
-                    res.get_label(),
-                    nsref_med.get_label(),
-                    res_med.get_label(),
-                ]
-                self.chart_tab.res_axes.legend(
-                    [nsref, res], labels, loc="upper right", fontsize=9, fancybox=True
-                )
 
             except ValueError, e:
                 pass
@@ -1388,8 +1370,8 @@ class ProcWindow(wx.Frame):
                     self.chart_tab.bxy_axes.add_patch(circle_a)
                     self.chart_tab.bxy_axes.add_patch(circle_b)
                     self.chart_tab.bxy_axes.add_patch(circle_c)
-                    self.chart_tab.bxy_axes.set_xlabel("BeamX (mm)", fontsize=15)
-                    self.chart_tab.bxy_axes.set_ylabel("BeamY (mm)", fontsize=15)
+                    self.chart_tab.bxy_axes.set_xlabel("BeamX (mm)", fontsize=12)
+                    self.chart_tab.bxy_axes.set_ylabel("BeamY (mm)", fontsize=12)
                     self.chart_tab.bxy_axes.set_title("Beam Center Coordinates")
 
             except ValueError, e:
@@ -1405,39 +1387,38 @@ class ProcWindow(wx.Frame):
         img_object_files = [
             os.path.join(self.init.obj_base, i)
             for i in os.listdir(self.init.obj_base)
-            if i.endswith("fin")
+            if i.endswith("int")
         ]
-        img_object_files = [
-            i for i in img_object_files if i not in self.read_object_files
+        new_objects = [
+            ep.load(i) for i in img_object_files if i not in self.read_object_files
         ]
+        self.finished_objects.extend([i for i in new_objects if i.status == "final"])
+        self.read_object_files = [i.obj_file for i in self.finished_objects]
 
-        self.objects_in_progress.extend([ep.load(i) for i in img_object_files])
-        self.read_object_files.extend(img_object_files)
-
-        if len(self.objects_in_progress) > 0:
-            for obj in self.objects_in_progress:
+        if len(self.finished_objects) > 0:
+            for obj in self.finished_objects:
                 self.nref_list[obj.img_index - 1] = obj.final["strong"]
                 self.res_list[obj.img_index - 1] = obj.final["res"]
 
         end_filename = os.path.join(self.init.tmp_base, "finish.cfg")
 
         if os.path.isfile(end_filename):
-            self.img_objects = self.objects_in_progress
+            self.img_objects = self.finished_objects
             self.finish_process()
 
-        if len(self.objects_in_progress) > self.obj_counter:
+        if len(self.finished_objects) > self.obj_counter:
             self.plot_integration()
-            self.obj_counter = len(self.objects_in_progress)
+            self.obj_counter = len(self.finished_objects)
 
         # Update gauge
         self.gauge_process.Show()
-        self.gauge_process.SetValue(len(self.objects_in_progress))
+        self.gauge_process.SetValue(len(self.finished_objects))
 
         # Update status bar
         if self.gparams.image_conversion.convert_only:
             img_with_diffraction = [
                 i
-                for i in self.objects_in_progress
+                for i in self.finished_objects
                 if i.status == "imported" and i.fail == None
             ]
             self.sb.SetStatusText(
@@ -1450,7 +1431,7 @@ class ProcWindow(wx.Frame):
                 1,
             )
         else:
-            processed_images = [i for i in self.objects_in_progress if i.fail == None]
+            processed_images = [i for i in self.finished_objects if i.fail == None]
             self.sb.SetStatusText(
                 "{} of {} images processed, {} successfully integrated"
                 "".format(self.obj_counter, len(self.img_list), len(processed_images)),
@@ -1481,7 +1462,7 @@ class ProcWindow(wx.Frame):
             self.timer.Stop()
             return
         else:
-            self.final_objects = [i for i in self.objects_in_progress if i.fail == None]
+            self.final_objects = [i for i in self.finished_objects if i.fail == None]
             self.gauge_process.Hide()
             self.proc_toolbar.EnableTool(self.tb_btn_abort.GetId(), False)
             self.sb.SetStatusText(
