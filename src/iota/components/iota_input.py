@@ -281,10 +281,6 @@ def process_input(args, phil_args, input_file, mode="auto", now=None):
         params = master_phil.extract()
         params.description = "IOTA parameters auto-generated on {}".format(now)
         params.input = [input_file]
-        if params.advanced.integrate_with == "dials":
-            params.dials.target = "dials.phil"
-        elif params.advanced.integrate_with == "cctbx":
-            params.cctbx.target = "cctbx.phil"
 
     final_phil = master_phil.format(python_object=params)
 
@@ -305,6 +301,13 @@ def process_input(args, phil_args, input_file, mode="auto", now=None):
 
     # Perform command line check and modify params accordingly
     params = final_phil.extract()
+
+    if mode == "auto":
+        output_dir = os.path.abspath(os.curdir)
+        if params.advanced.integrate_with == "dials":
+            params.dials.target = os.path.join(output_dir, "dials.phil")
+        elif params.advanced.integrate_with == "cctbx":
+            params.cctbx.target = os.path.join(output_dir, "cctbx.phil")
 
     # Check for -r option and set random subset parameter
     if args.random > 0:
