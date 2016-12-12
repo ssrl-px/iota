@@ -1503,6 +1503,8 @@ class InputWindow(wx.Panel):
             ctrl_size=(120, -1),
             choices=progs,
         )
+        self.int_box.ctr.SetSelection(0)
+
         vbox.Add(self.int_box, flag=wx.LEFT | wx.TOP | wx.RIGHT | wx.EXPAND, border=15)
 
         # Input box and Browse button
@@ -2726,7 +2728,7 @@ class AnalysisWindow(wx.Dialog):
         self.an_chk_cluster = wx.CheckBox(
             self, label="Unit cell clustering", style=wx.ALIGN_TOP
         )
-        self.an_chk_cluster.Disable()
+        # self.an_chk_cluster.Disable()
         self.an_txt_cluster = wx.StaticText(self, label="Threshold:")
         self.an_ctr_cluster = wx.TextCtrl(self, size=(100, -1))
         self.an_txt_cluster.Disable()
