@@ -158,6 +158,7 @@ class SingleImage(object):
             with misc.Capturing() as junk_output:
                 loaded_img = dxtbx.load(self.raw_img)
         except IOError, e:
+            print e
             loaded_img = None
             pass
 
