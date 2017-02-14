@@ -354,9 +354,9 @@ class Plotter(object):
 class Analyzer(object):
     """Class to analyze integration results."""
 
-    def __init__(self, init, all_objects, version, gui_mode=False):
+    def __init__(self, init, all_objects, gui_mode=False):
 
-        self.ver = version
+        self.ver = misc.iota_version
         self.now = init.now
         self.params = init.params
         self.args = init.args
