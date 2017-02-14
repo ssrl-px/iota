@@ -13,8 +13,8 @@ import wx
 from cStringIO import StringIO
 
 from datetime import datetime
+from iota import iota_version
 
-iota_version = "1.1.001"
 now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
 
 # For GUI
