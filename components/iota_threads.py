@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 01/06/2017
+Last Changed: 02/14/2017
 Description : IOTA GUI Threads and PostEvents
 """
 
@@ -111,7 +111,6 @@ class ProcThread(Thread):
                 except Exception, e:
                     print e
             if self.init.params.mp_method == "torq":
-
                 params = "{} --files {} --type {}".format(
                     init_path, iter_path, self.type
                 )
