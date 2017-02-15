@@ -914,7 +914,7 @@ class SingleImage(object):
             integrator = Integrator(
                 self.conv_img,
                 self.obj_base,
-                self.fin_base,
+                # self.fin_base,
                 self.fin_file,
                 self.final,
                 self.int_log,
