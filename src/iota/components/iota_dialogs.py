@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 01/17/2017
+Last Changed: 02/14/2017
 Description : IOTA GUI Dialogs
 """
 
@@ -1104,7 +1104,7 @@ class DIALSOptions(BaseDialog):
         self.proc_phil = None
 
         # Create options panel (all objects should be called as self.options.object)
-        self.options = ScrolledPanel(self, size=(-1, 120))
+        self.options = ScrolledPanel(self, size=(200, 120))
         options_sizer = wx.BoxSizer(wx.VERTICAL)
         self.options.SetSizer(options_sizer)
 
@@ -1163,6 +1163,8 @@ class DIALSOptions(BaseDialog):
         self.Layout()
         self.options.SetupScrolling()
 
+        self.read_param_phil()
+
     def onImportPHIL(self, e):
         dlg = wx.FileDialog(
             self,
@@ -1203,8 +1205,10 @@ class DIALSOptions(BaseDialog):
             self.phil.ctr.SetValue("")
 
         # DIALS options
-        self.min_spot_size.min_spot_size.SetValue(self.params.dials.min_spot_size)
-        self.global_threshold.threshold.SetValue(self.params.dials.global_threshold)
+        self.min_spot_size.min_spot_size.SetValue(str(self.params.dials.min_spot_size))
+        self.global_threshold.threshold.SetValue(
+            str(self.params.dials.global_threshold)
+        )
 
     def onOK(self, e):
         """Populate param PHIL file for DIALS options."""
@@ -1316,11 +1320,17 @@ class AnalysisWindow(BaseDialog):
     def read_param_phil(self):
         """Read in parameters from IOTA parameter PHIL."""
 
-        if self.params.analysis.run_clustering:
-            self.clustering.toggle.SetValue(True)
-            self.clustering.ctr.SetValue(self.params.analysis.cluster_threshold)
+        if self.params.advanced.integrate_with == "dials":
+            self.clustering.toggle_boxes(flag_on=False)
+            self.clustering.Disable()
+        else:
+            if self.params.analysis.run_clustering:
+                self.clustering.toggle_boxes(flag_on=True)
+                self.clustering.threshold.SetValue(
+                    str(self.params.analysis.cluster_threshold)
+                )
 
-        viz_idx = self.visualization.ctr.FindString(self.params.analysis.viz)
+        viz_idx = self.visualization.ctr.FindString(str(self.params.analysis.viz))
         if str(self.params.analysis.viz).lower() == "none":
             viz_idx = 0
         self.visualization.ctr.SetSelection(viz_idx)
@@ -1335,13 +1345,16 @@ class AnalysisWindow(BaseDialog):
 
         analysis_phil_txt = "\n".join(
             [
-                "run_clustering = {}".format(self.clustering.toggle.GetValue()),
-                "cluster_threshold = {}".format(
+                "analysis",
+                "{",
+                " run_clustering = {}".format(self.clustering.toggle.GetValue()),
+                " cluster_threshold = {}".format(
                     noneset(self.clustering.threshold.GetValue())
                 ),
-                "viz = {}".format(viz),
-                "charts = {}".format(self.proc_charts.GetValue()),
-                "summary_graphs = {}".format(self.summary_graphs.GetValue()),
+                " viz = {}".format(viz),
+                " charts = {}".format(self.proc_charts.GetValue()),
+                " summary_graphs = {}".format(self.summary_graphs.GetValue()),
+                "}",
             ]
         )
 

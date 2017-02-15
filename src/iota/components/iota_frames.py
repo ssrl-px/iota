@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 01/17/2017
+Last Changed: 02/14/2017
 Description : IOTA GUI Windows / frames
 """
 
@@ -1629,4 +1629,7 @@ class ProcWindow(wx.Frame):
                 self.plot_integration()
                 self.analyze_results()
 
-            shutil.rmtree(self.init.tmp_base)
+            try:
+                shutil.rmtree(self.init.tmp_base)
+            except OSError:
+                pass
