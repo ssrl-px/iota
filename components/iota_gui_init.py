@@ -289,7 +289,7 @@ class MainWindow(wx.Frame):
 
         # Get list of inputs from input window
         idxs = self.input_window.input.ctr.GetItemCount()
-        inputs = [self.input_window.input.ctr.GetItemText(i) for i in range(idxs)]
+        inputs = [self.input_window.input.ctr.GetItemData(i).path for i in range(idxs)]
 
         # Set all main window params (including inputs)
         self.gparams = self.iota_phil.extract()
