@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 03/09/2017
+Last Changed: 03/20/2017
 Description : IOTA GUI Dialogs
 """
 
@@ -210,6 +210,10 @@ class IOTAPreferences(BaseDialog):
         )
         adv_sizer.Add(self.prime_prefix, flag=wx.ALL | wx.EXPAND, border=10)
 
+        # Temp folder
+        self.temp_folder = ct.InputCtrl(self, label="Temp folder:", buttons=True)
+        adv_sizer.Add(self.temp_folder, flag=wx.ALL | wx.EXPAND, border=10)
+
         self.main_sizer.Add(queue_sizer, flag=wx.EXPAND | wx.ALL, border=10)
         self.main_sizer.Add(adv_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
@@ -225,8 +229,19 @@ class IOTAPreferences(BaseDialog):
         self.Bind(wx.EVT_CHECKBOX, self.onMonitor, self.chk_cont_mode)
         self.Bind(wx.EVT_CHECKBOX, self.onTimeout, self.chk_mm_timeout)
         self.Bind(wx.EVT_CHECKBOX, self.onRandom, self.chk_random_sample)
+        self.Bind(wx.EVT_BUTTON, self.onTempBrowse, self.temp_folder.btn_browse)
 
         self.Fit()
+
+    def onTempBrowse(self, e):
+        """On clicking the Browse button: show the DirDialog and populate
+        'Output' box w/ selection."""
+        dlg = wx.DirDialog(
+            self, "Choose the temporary output directory:", style=wx.DD_DEFAULT_STYLE
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            self.temp_folder.ctr.SetValue(dlg.GetPath())
+        dlg.Destroy()
 
     def set_choices(self):
         # Set queue to default value
@@ -265,6 +280,10 @@ class IOTAPreferences(BaseDialog):
 
         # Set PRIME prefix
         self.prime_prefix.prefix.SetValue(self.params.advanced.prime_prefix)
+
+        # Set temp folder
+        if self.params.advanced.temporary_output_folder is not None:
+            self.temp_folder.ctr.SetValue(self.params.advanced.temporary_output_folder)
 
     def onMethod(self, e):
         self.check_method()
@@ -333,6 +352,8 @@ class IOTAPreferences(BaseDialog):
         else:
             self.queue = None
 
+        temp_folder = noneset(self.temp_folder.ctr.GetValue())
+
         # test generation of PHIL settings
         prefs_text = "\n".join(
             [
@@ -343,6 +364,7 @@ class IOTAPreferences(BaseDialog):
                 "  monitor_mode_timeout = {}".format(self.mm_timeout),
                 "  monitor_mode_timeout_length = {}".format(int(self.mm_timeout_len)),
                 "  prime_prefix = {}".format(self.prime_prefix.prefix.GetValue()),
+                "  temporary_output_folder = {}".format(temp_folder),
                 "  random_sample",
                 "  {",
                 "    flag_on = {}".format(self.chk_random_sample.GetValue()),
