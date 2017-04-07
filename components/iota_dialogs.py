@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 03/20/2017
+Last Changed: 04/06/2017
 Description : IOTA GUI Dialogs
 """
 
@@ -1148,23 +1148,24 @@ class DIALSOptions(BaseDialog):
         dials_box_sizer = wx.StaticBoxSizer(dials_box, wx.VERTICAL)
 
         # DIALS options
-        self.min_spot_size = ct.OptionCtrl(
-            self.options,
-            items=[("min_spot_size", "6")],
-            label="Minimum spot size:",
-            label_size=(200, -1),
-            ctrl_size=(80, -1),
+        self.reindex = wx.CheckBox(
+            self.options, label="Determine space group and reindex"
         )
-        dials_box_sizer.Add(self.min_spot_size, flag=f.stack, border=10)
-
-        self.global_threshold = ct.OptionCtrl(
-            self.options,
-            items=[("threshold", "0")],
-            label="Global threshold:",
-            label_size=(200, -1),
-            ctrl_size=(80, -1),
-        )
-        dials_box_sizer.Add(self.global_threshold, flag=wx.ALL, border=10)
+        self.reindex.SetValue(True)
+        dials_box_sizer.Add(self.reindex, flag=wx.ALL, border=10)
+        # self.min_spot_size = ct.OptionCtrl(self.options,
+        #                                    items = [('min_spot_size', '6')],
+        #                                    label='Minimum spot size:',
+        #                                    label_size=(200, -1),
+        #                                    ctrl_size=(80, -1))
+        # dials_box_sizer.Add(self.min_spot_size, flag=f.stack, border=10)
+        #
+        # self.global_threshold = ct.OptionCtrl(self.options,
+        #                                       items=[('threshold', '0')],
+        #                                       label='Global threshold:',
+        #                                       label_size=(200, -1),
+        #                                       ctrl_size=(80, -1))
+        # dials_box_sizer.Add(self.global_threshold, flag=wx.ALL, border=10)
 
         # Dialog control
         dialog_box = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
@@ -1227,10 +1228,11 @@ class DIALSOptions(BaseDialog):
             self.phil.ctr.SetValue("")
 
         # DIALS options
-        self.min_spot_size.min_spot_size.SetValue(str(self.params.dials.min_spot_size))
-        self.global_threshold.threshold.SetValue(
-            str(self.params.dials.global_threshold)
-        )
+        self.reindex.SetValue(self.params.dials.determine_sg_and_reindex)
+        # self.min_spot_size.min_spot_size.SetValue(
+        #   str(self.params.dials.min_spot_size))
+        # self.global_threshold.threshold.SetValue(
+        #   str(self.params.dials.global_threshold))
 
     def onOK(self, e):
         """Populate param PHIL file for DIALS options."""
@@ -1253,12 +1255,7 @@ class DIALSOptions(BaseDialog):
             [
                 "dials",
                 "{",
-                "  min_spot_size = {}".format(
-                    self.min_spot_size.min_spot_size.GetValue()
-                ),
-                "  global_threshold = {}".format(
-                    self.global_threshold.threshold.GetValue()
-                ),
+                "  determine_sg_and_reindex = {}".format(self.reindex.GetValue()),
                 "}",
             ]
         )
@@ -1345,15 +1342,11 @@ class AnalysisWindow(BaseDialog):
     def read_param_phil(self):
         """Read in parameters from IOTA parameter PHIL."""
 
-        if self.params.advanced.integrate_with == "dials":
-            self.clustering.toggle_boxes(flag_on=False)
-            self.clustering.Disable()
-        else:
-            if self.params.analysis.run_clustering:
-                self.clustering.toggle_boxes(flag_on=True)
-                self.clustering.threshold.SetValue(
-                    str(self.params.analysis.cluster_threshold)
-                )
+        if self.params.analysis.run_clustering:
+            self.clustering.toggle_boxes(flag_on=True)
+            self.clustering.threshold.SetValue(
+                str(self.params.analysis.cluster_threshold)
+            )
 
         viz_idx = self.visualization.ctr.FindString(str(self.params.analysis.viz))
         if str(self.params.analysis.viz).lower() == "none":

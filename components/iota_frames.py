@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 04/03/2017
+Last Changed: 04/06/2017
 Description : IOTA GUI Windows / frames
 """
 
