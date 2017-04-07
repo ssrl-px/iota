@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 03/20/2017
+Last Changed: 04/06/2017
 Description : IOTA GUI Initialization module
 """
 
@@ -582,6 +582,7 @@ class InitAll(object):
         from datetime import datetime
 
         self.iver = iver
+        self.user_id = user
         self.now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
         self.input_base = None
         self.conv_base = None

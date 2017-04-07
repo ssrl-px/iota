@@ -34,6 +34,7 @@ class SingleImage(object):
         # Initialize parameters
         self.params = init.params
         self.args = init.args
+        self.user_id = init.user_id
         self.raw_img = img[2]
         self.conv_img = img[2]
         self.img_index = img[0]
@@ -504,7 +505,7 @@ class SingleImage(object):
             self.params.image_conversion.square_mode = "no_modification"
 
         # Check if conversion/modification is required and carry them out
-        if (
+        if self.params.advanced.integrate_with != "dials" and (
             img_type == "raw"
             or self.params.image_conversion.square_mode != "no_modification"
             or self.params.image_conversion.beam_center.x != 0
@@ -535,10 +536,7 @@ class SingleImage(object):
                     pass
             else:
                 if rename_choice == "auto_filename":
-                    try:
-                        prefix = os.getlogin()
-                    except Exception:
-                        prefix = "converted"
+                    prefix = self.user_id
                 elif rename_choice == "custom_filename":
                     prefix = self.params.image_conversion.rename_pickle_prefix
                 number = int(os.path.basename(self.conv_base))
