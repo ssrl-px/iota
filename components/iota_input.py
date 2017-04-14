@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 04/06/2017
+Last Changed: 04/13/2017
 Description : IOTA I/O module. Reads PHIL input, also creates reasonable IOTA
               and PHIL defaults if selected.
 """
@@ -205,9 +205,9 @@ advanced
   integrate_with = *cctbx dials
     .type = choice
     .help = Choose image processing software package
-  estimate_gain = False
+  estimate_gain = True
     .type = bool
-    .help = Estimates detector gain (sometimes helps indexing)
+    .help = Estimates detector gain (helps improve spotfinding in DIALS)
   debug = False
     .type = bool
     .help = Used for various debugging purposes.
@@ -449,9 +449,12 @@ def write_defaults(
             "   }",
             "}",
             "geometry {",
-            "  mosflm_beam_centre = None",
-            "  slow_fast_beam_centre = None",
-            "}" "indexing {",
+            "  detector {",
+            "    distance = None",
+            "    slow_fast_beam_centre = None",
+            "  }",
+            "}",
+            "indexing {",
             "  known_symmetry {",
             "    space_group = None",
             "    unit_cell = None",
@@ -460,7 +463,7 @@ def write_defaults(
             "    n_macro_cycles = 1",
             "    d_min_start = 2.0",
             "  }",
-            "  basis_vector_combinations.max_try = 10",
+            "  basis_vector_combinations.max_combinations = 10",
             "  stills { ",
             "    indexer = stills",
             "    method_list = fft1d real_space_grid_search",
