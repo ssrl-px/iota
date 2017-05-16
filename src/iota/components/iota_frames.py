@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 04/25/2017
+Last Changed: 05/16/2017
 Description : IOTA GUI Windows / frames
 """
 
@@ -1476,6 +1476,7 @@ class ProcWindow(wx.Frame):
                     "Processing {} remaining images ({} total)..."
                     "".format(len(iterable), len(self.img_list))
                 )
+                self.start_object_finder = True
             else:
                 self.img_list = [
                     [i, len(self.init.input_list) + 1, j]
