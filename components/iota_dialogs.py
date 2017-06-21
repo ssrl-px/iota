@@ -451,6 +451,10 @@ class ImportWindow(BaseDialog):
         )
         conv_box_sizer.Add(self.mod_mask, 1, flag=wx.ALL | wx.EXPAND, border=10)
 
+        self.mask_invert = wx.CheckBox(self, label="Invert boolean mask")
+        self.mask_invert.SetValue(False)
+        conv_box_sizer.Add(self.mask_invert, flag=wx.ALL, border=10)
+
         # Image triage options
         trg_box = wx.StaticBox(self, label="Diffraction Triage Options")
         trg_box_sizer = wx.StaticBoxSizer(trg_box, wx.VERTICAL)
@@ -663,6 +667,7 @@ class ImportWindow(BaseDialog):
                     self.mod_square.ctr.GetString(self.mod_square.ctr.GetSelection())
                 ),
                 "  mask = {}".format(maskpath),
+                "  invert_boolean_mask = {}".format(self.mask_invert.GetValue()),
                 "  beamstop = {}".format(self.mod_beamstop.threshold.GetValue()),
                 "  distance = {}".format(self.mod_detZ.detZ.GetValue()),
                 "  beam_center",
