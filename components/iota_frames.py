@@ -1667,7 +1667,9 @@ class ProcWindow(wx.Frame):
                 )
 
         self.gauge_process.SetRange(len(self.img_list))
-        img_process = thr.ProcThread(self, self.init, iterable, input_type=type)
+        img_process = thr.ProcThread(
+            self, self.init, iterable, input_type=type, term_file=self.tmp_abort_file
+        )
         img_process.start()
 
     def analyze_results(self):
