@@ -69,6 +69,7 @@ class MainWindow(wx.Frame):
         self.iota_phil = inp.master_phil
         self.prefs_phil = None
         self.target_phil = None
+        self.term_file = None
 
         # Create some defaults on startup
         # Figure out temp folder
@@ -447,6 +448,7 @@ class MainWindow(wx.Frame):
         self.proc_window.run(init)
 
         if self.proc_window.good_to_go:
+            self.term_file = self.proc_window.tmp_abort_file
             self.proc_window.Show(True)
 
     def onOutputScript(self, e):
@@ -650,7 +652,9 @@ class MainWindow(wx.Frame):
         return fixed_phil
 
     def onQuit(self, e):
-        # TODO: Need something that will identify and kill ALL child processes
+        if self.term_file is not None:
+            with open(self.term_file, "w") as tf:
+                tf.write("")
         self.Close()
 
 

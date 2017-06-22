@@ -71,75 +71,87 @@ class AllDone(wx.PyCommandEvent):
 class ProcessImage:
     """Wrapper class to do full processing of an image."""
 
-    def __init__(self, init, input_entry, input_type="image"):
+    def __init__(self, init, input_entry, input_type="image", abort=False):
         self.init = init
         self.input_entry = input_entry
         self.input_type = input_type
+        self.abort = abort
 
     def run(self):
-        if self.input_type == "image":
-            img_object = img.SingleImage(self.input_entry, self.init)
-            img_object.import_image()
-        elif self.input_type == "object":
-            img_object = self.input_entry[2]
-            img_object.import_int_file(self.init)
-
-        if self.init.params.image_conversion.convert_only:
-            return img_object
+        if self.abort:
+            raise Exception("IOTA: Run aborted by user")
         else:
-            img_object.process()
-            return img_object
+            if self.input_type == "image":
+                img_object = img.SingleImage(self.input_entry, self.init)
+                img_object.import_image()
+            elif self.input_type == "object":
+                img_object = self.input_entry[2]
+                img_object.import_int_file(self.init)
+
+            if self.init.params.image_conversion.convert_only:
+                return img_object
+            else:
+                img_object.process()
+                return img_object
 
 
 class ProcThread(Thread):
     """Worker thread; generated so that the GUI does not lock up when
     processing is running."""
 
-    def __init__(self, parent, init, iterable, input_type="image"):
+    def __init__(self, parent, init, iterable, term_file, input_type="image"):
         Thread.__init__(self)
         self.parent = parent
         self.init = init
         self.iterable = iterable
         self.type = input_type
+        self.term_file = term_file
 
     def run(self):
         if self.init.params.mp_method == "multiprocessing":
-            img_objects = parallel_map(
-                iterable=self.iterable,
-                func=self.full_proc_wrapper,
-                processes=self.init.params.n_processors,
-            )
+            try:
+                img_objects = parallel_map(
+                    iterable=self.iterable,
+                    func=self.full_proc_wrapper,
+                    processes=self.init.params.n_processors,
+                )
+            except Exception, e:
+                print e
+                return
         else:
             # write iterable
             img_objects = None
             queue = self.init.params.mp_queue
-            iter_path = os.path.join(self.init.params.int_base, "iter.cfg")
-            init_path = os.path.join(self.init.params.int_base, "init.cfg")
+            iter_path = os.path.join(self.init.int_base, "iter.cfg")
+            init_path = os.path.join(self.init.int_base, "init.cfg")
             nproc = self.init.params.n_processors
             ep.dump(iter_path, self.iterable)
             ep.dump(init_path, self.init)
-            if self.init.params.mp_method == "lsf":
-                try:
+            try:
+                if self.init.params.mp_method == "lsf":
                     command = (
-                        "bsub -q {} -n {} iota.process {} --files {} --type {}"
-                        "".format(queue, nproc, init_path, iter_path, self.type)
+                        "bsub -q {} -n {} iota.process {} --files {} --type {} "
+                        "--stopfile {}".format(
+                            queue,
+                            nproc,
+                            init_path,
+                            iter_path,
+                            self.type,
+                            self.term_file,
+                        )
                     )
-                except Exception, e:
-                    print e
-            if self.init.params.mp_method == "torq":
-                params = "{} --files {} --type {}".format(
-                    init_path, iter_path, self.type
-                )
-                try:
+                if self.init.params.mp_method == "torq":
+                    params = "{} --files {} --type {} --stopfile {}" "".format(
+                        init_path, iter_path, self.type, self.term_file
+                    )
                     command = (
                         'qsub -e /dev/null -o /dev/null -d {} iota.process -F "{}"'
                         "".format(self.init.params.output, params)
                     )
-                except Exception, e:
-                    print e
-
-            print command
-            easy_run.fully_buffered(command, join_stdout_stderr=True)
+                print command
+                easy_run.fully_buffered(command, join_stdout_stderr=True)
+            except Exception, e:
+                print e
 
         # Send "all done" event to GUI
         try:
@@ -149,9 +161,13 @@ class ProcThread(Thread):
             pass
 
     def full_proc_wrapper(self, input_entry):
-        proc_image_instance = ProcessImage(self.init, input_entry, self.type)
-        proc_image = proc_image_instance.run()
-        return proc_image
+        abort = os.path.isfile(self.term_file)
+        try:
+            proc_image_instance = ProcessImage(self.init, input_entry, self.type, abort)
+            proc_image = proc_image_instance.run()
+            return proc_image
+        except Exception, e:
+            raise e
 
 
 class ImageFinderThread(Thread):
