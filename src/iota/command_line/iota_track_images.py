@@ -733,6 +733,8 @@ class TrackerWindow(wx.Frame):
 
     def onQuit(self, e):
         self.timer.Stop()
+        with open(self.term_file, "w") as tf:
+            tf.write("")
         self.Close()
 
 
