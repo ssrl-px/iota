@@ -15,6 +15,7 @@ Description : Creates image object. If necessary, converts raw image to pickle
 
 import os
 import math
+import numpy as np
 
 from scitbx.array_family import flex
 
@@ -38,6 +39,7 @@ class SingleImage(object):
         self.raw_img = img[2]
         self.conv_img = img[2]
         self.img_index = img[0]
+        self.center_int = 0
         self.status = None
         self.fail = None
         self.final = None
@@ -451,6 +453,15 @@ class SingleImage(object):
         # if DIALS is selected, change image type to skip conversion step
         if self.params.advanced.integrate_with == "dials":
             img_type = "dials_input"
+            if self.params.dials.auto_threshold:
+                beam_x_px = img_data["BEAM_CENTER_X"] / img_data["PIXEL_SIZE"]
+                beam_y_px = img_data["BEAM_CENTER_Y"] / img_data["PIXEL_SIZE"]
+                data_array = img_data["DATA"].as_numpy_array().astype(float)
+                self.center_int = np.nanmax(
+                    data_array[
+                        beam_y_px - 20 : beam_y_px + 20, beam_x_px - 20 : beam_x_px + 20
+                    ]
+                )
 
         # Log initial image information
         self.log_info.append("\n{:-^100}\n".format(self.raw_img))
@@ -931,11 +942,11 @@ class SingleImage(object):
                 integrator = Integrator(
                     self.conv_img,
                     self.obj_path,
-                    # self.fin_base,
                     self.fin_file,
                     self.final,
                     self.int_log,
                     self.gain,
+                    self.center_int,
                     self.params,
                 )
 
