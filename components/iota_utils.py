@@ -151,8 +151,14 @@ class InputFinder:
         """
         with open(path, "r") as tf:
             contents = tf.readlines()
+
+        # TODO: Find a better way to catch an old-timey format
+        # if '\r' in contents[0]:
+        #   contents = contents[0].split('\r')
+
         contents = [i.replace("\n", "") for i in contents][:1000]
         content_test = [os.path.isfile(i) for i in contents]
+
         if Counter(content_test).most_common(1)[0][0]:
             return "file list"
         else:
@@ -257,6 +263,9 @@ class InputFinder:
             input_list = self.get_file_list(path, last=last)
             suffix = "folder"
 
+        if input_list is None:
+            return [], None
+
         if len(input_list) > 0:
             input_pairs = [
                 (filepath, self.identify_file_type(filepath)) for filepath in input_list
@@ -271,8 +280,7 @@ class InputFinder:
                 consensus_type = Counter(input_types).most_common(1)[0][0]
                 input_type = "{} {}".format(consensus_type, suffix)
             else:
-                input_list = []
-                input_type = None
+                return [], None
 
         return input_list, input_type
 
