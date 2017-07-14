@@ -9,7 +9,7 @@ Description : IOTA GUI Threads and PostEvents
 
 import os
 import wx
-from threading import Thread, Event
+from threading import Thread
 
 from libtbx.easy_mp import parallel_map
 from libtbx import easy_pickle as ep
