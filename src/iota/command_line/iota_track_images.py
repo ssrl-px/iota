@@ -20,7 +20,6 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from iotbx import phil as ip
-from libtbx import easy_run
 
 from iota import iota_version
 from iota.components.iota_utils import InputFinder
