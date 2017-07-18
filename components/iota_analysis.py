@@ -21,6 +21,7 @@ from collections import Counter
 import math
 
 import cPickle as pickle
+from libtbx import easy_pickle as ep
 from cctbx.uctbx import unit_cell
 
 import matplotlib.pyplot as plt
@@ -99,14 +100,16 @@ class Plotter(object):
 
     def calculate_beam_xy(self):
         """calculates beam xy and other parameters."""
-        from libtbx import easy_pickle as ep
-
         info = []
 
         # Import relevant info
         for i in [j.final["final"] for j in self.final_objects]:
             try:
                 beam = ep.load(i)
+                if self.params.advanced.integrate_with == "cctbx":
+                    pixel_size = beam["PIXEL_SIZE"]
+                elif self.params.advanced.integrate_with == "dials":
+                    pixel_size = beam["pixel_size"]
                 info.append(
                     [
                         i,
@@ -168,6 +171,7 @@ class Plotter(object):
             aD,
             bD,
             cD,
+            pixel_size,
         )
 
     def plot_beam_xy(self, write_files=False, return_values=False, threeD=False):
