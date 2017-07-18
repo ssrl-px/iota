@@ -311,7 +311,7 @@ class SpotFinderThread(Thread):
                 processes=None,
             )
         except Exception, e:
-            print e
+            print "SPOTFINDING THREAD:", e
 
         # Signal that this batch is finished
         try:
@@ -329,17 +329,17 @@ class SpotFinderThread(Thread):
             print "TERMINATING {}, image {} of {}" "".format(
                 img, self.data_list.index(img), len(self.data_list)
             )
-            raise Exception("IOTA_TRACKER: Termination signal received!")
+            raise Exception("Termination signal received!")
         else:
-            datablock = DataBlockFactory.from_filenames([img])[0]
-            # info = self.spotfinder.run(self.data_list.index(img), datablock, img)
-            # return info
-            observed = self.processor.find_spots(datablock=datablock)
-            return [self.data_list.index(img), len(observed), img]
-        # except Exception, e:
-        #   print '{}, image {} of {}'.format(img, self.data_list.index(img),
-        #                                     len(self.data_list))
-        #   raise e
+            if os.path.isfile(img):
+                datablock = DataBlockFactory.from_filenames([img])[0]
+                # info = self.spotfinder.run(self.data_list.index(img), datablock, img)
+                # return info
+                observed = self.processor.find_spots(datablock=datablock)
+                return [self.data_list.index(img), len(observed), img]
+            else:
+                print "DEBUG: FILE {} DOES NOT EXIST".format(img)
+                return [self.data_list.index(img), 0, img]
 
     def callback(self, info):
         try:
