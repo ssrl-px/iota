@@ -198,6 +198,7 @@ class Plotter(object):
             aD,
             bD,
             cD,
+            pixel_size,
         ) = self.calculate_beam_xy()
 
         # Plot figure
