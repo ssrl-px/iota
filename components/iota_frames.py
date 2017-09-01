@@ -747,110 +747,6 @@ class ProcessingTab(wx.Panel):
 
         if sum(self.nref_list) > 0 and sum(self.res_list) > 0:
             try:
-                # Unit cell histograms
-                finished = [
-                    i
-                    for i in self.finished_objects
-                    if i.fail == None and i.final["final"] != None
-                ]
-                if len(finished) > 0:
-                    self.a_axes.clear()
-                    self.b_axes.clear()
-                    self.c_axes.clear()
-                    self.alpha_axes.clear()
-                    self.beta_axes.clear()
-                    self.gamma_axes.clear()
-
-                    a = [i.final["a"] for i in finished]
-                    b = [i.final["b"] for i in finished]
-                    c = [i.final["c"] for i in finished]
-                    alpha = [i.final["alpha"] for i in finished]
-                    beta = [i.final["beta"] for i in finished]
-                    gamma = [i.final["gamma"] for i in finished]
-
-                    self.a_axes.hist(
-                        a,
-                        50,
-                        normed=False,
-                        facecolor="#4575b4",
-                        alpha=0.75,
-                        histtype="stepfilled",
-                    )
-                    self.a_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
-                    self.a_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
-                    self.a_axes.xaxis.tick_top()
-                    edge_ylabel = "a, b, c ({})".format(r"$\AA$")
-                    self.a_axes.set_ylabel(edge_ylabel)
-
-                    self.b_axes.hist(
-                        b,
-                        50,
-                        normed=False,
-                        facecolor="#4575b4",
-                        alpha=0.75,
-                        histtype="stepfilled",
-                    )
-                    self.b_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
-                    self.b_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
-                    self.b_axes.xaxis.tick_top()
-                    plt.setp(self.b_axes.get_yticklabels(), visible=False)
-
-                    self.c_axes.hist(
-                        c,
-                        50,
-                        normed=False,
-                        facecolor="#4575b4",
-                        alpha=0.75,
-                        histtype="stepfilled",
-                    )
-                    self.c_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
-                    self.c_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
-                    self.c_axes.xaxis.tick_top()
-                    plt.setp(self.c_axes.get_yticklabels(), visible=False)
-
-                    self.alpha_axes.hist(
-                        alpha,
-                        50,
-                        normed=False,
-                        facecolor="#4575b4",
-                        alpha=0.75,
-                        histtype="stepfilled",
-                    )
-                    self.alpha_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
-                    self.alpha_axes.xaxis.get_major_ticks()[-1].label1.set_visible(
-                        False
-                    )
-                    ang_ylabel = "{}, {}, {} ({})".format(
-                        r"$\alpha$", r"$\beta$", r"$\gamma$", r"$^\circ$"
-                    )
-                    self.alpha_axes.set_ylabel(ang_ylabel)
-
-                    self.beta_axes.hist(
-                        beta,
-                        50,
-                        normed=False,
-                        facecolor="#4575b4",
-                        alpha=0.75,
-                        histtype="stepfilled",
-                    )
-                    self.beta_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
-                    self.beta_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
-                    plt.setp(self.beta_axes.get_yticklabels(), visible=False)
-
-                    self.gamma_axes.hist(
-                        gamma,
-                        50,
-                        normed=False,
-                        facecolor="#4575b4",
-                        alpha=0.75,
-                        histtype="stepfilled",
-                    )
-                    self.gamma_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
-                    self.gamma_axes.xaxis.get_major_ticks()[-1].label1.set_visible(
-                        False
-                    )
-                    plt.setp(self.gamma_axes.get_yticklabels(), visible=False)
-
                 # Strong reflections per frame
                 self.nsref_axes.clear()
                 self.nsref_x = np.array(
@@ -955,6 +851,110 @@ class ProcessingTab(wx.Panel):
                     self.btn_left.Enable()
                     self.btn_right.Enable()
                     self.btn_viewer.Enable()
+
+                # Unit cell histograms
+                finished = [
+                    i
+                    for i in self.finished_objects
+                    if i.fail == None and i.final["final"] != None
+                ]
+                if len(finished) > 0:
+                    self.a_axes.clear()
+                    self.b_axes.clear()
+                    self.c_axes.clear()
+                    self.alpha_axes.clear()
+                    self.beta_axes.clear()
+                    self.gamma_axes.clear()
+
+                    a = [i.final["a"] for i in finished]
+                    b = [i.final["b"] for i in finished]
+                    c = [i.final["c"] for i in finished]
+                    alpha = [i.final["alpha"] for i in finished]
+                    beta = [i.final["beta"] for i in finished]
+                    gamma = [i.final["gamma"] for i in finished]
+
+                    self.a_axes.hist(
+                        a,
+                        50,
+                        normed=False,
+                        facecolor="#4575b4",
+                        alpha=0.75,
+                        histtype="stepfilled",
+                    )
+                    self.a_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
+                    self.a_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
+                    self.a_axes.xaxis.tick_top()
+                    edge_ylabel = "a, b, c ({})".format(r"$\AA$")
+                    self.a_axes.set_ylabel(edge_ylabel)
+
+                    self.b_axes.hist(
+                        b,
+                        50,
+                        normed=False,
+                        facecolor="#4575b4",
+                        alpha=0.75,
+                        histtype="stepfilled",
+                    )
+                    self.b_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
+                    self.b_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
+                    self.b_axes.xaxis.tick_top()
+                    plt.setp(self.b_axes.get_yticklabels(), visible=False)
+
+                    self.c_axes.hist(
+                        c,
+                        50,
+                        normed=False,
+                        facecolor="#4575b4",
+                        alpha=0.75,
+                        histtype="stepfilled",
+                    )
+                    self.c_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
+                    self.c_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
+                    self.c_axes.xaxis.tick_top()
+                    plt.setp(self.c_axes.get_yticklabels(), visible=False)
+
+                    self.alpha_axes.hist(
+                        alpha,
+                        50,
+                        normed=False,
+                        facecolor="#4575b4",
+                        alpha=0.75,
+                        histtype="stepfilled",
+                    )
+                    self.alpha_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
+                    self.alpha_axes.xaxis.get_major_ticks()[-1].label1.set_visible(
+                        False
+                    )
+                    ang_ylabel = "{}, {}, {} ({})".format(
+                        r"$\alpha$", r"$\beta$", r"$\gamma$", r"$^\circ$"
+                    )
+                    self.alpha_axes.set_ylabel(ang_ylabel)
+
+                    self.beta_axes.hist(
+                        beta,
+                        50,
+                        normed=False,
+                        facecolor="#4575b4",
+                        alpha=0.75,
+                        histtype="stepfilled",
+                    )
+                    self.beta_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
+                    self.beta_axes.xaxis.get_major_ticks()[-1].label1.set_visible(False)
+                    plt.setp(self.beta_axes.get_yticklabels(), visible=False)
+
+                    self.gamma_axes.hist(
+                        gamma,
+                        50,
+                        normed=False,
+                        facecolor="#4575b4",
+                        alpha=0.75,
+                        histtype="stepfilled",
+                    )
+                    self.gamma_axes.xaxis.get_major_ticks()[0].label1.set_visible(False)
+                    self.gamma_axes.xaxis.get_major_ticks()[-1].label1.set_visible(
+                        False
+                    )
+                    plt.setp(self.gamma_axes.get_yticklabels(), visible=False)
 
                 # Beam XY (cumulative)
                 info = []
@@ -1633,7 +1633,12 @@ class ProcWindow(wx.Frame):
         self.start_object_finder = True
         self.state = status
         self.start_object_finder = False
-        object_finder = thr.ObjectFinderThread(self, object_folder=self.init.obj_base)
+        object_finder = thr.ObjectFinderThread(
+            self,
+            object_folder=self.init.obj_base,
+            fix_paths=True,
+            new_fin_base=init.fin_base,
+        )
         object_finder.start()
 
     def run(self, init):
@@ -1672,6 +1677,10 @@ class ProcWindow(wx.Frame):
                 for i, j in enumerate(self.init.gs_img_objects, 1)
             ]
             iterable = self.img_list
+            self.status_summary = [0] * len(self.img_list)
+            self.nref_list = [0] * len(self.img_list)
+            self.nref_xaxis = [i[0] for i in self.img_list]
+            self.res_list = [0] * len(self.img_list)
             type = "object"
             self.status_txt.SetLabel("Re-running selection...")
         else:
@@ -1716,7 +1725,6 @@ class ProcWindow(wx.Frame):
                 self.status_txt.SetLabel(
                     "Processing {} images..." "".format(len(self.img_list))
                 )
-
         self.gauge_process.SetRange(len(self.img_list))
         img_process = thr.ProcThread(
             self, self.init, iterable, input_type=type, term_file=self.tmp_abort_file
@@ -1878,7 +1886,8 @@ class ProcWindow(wx.Frame):
                 try:
                     self.nref_list[obj.img_index - 1] = obj.final["strong"]
                     self.res_list[obj.img_index - 1] = obj.final["res"]
-                except Exception:
+                except Exception, e:
+                    raise e
                     pass
 
         self.chart_tab.init = self.init
