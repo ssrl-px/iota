@@ -230,6 +230,9 @@ class MainWindow(wx.Frame):
             self.iota_phil = self.iota_phil.fetch(source=prefs.prefs_phil)
         prefs.Destroy()
 
+        self.input_window.input_phil = self.iota_phil
+        self.input_window.gparams = self.iota_phil.extract()
+
     def onImportOptions(self, e):
         """Opens dialog for image import options.
 
