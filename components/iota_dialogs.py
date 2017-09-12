@@ -167,6 +167,23 @@ class IOTAPreferences(BaseDialog):
         adv_box = wx.StaticBox(self, label="Advanced Preferences")
         adv_sizer = wx.StaticBoxSizer(adv_box, wx.VERTICAL)
 
+        # Viewer preferences
+        v_choices = [
+            "dials.image_viewer",
+            "cctbx.image_viewer",
+            "distl.image_viewer",
+            "cxi.view",
+        ]
+        self.viewers = ct.ChoiceCtrl(
+            self,
+            label="Image Viewer:",
+            label_size=(120, -1),
+            label_style="bold",
+            ctrl_size=wx.DefaultSize,
+            choices=v_choices,
+        )
+        adv_sizer.Add(self.viewers, flag=wx.LEFT | wx.RIGHT | wx.BOTTOM, border=10)
+
         # Monitor Mode preferences
         self.chk_cont_mode = wx.CheckBox(self, label="Process in Monitor Mode")
         self.chk_cont_mode.SetValue(False)
@@ -261,6 +278,15 @@ class IOTAPreferences(BaseDialog):
             self.mp_methods.ctr.SetSelection(inp_method)
         self.check_method()
 
+        # Set viewer values
+        try:  # Need this for backwards compatibility with old scripts
+            viewer = self.params.advanced.image_viewer
+        except Exception:
+            viewer = "dials.image_viewer"
+        v_selection = self.viewers.ctr.FindString(viewer)
+        if v_selection != wx.NOT_FOUND:
+            self.viewers.ctr.SetSelection(v_selection)
+
         # Set Monitor Mode values
         if self.monitor_mode:
             self.chk_cont_mode.SetValue(True)
@@ -353,6 +379,8 @@ class IOTAPreferences(BaseDialog):
         else:
             self.queue = None
 
+        viewer = self.viewers.ctr.GetString(self.viewers.ctr.GetSelection())
+
         temp_folder = noneset(self.temp_folder.ctr.GetValue())
 
         # test generation of PHIL settings
@@ -361,6 +389,7 @@ class IOTAPreferences(BaseDialog):
                 "mp_method = {}".format(str(self.method)),
                 "mp_queue = {}".format(str(self.queue)),
                 "advanced {",
+                "  image_viewer = {}".format(viewer),
                 "  monitor_mode = {}".format(self.monitor_mode),
                 "  monitor_mode_timeout = {}".format(self.mm_timeout),
                 "  monitor_mode_timeout_length = {}".format(int(self.mm_timeout_len)),
