@@ -4,7 +4,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/07/2015
-Last Changed: 09/07/2017
+Last Changed: 09/12/2017
 Description : Analyzes integration results and outputs them in an accessible
               format. Includes (optional) unit cell analysis by hierarchical
               clustering (Zeldin, et al., Acta Cryst D, 2013). In case of
@@ -941,8 +941,9 @@ class Analyzer(object):
             self.ver, self.now
         )
         prime_params.scale.d_min = np.mean(self.hres)
+        prime_params.scale.d_max = 8
         prime_params.postref.scale.d_min = np.mean(self.hres)
-        prime_params.postref.scale.d_max = 8
+        prime_params.postref.scale.d_max = np.max(self.lres)
         prime_params.postref.crystal_orientation.d_min = np.mean(self.hres)
         prime_params.postref.crystal_orientation.d_max = np.max(self.lres)
         prime_params.postref.reflecting_range.d_min = np.mean(self.hres)
