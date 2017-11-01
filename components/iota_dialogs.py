@@ -2271,8 +2271,8 @@ class RecoveryDialog(BaseDialog):
             if self.pathlist.IsSelected(i):
 
                 self.selected = [
-                    self.pathlist.GetItemText(i, col=1),
                     self.pathlist.GetItemText(i, col=2),
+                    self.pathlist.GetItemText(i, col=3),
                 ]
         e.Skip()
 
