@@ -55,7 +55,7 @@ default_target = "\n".join(
         "verbosity=10",
         "spotfinder {",
         "  threshold {",
-        "    xds {",
+        "    dispersion {",
         "      gain = 1",
         "      sigma_strong = 3",
         "      global_threshold = 0",
