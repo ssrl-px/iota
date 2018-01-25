@@ -177,6 +177,8 @@ class ProcThread(Thread):
             return proc_image
         except IOTATermination, e:
             raise e
+        except Exception, e:
+            pass
 
 
 class ImageFinderThread(Thread):
