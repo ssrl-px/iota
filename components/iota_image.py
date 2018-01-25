@@ -843,7 +843,6 @@ class SingleImage(object):
 
     def process(self, single_image=False):
         """Image processing; selects method, runs requisite modules."""
-
         if self.status != "bypass grid search":
             self.status = "processing"
 
