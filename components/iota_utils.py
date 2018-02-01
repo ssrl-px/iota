@@ -245,7 +245,7 @@ class InputFinder:
         except Exception:
             return "text"
 
-    def get_input(self, path, filter=True, last=None):
+    def get_input(self, path, filter=True, filter_type="image", last=None):
         """Obtain list of files (or single file) from any input; obtain file
         type in input.
 
@@ -273,13 +273,13 @@ class InputFinder:
         if input_list is None:
             return [], None
 
-        if len(input_list) > 1:
+        if len(input_list) > 0:
             input_pairs = [
                 (filepath, self.identify_file_type(filepath)) for filepath in input_list
             ]
 
             if filter:
-                input_pairs = [i for i in input_pairs if "image" in i[1]]
+                input_pairs = [i for i in input_pairs if filter_type in i[1]]
                 input_pairs = [i for i in input_pairs if not "_tmp" in i[0]]
 
             if len(input_pairs) > 0:
@@ -316,7 +316,7 @@ class InputFinder:
         else:
             return "unknown"
 
-    def make_input_list(self, input_entries, last=None):
+    def make_input_list(self, input_entries, filter=False, filter_type=None, last=None):
         """Makes input list from multiple entries.
 
         :param input_entries: a list of input paths
@@ -326,7 +326,9 @@ class InputFinder:
         input_list = []
         for path in input_entries:
             if path is not None:
-                filepaths, _ = self.get_input(path, last=last)
+                filepaths, _ = self.get_input(
+                    path, filter=filter, filter_type=filter_type, last=last
+                )
                 input_list.extend(filepaths)
         return input_list
 
