@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 11/06/2017
+Last Changed: 03/22/2018
 Description : Runs cctbx.xfel integration module either in grid-search or final
               integration mode. Has options to output diagnostic visualizations.
               Includes selector class for best integration result selection
@@ -388,6 +388,10 @@ class Integrator(object):
                     "alpha": cell[3],
                     "beta": cell[4],
                     "gamma": cell[5],
+                    "wavelength": int_final["wavelength"],
+                    "distance": int_final["distance"],
+                    "beamX": int_final["xbeam"],
+                    "beamY": int_final["ybeam"],
                     "strong": strong_spots,
                     "res": hres,
                     "lres": lres,
