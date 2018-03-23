@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 02/12/2018
+Last Changed: 03/22/2018
 Description : Creates image object. If necessary, converts raw image to pickle
               files; crops or pads pickle to place beam center into center of
               image; masks out beam stop. (Adapted in part from
@@ -300,6 +300,10 @@ class SingleImage(object):
             "epv": 0,
             "info": "",
             "final": None,
+            "wavelength": 0,
+            "distance": 0,
+            "beamX": 0,
+            "beamY": 0,
             "program": "cctbx",
         }
 
@@ -464,7 +468,7 @@ class SingleImage(object):
                 except OSError:
                     pass
 
-                ep.dump(self.obj_file, self)
+                # ep.dump(self.obj_file, self)
 
             return self
 
@@ -646,6 +650,10 @@ class SingleImage(object):
                 "epv": 0,
                 "info": "",
                 "final": None,
+                "wavelength": 0,
+                "distance": 0,
+                "beamX": 0,
+                "beamY": 0,
                 "program": "dials",
             }
 
@@ -700,13 +708,13 @@ class SingleImage(object):
             except OSError:
                 pass
 
-            # Save image object to file
-            ep.dump(self.obj_file, self)
+            self.status = "imported"
 
-        self.status = "imported"
+            # Save image object to file
+            # ep.dump(self.obj_file, self)
 
         # If conversion only option is selected, write conversion info to log
-        if self.params.image_conversion.convert_only:
+        else:
             log_entry = "\n".join(self.log_info)
             misc.main_log(self.main_log, log_entry)
 
@@ -823,9 +831,6 @@ class SingleImage(object):
                 elif self.params.analysis.viz == "cv_vectors":
                     viz.cv_png(self.final["img"], self.final["final"], self.viz_file)
 
-            # Save image object to file
-            ep.dump(self.obj_file, self)
-
         return self
 
     def select_cctbx(self):
@@ -853,9 +858,6 @@ class SingleImage(object):
             self.fail, self.final, log_entry = selector.select()
             self.status = "selection"
             self.log_info.append(log_entry)
-
-        # Save results into a pickle file
-        ep.dump(self.obj_file, self)
 
         return self
 
@@ -942,6 +944,11 @@ class SingleImage(object):
                 )
                 os.rename(self.int_log, final_int_log)
 
+            # Save results into a pickle file
+            self.status = "final"
+            ep.dump(self.obj_file, self)
+            return self
+
         # For DIALS integration (WORK IN PROGRESS)
         elif self.params.advanced.integrate_with == "dials":
 
@@ -949,11 +956,7 @@ class SingleImage(object):
                 self.fail = "aborted"
                 return self
 
-            if self.fail is not None:
-                self.status = "final"
-                ep.dump(self.obj_file, self)
-                return self
-            else:
+            if self.fail is None:
                 # Create DIALS integrator object
                 from iota.components.iota_dials import Integrator
 
@@ -982,8 +985,9 @@ class SingleImage(object):
                 final_int_log = self.int_log.split(".")[0] + ".log"
                 os.rename(self.int_log, final_int_log)
 
-        self.status = "final"
-        ep.dump(self.obj_file, self)
+            self.status = "final"
+            ep.dump(self.obj_file, self)
+            return self
 
 
 # **************************************************************************** #
