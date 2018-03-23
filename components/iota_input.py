@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 02/12/2018
+Last Changed: 03/22/2018
 Description : IOTA I/O module. Reads PHIL input, also creates reasonable IOTA
               and PHIL defaults if selected.
 """
@@ -427,7 +427,8 @@ def process_input(args, phil_args, input_file, mode="auto", now=None):
     final_phil = master_phil.format(python_object=params)
 
     temp_phil = [final_phil]
-    diff_phil = master_phil.fetch_diff(sources=temp_phil)
+    # diff_phil = master_phil.fetch_diff(sources=temp_phil)
+    diff_phil = master_phil.fetch(sources=temp_phil)
 
     with Capturing() as output:
         diff_phil.show()
