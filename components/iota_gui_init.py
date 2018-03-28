@@ -108,14 +108,6 @@ def parse_command_args(help_message):
         help='Specify a number of cores for a multiprocessor run"',
     )
     parser.add_argument(
-        "--analyze",
-        type=str,
-        nargs="?",
-        const=None,
-        default=None,
-        help="Use for analysis only; specify run number or folder",
-    )
-    parser.add_argument(
         "--tmp", type=str, nargs=1, default=None, help="Path to temp folder"
     )
     return parser
