@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 12/19/2016
-Last Changed: 03/22/2018
+Last Changed: 03/28/2018
 Description : Module with basic utilities of broad applications in IOTA
 """
 
@@ -256,7 +256,9 @@ class InputFinder:
         except Exception:
             return "text"
 
-    def get_input(self, path, filter=True, filter_type="image", last=None):
+    def get_input(
+        self, path, filter=True, filter_type="image", last=None, min_back=None
+    ):
         """Obtain list of files (or single file) from any input; obtain file
         type in input.
 
@@ -278,7 +280,7 @@ class InputFinder:
             else:
                 input_list = [os.path.abspath(path)]
         elif os.path.isdir(path):
-            input_list = self.get_file_list(path, last=last)
+            input_list = self.get_file_list(path, last=last, min_back=min_back)
             suffix = "folder"
 
         if input_list is None:
@@ -327,7 +329,9 @@ class InputFinder:
         else:
             return "unknown"
 
-    def make_input_list(self, input_entries, filter=False, filter_type=None, last=None):
+    def make_input_list(
+        self, input_entries, filter=False, filter_type=None, last=None, min_back=None
+    ):
         """Makes input list from multiple entries.
 
         :param input_entries: a list of input paths
@@ -338,7 +342,11 @@ class InputFinder:
         for path in input_entries:
             if path is not None:
                 filepaths, _ = self.get_input(
-                    path, filter=filter, filter_type=filter_type, last=last
+                    path,
+                    filter=filter,
+                    filter_type=filter_type,
+                    last=last,
+                    min_back=min_back,
                 )
                 input_list.extend(filepaths)
         return input_list
