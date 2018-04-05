@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 03/30/2018
+Last Changed: 04/04/2018
 Description : IOTA GUI Threads and PostEvents
 """
 
@@ -249,7 +249,9 @@ class ImageViewerThread(Thread):
     """Worker thread that will move the image viewer launch away from the GUI
     and hopefully will prevent the image selection dialog freezing on MacOS."""
 
-    def __init__(self, parent, file_string, viewer="dials.image_viewer", img_type=None):
+    def __init__(
+        self, parent, file_string=None, viewer="dials.image_viewer", img_type=None
+    ):
         Thread.__init__(self)
         self.parent = parent
         self.file_string = file_string
