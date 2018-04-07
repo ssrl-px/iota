@@ -434,14 +434,15 @@ class Analyzer(object):
                 "no_diff_objects", len(self.no_diff_objects)
             )
             self.analysis_result.__setattr__(
-                "not_idx_objects", len(self.not_idx_objects)
-            )
-            self.analysis_result.__setattr__(
                 "not_int_objects", len(self.not_int_objects)
             )
-            self.analysis_result.__setattr__(
-                "not_spf_objects", len(self.not_spf_objects)
-            )
+            if self.params.advanced.integrate_with == "dials":
+                self.analysis_result.__setattr__(
+                    "not_spf_objects", len(self.not_spf_objects)
+                )
+                self.analysis_result.__setattr__(
+                    "not_idx_objects", len(self.not_idx_objects)
+                )
             self.analysis_result.__setattr__("lres", self.lres)
             self.analysis_result.__setattr__("hres", self.hres)
             self.analysis_result.__setattr__("mos", self.mos)
