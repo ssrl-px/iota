@@ -584,12 +584,12 @@ class SpinCtrl(CtrlBase):
         self,
         parent,
         label="",
-        label_size=(200, -1),
+        label_size=wx.DefaultSize,
         label_style="normal",
         checkbox=False,
         checkbox_state=False,
         checkbox_label="",
-        ctrl_size=(60, -1),
+        ctrl_size=wx.DefaultSize,
         ctrl_value="3",
         ctrl_max=999999,
         ctrl_min=0,
@@ -641,7 +641,8 @@ class SpinCtrl(CtrlBase):
         self.toggle_boxes(flag_on=self.toggle.GetValue())
         e.Skip()
 
-    def toggle_boxes(self, flag_on):
+    def toggle_boxes(self, flag_on=True):
+        self.toggle.SetValue(flag_on)
         if flag_on:
             self.ctr.Enable()
             self.ctr.SetValue(int(self.value))
@@ -762,6 +763,7 @@ class OptionCtrl(CtrlBase):
 
     def toggle_boxes(self, flag_on=True):
         self.toggle.SetValue(flag_on)
+
         if self.items is not None:
             if flag_on:
                 for item in self.items:
