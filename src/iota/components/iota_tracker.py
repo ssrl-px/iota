@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 07/21/2017
-Last Changed: 04/05/2018
+Last Changed: 05/31/2018
 Description : IOTA image-tracking GUI module
 """
 
@@ -1055,7 +1055,6 @@ class TrackerWindow(wx.Frame):
         self.toolbar.EnableTool(self.tb_btn_open.GetId(), True)
 
     def find_new_images(self, min_back=None, last_file=None):
-        find_start = time.time()
         found_files = ginp.make_input_list(
             [self.data_folder],
             filter=True,
@@ -1065,7 +1064,6 @@ class TrackerWindow(wx.Frame):
         )
 
         # Sometimes duplicate files are found anyway; clean that up
-        test_files = found_files
         found_files = list(set(found_files) - set(self.data_list))
 
         # Add new files to the data list & clean up
