@@ -178,7 +178,6 @@ def parse_command_args(help_message):
         "-b",
         "--backend",
         type=str,
-        nargs=1,
         default="mosflm",
         help="Specify backend for spotfinding / indexing",
     )
@@ -864,7 +863,7 @@ class TrackerWindow(wx.Frame):
         # Read arguments if any
         self.args, self.phil_args = parse_command_args("").parse_known_args()
 
-        self.spf_backend = self.args.backend[0]
+        self.spf_backend = self.args.backend
         self.tracker_panel.min_bragg.ctr.SetValue(self.args.bragg)
 
         if self.args.file is not None:
@@ -1075,7 +1074,7 @@ class TrackerWindow(wx.Frame):
         if not self.terminated:
             info = e.GetValue()
             if info is not None:
-                idx = info[0] + len(self.done_list)
+                idx = int(info[0]) + len(self.done_list)
                 obs_count = info[1]
                 img_path = info[2]
                 self.spotfinding_info.append(
@@ -1275,6 +1274,7 @@ class TrackerWindow(wx.Frame):
                     5000, log=False, write_file_lists=False, schnell=True, doplot=False
                 )
             except Exception, e:
+                print e
                 clusters = []
 
         if len(clusters) > 0:
