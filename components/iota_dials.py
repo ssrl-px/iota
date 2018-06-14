@@ -25,15 +25,15 @@ from dials.command_line.refine_bravais_settings import (
 )
 
 import iota.components.iota_misc as misc
-from iota.components.iota_utils import RadAverageCalculator
 
 
 class IOTADialsProcessor(Processor):
     """Subclassing the Processor module from dials.stills_process to introduce
     streamlined integration pickles output."""
 
-    def __init__(self, params):
+    def __init__(self, params, write_pickle=True):
         self.phil = params
+        self.write_pickle = write_pickle
         Processor.__init__(self, params=params)
 
     def refine_bravais_settings(self, reflections, experiments):
@@ -149,12 +149,13 @@ class IOTADialsProcessor(Processor):
         the code in stills_indexer, since the filename convention is set
         up upstream.
         """
-        from libtbx import easy_pickle
-        from xfel.command_line.frame_extractor import ConstructFrame
+        if self.write_pickle:
+            from libtbx import easy_pickle
+            from xfel.command_line.frame_extractor import ConstructFrame
 
-        self.frame = ConstructFrame(integrated, experiments[0]).make_frame()
-        self.frame["pixel_size"] = experiments[0].detector[0].get_pixel_size()[0]
-        easy_pickle.dump(self.phil.output.integration_pickle, self.frame)
+            self.frame = ConstructFrame(integrated, experiments[0]).make_frame()
+            self.frame["pixel_size"] = experiments[0].detector[0].get_pixel_size()[0]
+            easy_pickle.dump(self.phil.output.integration_pickle, self.frame)
 
 
 class Triage(object):
@@ -270,6 +271,9 @@ class Integrator(object):
             object_folder, file_basename
         )
         self.phil.output.refined_experiments_filename = "{}/{}_refined_experiments.json".format(
+            object_folder, file_basename
+        )
+        self.phil.output.integrated_experiments_filename = "{}/{}_integrated_experiments.json".format(
             object_folder, file_basename
         )
         self.phil.output.integrated_filename = "{}/{}_integrated.pickle".format(
