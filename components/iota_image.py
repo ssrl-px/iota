@@ -3,7 +3,7 @@ from __future__ import division
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 03/30/2018
+Last Changed: 07/11/2018
 Description : Creates image object. If necessary, converts raw image to pickle
               files; crops or pads pickle to place beam center into center of
               image; masks out beam stop. (Adapted in part from
@@ -88,11 +88,10 @@ class SingleImage(object):
         self.obj_path = misc.make_image_path(
             self.conv_img, self.input_base, self.obj_base
         )
-        self.obj_file = os.path.abspath(
-            os.path.join(
-                self.obj_path, os.path.basename(self.conv_img).split(".")[0] + ".int"
-            )
-        )
+
+        filename = misc.make_filename(self.conv_img)
+
+        self.obj_file = os.path.abspath(os.path.join(self.obj_path, filename + ".int"))
         self.fin_path = misc.make_image_path(
             self.conv_img, self.input_base, self.fin_base
         )
@@ -100,19 +99,14 @@ class SingleImage(object):
             self.conv_img, self.input_base, self.log_base
         )
         self.fin_file = os.path.abspath(
-            os.path.join(
-                self.fin_path,
-                os.path.basename(self.conv_img).split(".")[0] + "_int.pickle",
-            )
+            os.path.join(self.fin_path, filename + "_int.pickle")
         )
         self.final["final"] = self.fin_file
         self.final["img"] = self.conv_img
         self.viz_path = misc.make_image_path(
             self.conv_img, self.input_base, self.viz_base
         )
-        self.viz_file = os.path.join(
-            self.viz_path, os.path.basename(self.conv_img).split(".")[0] + "_int.png"
-        )
+        self.viz_file = os.path.join(self.viz_path, filename + "_int.png")
 
         # Create actual folders (if necessary)
         try:
@@ -444,7 +438,7 @@ class SingleImage(object):
                 self.conv_img, self.input_base, self.log_base
             )
             self.int_log = os.path.join(
-                self.log_path, os.path.basename(self.conv_img).split(".")[0] + ".tmp"
+                self.log_path, misc.make_filename(self.conv_img) + ".tmp"
             )
             self.log_info.append("\n{:-^100}\n".format(self.raw_img))
             self.log_info.append("FAILED TO IMPORT")
@@ -456,8 +450,7 @@ class SingleImage(object):
                     self.conv_img, self.input_base, self.obj_base
                 )
                 rej_name = (
-                    filter(None, os.path.basename(self.conv_img).split("."))[0]
-                    + "_reject.int"
+                    filter(None, misc.make_filename(self.conv_img))[0] + "_reject.int"
                 )
                 self.obj_file = os.path.abspath(os.path.join(self.obj_path, rej_name))
 
@@ -535,7 +528,7 @@ class SingleImage(object):
                 img_path = misc.make_image_path(
                     self.raw_img, self.input_base, self.conv_base
                 )
-                img_filename = os.path.basename(self.raw_img).split(".")[0] + ".pickle"
+                img_filename = misc.make_filename(self.raw_img) + ".pickle"
                 self.conv_img = os.path.abspath(os.path.join(img_path, img_filename))
                 try:
                     if not os.path.isdir(img_path):
@@ -661,42 +654,35 @@ class SingleImage(object):
             }
 
         # Generate names for output folders and files:
-        if not self.params.image_conversion.convert_only:
-            self.obj_path = misc.make_image_path(
-                self.conv_img, self.input_base, self.obj_base
-            )
-            self.obj_file = os.path.abspath(
-                os.path.join(
-                    self.obj_path,
-                    os.path.basename(self.conv_img).split(".")[0] + ".int",
+        filename = misc.make_filename(self.conv_img)
+        self.test_filename = filename
+
+        try:
+            if not self.params.image_conversion.convert_only:
+                self.obj_path = misc.make_image_path(
+                    self.conv_img, self.input_base, self.obj_base
                 )
-            )
-            self.fin_path = misc.make_image_path(
-                self.conv_img, self.input_base, self.fin_base
-            )
-            self.log_path = misc.make_image_path(
-                self.conv_img, self.input_base, self.log_base
-            )
-            self.fin_file = os.path.abspath(
-                os.path.join(
-                    self.fin_path,
-                    "int_{}.pickle".format(
-                        os.path.basename(self.conv_img).split(".")[0]
-                    ),
+                self.obj_file = os.path.abspath(
+                    os.path.join(self.obj_path, filename + ".int")
                 )
-            )
-            self.final["final"] = self.fin_file
-            self.final["img"] = self.conv_img
-            self.int_log = os.path.join(
-                self.log_path, os.path.basename(self.conv_img).split(".")[0] + ".tmp"
-            )
-            self.viz_path = misc.make_image_path(
-                self.conv_img, self.input_base, self.viz_base
-            )
-            self.viz_file = os.path.join(
-                self.viz_path,
-                "int_{}.png".format(os.path.basename(self.conv_img).split(".")[0]),
-            )
+                self.fin_path = misc.make_image_path(
+                    self.conv_img, self.input_base, self.fin_base
+                )
+                self.log_path = misc.make_image_path(
+                    self.conv_img, self.input_base, self.log_base
+                )
+                self.fin_file = os.path.abspath(
+                    os.path.join(self.fin_path, "int_{}.pickle".format(filename))
+                )
+                self.final["final"] = self.fin_file
+                self.final["img"] = self.conv_img
+                self.int_log = os.path.join(self.log_path, filename + ".tmp")
+                self.viz_path = misc.make_image_path(
+                    self.conv_img, self.input_base, self.viz_base
+                )
+                self.viz_file = os.path.join(
+                    self.viz_path, "int_{}.png".format(filename)
+                )
 
             # Create actual folders (if necessary)f
             try:
@@ -714,7 +700,11 @@ class SingleImage(object):
             self.status = "imported"
 
             # Save image object to file
-            # ep.dump(self.obj_file, self)
+            ep.dump(self.obj_file, self)
+        except Exception, e:
+            with open("exception.txt", "w") as ef:
+                ef.write(filename)
+                ef.write(e)
 
         # If conversion only option is selected, write conversion info to log
         else:
