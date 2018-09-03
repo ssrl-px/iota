@@ -135,7 +135,7 @@ class Plotter(object):
                         (i["a"], i["b"], i["c"], i["alpha"], i["beta"], i["gamma"]),
                     ]
                 )
-            except IOError, e:
+            except IOError as e:
                 pass
 
         # Calculate beam center coordinates and distances
