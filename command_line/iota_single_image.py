@@ -175,7 +175,7 @@ class DIALSSpfIdx(Thread):
                     datablock = DataBlockFactory.from_filenames([self.img])[0]
                     observed = self.processor.find_spots(datablock=datablock)
                     status = "spots found"
-                except Exception, e:
+                except Exception as e:
                     fail = True
                     observed = []
                     err.append("SPOTFINDING ERROR: {}".format(e))
@@ -189,7 +189,7 @@ class DIALSSpfIdx(Thread):
                                 datablock=datablock, reflections=observed
                             )
                             score = len(indexed)
-                        except Exception, e:
+                        except Exception as e:
                             fail = True
                             err.append("INDEXING ERROR: {}".format(e))
                             pass
@@ -211,7 +211,7 @@ class DIALSSpfIdx(Thread):
                             lat = experiments[0].crystal.get_space_group().info()
                             sg = str(lat).replace(" ", "")
                             status = "indexed"
-                        except Exception, e:
+                        except Exception as e:
                             fail = True
                             err.append("LATTICE ERROR: {}".format(e))
                             pass
@@ -227,7 +227,7 @@ class DIALSSpfIdx(Thread):
                                 experiments, indexed = self.processor.refine(
                                     experiments=experiments, centroids=indexed
                                 )
-                            except Exception, e:
+                            except Exception as e:
                                 fail = True
                                 err.append("REFINEMENT ERROR: {}".format(e))
                                 pass
@@ -243,7 +243,7 @@ class DIALSSpfIdx(Thread):
                                     integrated, experiments[0]
                                 ).make_frame()
                                 status = "integrated"
-                            except Exception, e:
+                            except Exception as e:
                                 err.append("INTEGRATION ERROR: {}".format(e))
                                 pass
 
