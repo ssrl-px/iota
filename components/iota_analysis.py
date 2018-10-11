@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+from __future__ import division, print_function, absolute_import
+from past.builtins import range
 
 """
 Author      : Lyubimov, A.Y.
@@ -19,6 +20,11 @@ import os
 import numpy as np
 from collections import Counter
 import math
+
+try:  # for Py3 compatibility
+    import itertools.izip as zip
+except ImportError:
+    pass
 
 import cPickle as pickle
 from libtbx import easy_pickle as ep
@@ -135,7 +141,7 @@ class Plotter(object):
                         (i["a"], i["b"], i["c"], i["alpha"], i["beta"], i["gamma"]),
                     ]
                 )
-            except IOError, e:
+            except IOError as e:
                 pass
 
         # Calculate beam center coordinates and distances
@@ -1072,8 +1078,8 @@ class Analyzer(object):
 
         try:
             sg = str(self.cons_pg).replace(" ", "")
-        except AttributeError, e:
-            print "PRIME INPUT ERROR: ", e
+        except AttributeError as e:
+            print("PRIME INPUT ERROR: ", e)
             sg = "P1"
 
         try:

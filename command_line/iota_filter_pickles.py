@@ -1,10 +1,15 @@
-from __future__ import division
+from __future__ import division, print_function, absolute_import
 
 # LIBTBX_SET_DISPATCHER_NAME iota.filter_pickles
 
 import h5py
 import os, shutil, argparse, glob, ntpath
 import numpy as np
+
+try:  # for Py3 compatibility
+    import itertools.izip as zip
+except ImportError:
+    pass
 
 
 def main(hdf5Filename, data, destDir, powder):
@@ -42,7 +47,7 @@ def main(hdf5Filename, data, destDir, powder):
     goodKey = []
     goodRayonixTimeList = []
     goodRayonixIpm3List = []
-    for key, val in goodRayonixTime.iteritems():
+    for key, val in goodRayonixTime.items():
         if len(val) > 1:
             goodIndex = np.argmax(goodRayonixIpm3[key])
         else:
@@ -63,7 +68,9 @@ def main(hdf5Filename, data, destDir, powder):
         os.makedirs(destDirOn)
         os.makedirs(destDirOff)
     except OSError:
-        print "WARNING: Problem creating folder. If the folder exists, it will get overwritten."
+        print(
+            "WARNING: Problem creating folder. If the folder exists, it will get overwritten."
+        )
         pass
 
     txtOn = ""
@@ -87,10 +94,10 @@ def main(hdf5Filename, data, destDir, powder):
             # copy any files that match with the pattern
             for filename in glob.glob(data + "/" + filename_pattern):
                 shutil.copy(filename, destDirSelected + "/" + ntpath.basename(filename))
-                print filename, _evr92, destDirSelected, "sucess"
+                print(filename, _evr92, destDirSelected, "success")
             cnSuccess += 1
-        except IOError, err:
-            print err
+        except IOError as err:
+            print(err)
             txtError += ",".join(map(str, list(_key)))
             txtError += ",%d, %f\n" % (_rt, _ipm3)
             cnErrors += 1
@@ -104,8 +111,8 @@ def main(hdf5Filename, data, destDir, powder):
     f.close()
     f = open(destDir + "/errors.txt", "w")
     f.write(txtError)
-    print "Successfully move %d files" % (cnSuccess)
-    print "%d files not found" % (cnErrors)
+    print("Successfully moved %d files" % (cnSuccess))
+    print("%d files not found" % (cnErrors))
 
 
 if __name__ == "__main__":
@@ -127,5 +134,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if args.powder:
-        print "Powder diffractions. Ignore event codes"
+        print("Powder diffraction. Ignore event codes")
     main(args.hdf5Filename, args.data, args.destDir, args.powder)
