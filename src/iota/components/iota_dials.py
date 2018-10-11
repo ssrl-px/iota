@@ -57,7 +57,7 @@ class IOTADialsProcessor(Processor):
                 nproc=1,
                 refiner_verbosity=10,
             )
-        except Exception as e:
+        except Exception, e:
             # If refinement fails, reset to P1 (experiments remain modified by Lfat
             # if there's a refinement failure, which causes issues down the line)
             for expt in experiments:
@@ -218,7 +218,7 @@ class Triage(object):
             else:
                 log_info = "REJECTED! {} observed reflections.".format(len(observed))
                 status = "failed triage"
-        except Exception as e:
+        except Exception, e:
             status = "failed triage"
             return status, "REJECTED! SPOT-FINDING ERROR!"
 
@@ -400,7 +400,7 @@ class Integrator(object):
                 print "{:-^100}\n\n".format(
                     " FOUND {} SPOTS: ".format(len(self.observed))
                 )
-            except Exception as e:
+            except Exception, e:
                 if hasattr(e, "classname"):
                     print e.classname, "for %s:" % self.img[0],
                     error_message = "{}: {}".format(
@@ -421,7 +421,7 @@ class Integrator(object):
                             " USED {} INDEXED REFLECTIONS: "
                             "".format(len(self.indexed))
                         )
-                except Exception as e:
+                except Exception, e:
                     if hasattr(e, "classname"):
                         error_message = "{}: {}".format(
                             e.classname, e[0].replace("\n", " ")[:50]
@@ -448,7 +448,7 @@ class Integrator(object):
                         )
                     else:
                         print "{:-^100}\n".format(" RETAINED TRICLINIC (P1) SYMMETRY ")
-                except Exception as e:
+                except Exception, e:
                     print "Bravais / Reindexing Error: ", e
 
             if self.fail == None:
@@ -460,7 +460,7 @@ class Integrator(object):
                         " FINAL {} INTEGRATED REFLECTIONS "
                         "".format(len(self.integrated))
                     )
-                except Exception as e:
+                except Exception, e:
                     if hasattr(e, "classname"):
                         print e.classname, "for %s:" % self.img[0],
                         error_message = "{}: {}".format(
