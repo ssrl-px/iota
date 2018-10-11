@@ -1,4 +1,5 @@
-from __future__ import division
+from __future__ import division, print_function, absolute_import
+from past.builtins import range
 
 """
 Author      : Lyubimov, A.Y.
@@ -168,7 +169,7 @@ class InitAll(object):
         cmd.Command.end("Reading input files -- DONE")
 
         if len(input_list) == 0:
-            print "\nERROR: No data found!"
+            print("\nERROR: No data found!")
             sys.exit()
 
         # Pick a randomized subset of images
@@ -267,7 +268,7 @@ class InitAll(object):
                     )
                 )
             except ValueError:
-                print "Run #{} not found".format(analysis_source)
+                print("Run #{} not found".format(analysis_source))
 
         if os.path.isdir(int_folder):
 
@@ -288,7 +289,7 @@ class InitAll(object):
             analysis.unit_cell_analysis()
             analysis.print_summary(write_files=False)
         else:
-            print "No results found in {}".format(int_folder)
+            print("No results found in {}".format(int_folder))
 
     def run(self):
 
@@ -301,8 +302,8 @@ class InitAll(object):
             parse_command_args(self.iver, self.help_message).print_help()
             if self.args.default:  # Write out default params and exit
                 help_out, txt_out = inp.print_params()
-                print "\n{:-^70}\n".format("IOTA Parameters")
-                print help_out
+                print("\n{:-^70}\n".format("IOTA Parameters"))
+                print(help_out)
                 inp.write_defaults(os.path.abspath(os.path.curdir), txt_out)
             misc.iota_exit()
         elif len(self.args.path) > 1:  # If multiple paths / wildcards
@@ -352,8 +353,9 @@ class InitAll(object):
                     )
             # If user provided gibberish
             else:
-                print self.logo
-                print "ERROR: Invalid input! Need parameter filename or data folder."
+                msg = None
+                print(self.logo)
+                print("ERROR: Invalid input! Need parameter filename or data folder.")
                 misc.iota_exit()
 
         # Identify indexing / integration program
@@ -361,16 +363,20 @@ class InitAll(object):
             prg = "                                                             with CCTBX.XFEL\n"
         elif self.params.advanced.integrate_with == "dials":
             prg = "                                                                  with DIALS\n"
+        else:
+            prg = ""
 
         self.logo += prg
-        print self.logo
-        print "\n{}\n".format(self.now)
+        print(self.logo)
+        print("\n{}\n".format(self.now))
         if msg != "":
-            print msg
+            print(msg)
 
         if self.args.analyze != None:
-            print "ANALYSIS ONLY will be performed (analyzing run #{})".format(
-                self.args.analyze
+            print(
+                "ANALYSIS ONLY will be performed (analyzing run #{})".format(
+                    self.args.analyze
+                )
             )
             self.analyze_prior_results("{:003d}".format(int(self.args.analyze)))
             misc.iota_exit()
@@ -401,14 +407,14 @@ class InitAll(object):
                     list_folder, "input_{}.lst".format(len(list_files))
                 )
 
-            print "\nINPUT LIST ONLY option selected"
-            print "Input list in {} \n\n".format(list_file)
+            print("\nINPUT LIST ONLY option selected")
+            print("Input list in {} \n\n".format(list_file))
             with open(list_file, "w") as lf:
                 for i, input_file in enumerate(self.input_list, 1):
                     lf.write("{}\n".format(input_file))
-                    print "{}: {}".format(i, input_file)
+                    print("{}: {}".format(i, input_file))
                     lf.write("{}\n".format(input_file))
-            print "\nExiting...\n\n"
+            print("\nExiting...\n\n")
             misc.iota_exit()
 
         # If fewer images than requested processors are supplied, set the number of
