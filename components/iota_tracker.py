@@ -402,7 +402,7 @@ class TrackChart(wx.Panel):
         self.bragg_line.set_ydata(min_bragg)
         try:
             self.draw_plot()
-        except AttributeError as e:
+        except AttributeError, e:
             pass
 
     def draw_plot(self, new_x=None, new_y=None, new_i=None, new_p=None):
@@ -872,6 +872,7 @@ class TrackerWindow(wx.Frame):
             self.toolbar.ToggleTool(self.tb_btn_zoom.GetId(), False)
 
     def initialize_spotfinder(self):
+        self.data_folder = None
         self.done_list = []
         self.data_list = []
         self.spotfinding_info = []
@@ -930,6 +931,8 @@ class TrackerWindow(wx.Frame):
                 )
             else:
                 auto_start = False
+        else:
+            auto_start = False
 
         # Initialize processing thread
         if self.args.file is None:
