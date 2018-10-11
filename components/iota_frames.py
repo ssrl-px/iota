@@ -808,7 +808,11 @@ class ProcessingTab(ScrolledPanel):
                     "failed triage",
                     "#d73027",
                     len(
-                        [i for i in self.finished_objects if i.fail == "failed triage"]
+                        [
+                            i
+                            for i in self.finished_objects
+                            if i.fail in ("failed triage", "failed import")
+                        ]
                     ),
                 ],
                 [
@@ -984,7 +988,7 @@ class ProcessingTab(ScrolledPanel):
 
             self.proc_canvas.draw()
 
-        except ValueError as e:
+        except ValueError, e:
             print "SUMMARY PLOT ERROR: ", e
 
     def draw_plots(self):
@@ -1033,7 +1037,7 @@ class ProcessingTab(ScrolledPanel):
             self.nsref_axes.yaxis.get_major_ticks()[0].label1.set_visible(False)
             self.nsref_axes.yaxis.get_major_ticks()[-1].label1.set_visible(False)
 
-        except ValueError as e:
+        except ValueError, e:
             print "NSREF ERROR: ", e
 
         try:
@@ -1108,7 +1112,7 @@ class ProcessingTab(ScrolledPanel):
                 self.btn_right.Enable()
                 self.btn_viewer.Enable()
 
-        except ValueError as e:
+        except ValueError, e:
             print "RES ERROR: ", e
 
     def draw_b_factors(self):
@@ -1152,7 +1156,7 @@ class ProcessingTab(ScrolledPanel):
                 equiv = ms.multiplicities().merge_equivalents()
                 merged_indices = equiv.redundancies()
 
-            except Exception as e:
+            except Exception, e:
                 print "HKL ERROR: ", e
                 return
 
@@ -1192,7 +1196,13 @@ class ProcessingTab(ScrolledPanel):
                 freq = np.zeros(500)
 
             # Format plot
-            hkl_scatter = self.hkl_axes.scatter(x, y, c=freq, cmap="jet", s=1)
+            pt_size = int(max(self.hkl_panel.GetSize()) / 250)
+            if pt_size == 0:
+                pt_size = 1
+
+            hkl_scatter = self.hkl_axes.scatter(
+                x, y, c=freq, cmap="jet", s=pt_size, edgecolor="none"
+            )
             self.hkl_axes.axhline(0, lw=0.5, c="black", ls="-")
             self.hkl_axes.axvline(0, lw=0.5, c="black", ls="-")
             self.hkl_axes.set_xticks([])
@@ -1205,7 +1215,7 @@ class ProcessingTab(ScrolledPanel):
                 ymax = abs(max(y, key=abs))
                 self.hkl_axes.set_xlim(xmin=-xmax, xmax=xmax)
                 self.hkl_axes.set_ylim(ymin=-ymax, ymax=ymax)
-            except ValueError as e:
+            except ValueError, e:
                 pass
 
             norm = colors.Normalize(vmin=0, vmax=np.max(freq))
@@ -1278,7 +1288,7 @@ class ProcessingTab(ScrolledPanel):
                         search = False
                     else:
                         search = True
-            except IndexError as e:
+            except IndexError, e:
                 search = False
                 self.pick["index"] = idx
                 self.pick["image"] = None
@@ -1415,20 +1425,25 @@ class LiveAnalysisTab(ScrolledPanel):
         tb1_box = wx.StaticBox(
             self.tb1_panel, label="PRIME Merging Statistics (" "no postref)"
         )
-        self.tb1_box_sizer = wx.StaticBoxSizer(tb1_box, wx.HORIZONTAL)
+        self.tb1_box_sizer = wx.StaticBoxSizer(tb1_box, wx.VERTICAL)
         self.tb1_panel.SetSizer(self.tb1_box_sizer)
+
+        # Run analysis button
+        self.btn_run_analysis = wx.Button(self, label="Run Analysis")
 
         self.main_fig_sizer.Add(self.uc_panel, pos=(0, 0), span=(2, 4), flag=wx.EXPAND)
         self.main_fig_sizer.Add(
             self.cluster_panel, pos=(2, 0), span=(2, 3), flag=wx.EXPAND
         )
-        self.main_fig_sizer.Add(self.tb1_panel, pos=(2, 3), span=(2, 1), flag=wx.EXPAND)
+        self.main_fig_sizer.Add(self.tb1_panel, pos=(2, 3), span=(1, 1), flag=wx.EXPAND)
+        self.main_fig_sizer.Add(self.btn_run_analysis, pos=(3, 3))
 
         self.main_fig_sizer.AddGrowableCol(0)
         self.main_fig_sizer.AddGrowableCol(1)
         self.main_fig_sizer.AddGrowableCol(2)
         self.main_fig_sizer.AddGrowableRow(1)
         self.main_fig_sizer.AddGrowableRow(2)
+        self.main_fig_sizer.AddGrowableRow(3)
 
         self.SetSizer(self.main_fig_sizer)
 
@@ -1455,15 +1470,18 @@ class LiveAnalysisTab(ScrolledPanel):
         if self.tb1 is not None:
             self.tb1.Destroy()
 
-        self.plot = ppl.Plotter(info=self.prime_info)
-        self.tb1_labels, self.tb1_data = self.plot.table_one()
-        self.tb1 = ct.TableCtrl(
-            self.tb1_panel,
-            rlabels=self.tb1_labels,
-            contents=self.tb1_data,
-            label_style="bold",
-        )
-        self.tb1_box_sizer.Add(self.tb1, 1, flag=wx.EXPAND | wx.ALL, border=10)
+        try:
+            self.plot = ppl.Plotter(info=self.prime_info)
+            self.tb1_labels, self.tb1_data = self.plot.table_one()
+            self.tb1 = ct.TableCtrl(
+                self.tb1_panel,
+                rlabels=self.tb1_labels,
+                contents=self.tb1_data,
+                label_style="bold",
+            )
+            self.tb1_box_sizer.Add(self.tb1, 1, flag=wx.EXPAND | wx.ALL, border=10)
+        except Exception, e:
+            print "PRIME PLOTTER ERROR: ", e
 
     def calculate_uc_histogram(self, a, axes, xticks_loc="top", set_ylim=False):
         n, bins = np.histogram(a, 50)
@@ -1516,30 +1534,42 @@ class LiveAnalysisTab(ScrolledPanel):
                 self.calculate_uc_histogram(
                     a, self.a_axes, xticks_loc="top", set_ylim=True
                 )
+                # self.a_axes.hist(a, 50, normed=False, facecolor='#4575b4',
+                #                 histtype='stepfilled')
                 edge_ylabel = "a, b, c ({})".format(r"$\AA$")
                 self.a_axes.set_ylabel(edge_ylabel)
 
                 self.calculate_uc_histogram(b, self.b_axes, xticks_loc="top")
+                # self.b_axes.hist(b, 50, normed=False, facecolor='#4575b4',
+                #                 histtype='stepfilled')
                 plt.setp(self.b_axes.get_yticklabels(), visible=False)
 
                 self.calculate_uc_histogram(c, self.c_axes, xticks_loc="top")
+                # self.c_axes.hist(a, 50, normed=False, facecolor='#4575b4',
+                #                 histtype='stepfilled')
                 plt.setp(self.c_axes.get_yticklabels(), visible=False)
 
                 self.calculate_uc_histogram(
                     alpha, self.alpha_axes, xticks_loc="bottom", set_ylim=True
                 )
+                # self.alpha_axes.hist(alpha, 50, normed=False, facecolor='#4575b4',
+                #                 histtype='stepfilled')
                 ang_ylabel = "{}, {}, {} ({})".format(
                     r"$\alpha$", r"$\beta$", r"$\gamma$", r"$^\circ$"
                 )
                 self.alpha_axes.set_ylabel(ang_ylabel)
 
                 self.calculate_uc_histogram(beta, self.beta_axes, xticks_loc="bottom")
+                # self.beta_axes.hist(beta, 50, normed=False, facecolor='#4575b4',
+                #                 histtype='stepfilled')
                 plt.setp(self.beta_axes.get_yticklabels(), visible=False)
 
                 self.calculate_uc_histogram(gamma, self.gamma_axes, xticks_loc="bottom")
+                # self.gamma_axes.hist(gamma, 50, normed=False, facecolor='#4575b4',
+                #                 histtype='stepfilled')
                 plt.setp(self.gamma_axes.get_yticklabels(), visible=False)
 
-        except ValueError as e:
+        except ValueError, e:
             print "UC HISTOGRAM ERROR: ", e
 
 
@@ -1940,6 +1970,7 @@ class tmpProcWindow(wx.Frame):
         self.state = "process"
         self.recovery = False
         self.bookmark = 0
+        self.draw_analysis = False
 
         # Set main panel and sizer
         self.main_panel = wx.Panel(self)
@@ -2013,10 +2044,6 @@ class tmpProcWindow(wx.Frame):
         self.gauge_process.SetPosition((rect.x + 2, rect.y + 2))
         self.gauge_process.SetSize((rect.width - 4, rect.height - 4))
         self.gauge_process.Hide()
-
-        # Output polling timer
-        self.timer = wx.Timer(self)
-        self.chart_timer = wx.Timer(self)
 
         # PostEvent bindings
         self.Bind(thr.EVT_PROCTIMER, self.onProcPostEvent)
@@ -2152,6 +2179,7 @@ class tmpProcWindow(wx.Frame):
 
     def onProcPostEvent(self, e):
         """Accept signal from processing thread."""
+
         self.proc_info = e.GetValue()
         self.update_UI()
 
@@ -2221,10 +2249,13 @@ class tmpProcWindow(wx.Frame):
         """Create image-processing thread and start it."""
         self.proc_thread = thr.IOTAUIThread(
             self,
+            init=self.init,
             gparams=self.gparams,
             target_phil=self.target_phil,
+            tmp_abort_file=self.tmp_abort_file,
             tmp_aborted_file=self.tmp_aborted_file,
             recover=recover,
+            state=self.state,
         )
         self.proc_thread.start()
 
@@ -2234,13 +2265,12 @@ class tmpProcWindow(wx.Frame):
 
     def update_UI(self):
         """Pulls data from self.proc_info and updates UI."""
-
         self.display_log()
-        self.plot_integration(force_plot=True)
-        self.plot_live_analysis(force_plot=True)
-
-        if self.proc_info.finished:
-            self.plot_summary()
+        self.plot_integration()
+        self.plot_live_analysis()
+        #
+        # if self.proc_info.finished:
+        #   self.finish_process()
 
     def display_log(self):
         """Update the log tab with the latest version of the IOTA log."""
@@ -2258,10 +2288,10 @@ class tmpProcWindow(wx.Frame):
         """This function will plot fast-drawing runtime processing charts on
         the "Processing" tab."""
 
-        if self.nref_list is not None and self.res_list is not None:
+        if self.proc_info.nref_list is not None and self.proc_info.res_list is not None:
             self.proc_tab.init = self.init
             self.proc_tab.gparams = self.gparams
-            self.proc_tab.finished_objects = self.proc_info.finished_objects
+            self.proc_tab.finished_objects = self.proc_info.image_objects
             self.proc_tab.img_list = self.proc_info.img_list
             self.proc_tab.res_list = self.proc_info.res_list
             self.proc_tab.nref_list = self.proc_info.nref_list
@@ -2276,8 +2306,6 @@ class tmpProcWindow(wx.Frame):
 
             self.proc_tab.indices = self.proc_info.indices
             self.proc_tab.b_factors = self.proc_info.b_factors
-            # TODO: Adjust plotter function to just plot, the arrays for it should
-            # TODO: be defined in Proc thread
 
             if self.proc_nb.GetSelection() == 1 or force_plot:
                 self.proc_tab.draw_plots()
@@ -2287,10 +2315,10 @@ class tmpProcWindow(wx.Frame):
         """This function will plot in-depth analysis that will (importantly)
         involve expensive and slow-drawing charts on the Live Analysis tab."""
 
-        if self.nref_list is not None and self.res_list is not None:
+        if self.proc_info.nref_list is not None and self.proc_info.res_list is not None:
             self.chart_tab.init = self.init
             self.chart_tab.gparams = self.gparams
-            self.chart_tab.finished_objects = self.proc_info.finished_objects
+            self.chart_tab.finished_objects = self.proc_info.image_objects
 
             self.chart_tab.cluster_info = self.proc_info.cluster_info
             self.chart_tab.prime_info = self.proc_info.prime_info
@@ -2527,7 +2555,7 @@ class tmpProcWindow(wx.Frame):
         self.proc_thread.anl_timer.Stop()
 
         # Finish up if no images have been successfully imported
-        if self.finished_objects is None:
+        if len(self.proc_info.image_objects) == 0:
             font = self.sb.GetFont()
             font.SetWeight(wx.BOLD)
             self.status_txt.SetFont(font)
@@ -2609,6 +2637,7 @@ class ProcWindow(wx.Frame):
         self.running_cluster = False
         self.running_prime = False
         self.draw_analysis = False
+        self.running_manual_analysis = False
 
         self.finished_objects = []
         self.read_object_files = []
@@ -2713,6 +2742,9 @@ class ProcWindow(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.onResume, self.tb_btn_resume)
         self.Bind(wx.EVT_TOOL, self.onMonitor, self.tb_btn_monitor)
         self.Bind(wx.EVT_TOOL, self.onAnalysis, self.tb_btn_analysis)
+        self.Bind(
+            wx.EVT_BUTTON, self.onAnalysisManualRun, self.chart_tab.btn_run_analysis
+        )
 
         # Determine if monitor mode was previously selected
         if self.gparams.advanced.monitor_mode:
@@ -2736,6 +2768,14 @@ class ProcWindow(wx.Frame):
         # if tab == 2:
         #   self.plot_live_analysis()
         pass
+
+    def onAnalysisManualRun(self, e):
+        # Run analysis calculations when Run Analysis button is pressed; this
+        # will enable analysis run even when IOTA isn't running anymore
+        if not (self.running_cluster or self.running_prime):
+            self.running_manual_analysis = True
+            self.chart_tab.btn_run_analysis.Disable()
+            self.run_clustering_thread()
 
     def onAnalysis(self, e):
         if self.proc_toolbar.GetToolState(self.tb_btn_analysis.GetId()):
@@ -2843,10 +2883,12 @@ class ProcWindow(wx.Frame):
         self.gparams = params
         self.tmp_abort_file = os.path.join(int_path, ".abort.tmp")
         self.tmp_aborted_file = os.path.join(int_path, ".aborted.tmp")
+
         self.img_list = [
             [i, len(self.init.input_list) + 1, j]
             for i, j in enumerate(self.init.input_list, 1)
         ]
+
         self.status_txt.SetLabel("Searching in {} ...".format(int_path))
 
         self.status_summary = [0] * len(self.img_list)
@@ -2909,6 +2951,7 @@ class ProcWindow(wx.Frame):
             if self.state == "new images":
                 iterable = self.new_images
                 self.img_list.extend(self.new_images)
+                self.init.input_list.extend(self.new_images)
                 self.new_images = []
                 self.status_summary.extend([0] * len(iterable))
                 self.nref_list.extend([0] * len(iterable))
@@ -2923,9 +2966,10 @@ class ProcWindow(wx.Frame):
             elif self.state == "resume":
                 iterable = self.new_images
                 self.img_list.extend(self.new_images)
-                self.nref_list.extend([0] * len(self.new_images))
-                self.nref_xaxis.extend([i[0] for i in self.new_images])
-                self.res_list.extend([0] * len(self.new_images))
+                # self.nref_list.extend([0] * len(self.new_images))
+                # self.nref_xaxis.extend([i[0] for i in self.new_images])
+                # self.res_list.extend([0] * len(self.new_images))
+
                 self.new_images = []
                 self.status_txt.SetLabel(
                     "Processing {} remaining images ({} total)..."
@@ -3006,7 +3050,7 @@ class ProcWindow(wx.Frame):
                         command, join_stdout_stderr=True
                     ).show_stdout()
                     print "JOB NAME = ", self.job_id
-                except thr.IOTATermination as e:
+                except thr.IOTATermination, e:
                     print "IOTA: JOB TERMINATED", e
             else:
                 print "IOTA ERROR: COMMAND NOT ISSUED!"
@@ -3271,7 +3315,7 @@ class ProcWindow(wx.Frame):
 
             self.proc_tab.indices = self.indices
             self.indices = []
-            self.proc_tab.b_factors = self.b_factors
+            self.proc_tab.b_factors.extend(self.b_factors)
             self.b_factors = []
 
             if self.proc_nb.GetSelection() == 1 or force_plot:
@@ -3294,10 +3338,10 @@ class ProcWindow(wx.Frame):
                 self.chart_tab.draw_plots()
 
     def find_objects(self, find_old=False):
-        if find_old:
+        if find_old or self.gparams.advanced.integrate_with == "cctbx":
             min_back = None
         else:
-            min_back = -1
+            min_back = -5
         object_files = ginp.get_file_list(
             self.init.obj_base, ext_only="int", min_back=min_back
         )
@@ -3323,15 +3367,20 @@ class ProcWindow(wx.Frame):
     def read_object_file(self, filepath):
         try:
             object = ep.load(filepath)
+        except Exception, e:
+            print "OBJECT_IMPORT_ERROR for {}: {}".format(filepath, e)
+            return None
+
+        try:
             if object.final["final"] is not None:
                 pickle_path = object.final["final"]
                 if os.path.isfile(pickle_path):
                     pickle = ep.load(pickle_path)
                     object.final["observations"] = pickle["observations"][0]
             return object
-        except Exception as e:
-            print "OBJECT_IMPORT_ERROR for {}: {}".format(filepath, e)
-            return None
+        except Exception, e:
+            print "OBJECT_ATTRIBUTE_ERROR for {}: {}".format(filepath, e)
+            return object
 
     def populate_data_points(self, objects=None):
         self.indices = []
@@ -3352,16 +3401,21 @@ class ProcWindow(wx.Frame):
                                 observations_as_f, asu_contents, e_statistics=True
                             )
                             self.b_factors.append(wp.wilson_b)
-                        except RuntimeError as e:
+                        except RuntimeError, e:
                             self.b_factors.append(0)
-                except Exception as e:
+                except Exception, e:
                     print "OBJECT_ERROR:", e, "({})".format(obj.obj_file)
-                    pass
+                    self.finished_objects.pop(self.finished_objects.index(obj))
 
     def onChartTimer(self, e):
         self.plot_live_analysis()
         if not self.running_cluster:
             self.run_clustering_thread()
+
+        if self.running_cluster or self.running_prime:
+            self.chart_tab.btn_run_analysis.Disable()
+        else:
+            self.chart_tab.btn_run_analysis.Enable()
 
     def run_clustering_thread(self):
         # Run clustering
@@ -3408,7 +3462,8 @@ class ProcWindow(wx.Frame):
                 final_files = [
                     o.final["final"]
                     for o in self.finished_objects
-                    if (
+                    if o.final is not None
+                    and (
                         o.final["final"] is not None
                         and os.path.isfile(o.final["final"])
                     )
@@ -3433,8 +3488,45 @@ class ProcWindow(wx.Frame):
                         gui_mode=False,
                     )
                     analyzer.prime_data_path = final_list_file
-                    analyzer.cons_pg = best_pg
-                    analyzer.cons_uc = best_uc
+
+                    if self.gparams.advanced.integrate_with == "dials":
+                        if self.gparams.dials.target_space_group is not None:
+                            analyzer.cons_pg = str(
+                                self.gparams.dials.target_space_group
+                            )
+                        else:
+                            analyzer.cons_pg = best_pg
+                        if self.gparams.dials.target_unit_cell is not None:
+                            uc = [
+                                str(i)
+                                for i in self.gparams.dials.target_unit_cell.parameters()
+                            ]
+                            analyzer.cons_uc = " ".join(uc)
+                        else:
+                            analyzer.cons_uc = best_uc
+                    elif self.gparams.advanced.integrate_with == "cctbx":
+                        if self.gparams.cctbx.selection.prefilter.flag_on:
+                            if (
+                                self.gparams.cctbx.selection.prefilter.target_pointgroup
+                                is not None
+                            ):
+                                analyzer.cons_pg = (
+                                    self.gparams.cctbx.selection.prefilter.target_pointgroup
+                                )
+                            else:
+                                analyzer.cons_pg = best_pg
+                            if (
+                                self.gparams.cctbx.selection.prefilter.target_unit_cell
+                                is not None
+                            ):
+                                analyzer.cons_uc = (
+                                    self.gparams.cctbx.selection.prefilter.target_unit_cell
+                                )
+                            else:
+                                analyzer.cons_uc = best_uc
+                        else:
+                            analyzer.cons_pg = best_pg
+                            analyzer.cons_uc = best_uc
 
                     prime_phil = analyzer.make_prime_input(
                         filename="live_prime.phil", run_zero=True
@@ -3459,6 +3551,7 @@ class ProcWindow(wx.Frame):
                         "queue.mode={}".format(self.pparams.queue.mode),
                         "queue.qname={}".format(self.pparams.queue.qname),
                         "n_processors={}".format(self.pparams.n_processors),
+                        "timeout_seconds=120",
                     ]
                     cmd_args = " ".join(cmd_args_list)
 
@@ -3477,6 +3570,7 @@ class ProcWindow(wx.Frame):
                         out_file=out_file,
                         cmd_args=cmd_args,
                         signal_finished=True,
+                        verbose=True,
                     )
                     prime_thread.start()
 
@@ -3484,6 +3578,11 @@ class ProcWindow(wx.Frame):
         self.running_prime = False
         if self.pparams is not None:
             self.get_prime_stats()
+
+        if self.running_manual_analysis:
+            self.plot_live_analysis(force_plot=True)
+            self.running_manual_analysis = False
+            self.chart_tab.btn_run_analysis.Enable()
 
     def get_prime_stats(self):
         stats_folder = os.path.join(self.pparams.run_no, "stats")
@@ -3563,18 +3662,14 @@ class ProcWindow(wx.Frame):
         # Update log
         self.display_log()
 
-        # Run an instance of new image finder on a separate thread
-        if self.find_new_images:
-            self.find_new_images = False
-            ext_image_list = self.img_list + self.new_images
-            img_finder = thr.ImageFinderThread(
-                self, image_paths=self.gparams.input, image_list=ext_image_list
-            )
-            img_finder.start()
-
         # Check if all images have been looked at; if yes, finish process
         if self.obj_counter >= len(self.img_list):
             if self.monitor_mode:
+                if self.find_new_images:
+                    self.search_for_new_images()
+                else:
+                    self.find_new_images = len(self.new_images) == 0
+
                 if len(self.new_images) > 0:
                     self.status_txt.SetLabel(
                         "Found {} new images".format(len(self.new_images))
@@ -3598,19 +3693,25 @@ class ProcWindow(wx.Frame):
                                 )
                                 self.status_txt.SetLabel(timeout_msg)
                     else:
-                        self.find_new_images = self.monitor_mode
                         self.status_txt.SetLabel("No new images found! Waiting ...")
             else:
                 self.status_txt.SetLabel("Wrapping up ...")
                 self.finish_process()
 
+    def search_for_new_images(self):
+        img_finder = thr.ImageFinderThread(
+            self, image_paths=self.gparams.input, image_list=self.img_list
+        )
+        img_finder.start()
+
     def onFinishedProcess(self, e):
-        pass
+        if not self.monitor_mode:
+            self.finish_process()
+        else:
+            self.find_new_images = True
 
     def onFinishedImageFinder(self, e):
-        new_img = e.GetValue()
-        self.new_images = self.new_images + new_img
-        self.find_new_images = self.monitor_mode
+        self.new_images = e.GetValue()
 
     def finish_process(self):
         import shutil
