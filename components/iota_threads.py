@@ -134,7 +134,7 @@ class ProcThread(Thread):
             )
         except IOTATermination as e:
             self.aborted = True
-            print e
+            print(e)
             return
 
         # Send "all done" event to GUI
@@ -163,7 +163,7 @@ class ProcThread(Thread):
         except IOTATermination as e:
             raise e
         except Exception as e:
-            print "IOTA PROC ERROR: ", e
+            print("IOTA PROC ERROR: ", e)
             pass
 
     def callback(self, result):
@@ -251,7 +251,7 @@ class ObjectFinderThread(Thread):
             object = ep.load(filepath)
             return object
         except EOFError as e:
-            print "OBJECT_IMPORT_ERROR: ", e
+            print("OBJECT_IMPORT_ERROR: ", e)
             return None
 
 
@@ -481,10 +481,10 @@ class IOTAUIThread(Thread):
         ep.dump(init_path, self.init)
 
         if self.gparams.mp_method == "multiprocessing":
-            # print 'DEBUG: SUBMITTING!'
+            # print ('DEBUG: SUBMITTING!')
             # command = 'iota.process {} --files {} --type {} --stopfile {}' \
             #             ''.format(init_path, iter_path, type, self.tmp_abort_file)
-            # print command
+            # print (command)
             # easy_run.fully_buffered(command, join_stdout_stderr=True).show_stdout()
 
             self.img_process = ProcThread(
@@ -536,15 +536,15 @@ class IOTAUIThread(Thread):
                 command = None
             if command is not None:
                 try:
-                    print command
+                    print(command)
                     easy_run.fully_buffered(
                         command, join_stdout_stderr=True
                     ).show_stdout()
-                    print "JOB NAME = ", self.job_id
+                    print("JOB NAME = ", self.job_id)
                 except IOTATermination as e:
-                    print "IOTA: JOB TERMINATED", e
+                    print("IOTA: JOB TERMINATED", e)
             else:
-                print "IOTA ERROR: COMMAND NOT ISSUED!"
+                print("IOTA ERROR: COMMAND NOT ISSUED!")
                 return
 
     def onProcThreadDone(self, img_objects):
@@ -617,7 +617,7 @@ class IOTAUIThread(Thread):
                 except RuntimeError:
                     self.info.b_factors.append(0)
         except Exception as e:
-            print "OBJECT_ERROR:", e, "({})".format(obj.obj_file)
+            print("OBJECT_ERROR:", e, "({})".format(obj.obj_file))
             pass
 
     def finish_process(self):
@@ -749,8 +749,8 @@ class SpotFinderDIALSThread:
 
                         if not fail:
                             try:
-                                print experiments
-                                print indexed
+                                print(experiments)
+                                print(indexed)
                                 integrated = self.processor.integrate(
                                     experiments=experiments, indexed=indexed
                                 )
@@ -909,12 +909,12 @@ class SpotFinderThread(Thread):
             )
         except IOTATermination as e:
             self.terminated = True
-            print e
+            print(e)
 
         # Signal that this batch is finished
         try:
             if self.terminated:
-                print "RUN TERMINATED!"
+                print("RUN TERMINATED!")
                 evt = SpotFinderTerminated(tp_EVT_SPFTERM, -1)
                 wx.PostEvent(self.parent, evt)
 
@@ -925,7 +925,7 @@ class SpotFinderThread(Thread):
             # wx.PostEvent(self.parent, evt)
             return
         except TypeError as e:
-            print e
+            print(e)
             return
 
     def spf_wrapper(self, img):
@@ -1055,7 +1055,7 @@ class InterceptorFileThread(Thread):
                     info_line.append(item[3])
                     input.append(info_line)
                 except ValueError as e:
-                    print "CLUSTER ERROR: ", e
+                    print("CLUSTER ERROR: ", e)
                     pass
 
         if len(input) > 0:
@@ -1175,7 +1175,7 @@ class InterceptorThread(Thread):
                         info_line.append(item[3])
                         input.append(info_line)
                     except ValueError, e:
-                        print "CLUSTER ERROR: ", e
+                        print("CLUSTER ERROR: ", e)
                         pass
 
             if len(input) > 0:
