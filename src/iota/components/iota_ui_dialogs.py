@@ -1,9 +1,11 @@
 from __future__ import division, print_function, absolute_import
 
+from iota.components import iota_ui_controls as ct
+
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 10/16/2018
+Last Changed: 10/17/2018
 Description : IOTA GUI Dialogs
 """
 
@@ -15,10 +17,14 @@ from wxtbx import bitmaps
 
 from iotbx import phil as ip
 
-import iota.components.iota_controls as ct
+import iota.components.iota_ui_controls as ct
 from iota.components.iota_input import master_phil
-from iota.components.iota_utils import UnicodeCharacters, WxFlags, noneset
-
+from iota.components.iota_utils import (
+    UnicodeCharacters,
+    WxFlags,
+    noneset,
+    norm_font_size,
+)
 
 # Platform-specific stuff
 # TODO: Will need to test this on Windows at some point
@@ -43,7 +49,7 @@ u = UnicodeCharacters()
 f = WxFlags()
 
 
-# ---------------------------------------------------------------------------- #
+# ------------------------------ Base Classes -------------------------------- #
 
 
 class BaseDialog(wx.Dialog):
@@ -197,6 +203,17 @@ class BaseBackendDialog(BaseDialog):
             method=method, write_target_file=False, write_param_file=False
         )
         self.target_phil = "\n".join(default_phil)
+
+
+class BasePanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY, size=(800, 500))
+
+        self.main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.main_sizer)
+
+
+# ---------------------------------------------------------------------------- #
 
 
 class IOTAPreferences(BaseDialog):
