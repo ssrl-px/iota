@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 07/11/2018
+Last Changed: 10/16/2018
 Description : Runs DIALS spotfinding, indexing, refinement and integration
               modules. The entire thing works, but no optimization of parameters
               is currently available. This is very much a work in progress
@@ -24,7 +24,7 @@ from dials.command_line.refine_bravais_settings import (
     bravais_lattice_to_space_group_table,
 )
 
-import iota.components.iota_misc as misc
+import iota.components.iota_utils as util
 
 
 class IOTADialsProcessor(Processor):
@@ -54,7 +54,6 @@ class IOTADialsProcessor(Processor):
                 experiments,
                 reflections,
                 lepage_max_delta=5,
-                nproc=1,
                 refiner_verbosity=10,
             )
         except Exception, e:
@@ -169,7 +168,7 @@ class Triage(object):
 
         # Read settings from the DIALS target (.phil) file
         # If none is provided, use default settings (and may God have mercy)
-        if self.params.dials.target != None:
+        if self.params.dials.target is not None:
             with open(self.params.dials.target, "r") as settings_file:
                 settings_file_contents = settings_file.read()
             settings = parse(settings_file_contents)
@@ -202,7 +201,7 @@ class Triage(object):
             self.phil.spotfinder.threshold.dispersion.global_threshold = threshold
 
         # Convert raw image into single-image datablock
-        with misc.Capturing() as junk_output:
+        with util.Capturing() as junk_output:
             self.datablock = DataBlockFactory.from_filenames([img])[0]
 
     def triage_image(self):
@@ -249,7 +248,7 @@ class Integrator(object):
 
         # Read settings from the DIALS target (.phil) file
         # If none is provided, use default settings (and may God have mercy)
-        if self.params.dials.target != None:
+        if self.params.dials.target is not None:
             with open(self.params.dials.target, "r") as settings_file:
                 settings_file_contents = settings_file.read()
             settings = parse(settings_file_contents)
@@ -259,7 +258,7 @@ class Integrator(object):
         self.phil = current_phil.extract()
 
         # Set general file-handling settings
-        file_basename = misc.make_filename(source_image)
+        file_basename = util.make_filename(source_image)
         self.phil.output.datablock_filename = "{}/{}.json".format(
             object_folder, file_basename
         )
@@ -318,7 +317,7 @@ class Integrator(object):
                 self.phil.significance_filter.isigi_cutoff = sigma
 
         # # Write target file for this IOTA run
-        # with misc.Capturing() as output:
+        # with util.Capturing() as output:
         #   mod_phil = current_phil.format(python_object=self.phil)
         #   mod_phil.show()
         #   txt_out = ''
@@ -391,7 +390,7 @@ class Integrator(object):
         self.processor = IOTADialsProcessor(params=self.phil)
 
         log_entry = ["\n"]
-        with misc.Capturing() as output:
+        with util.Capturing() as output:
             e = None
             try:
                 print("{:-^100}\n".format(" SPOTFINDING: "))
@@ -413,7 +412,7 @@ class Integrator(object):
                 print(error_message)
                 self.fail = "failed spotfinding"
 
-            if self.fail == None:
+            if self.fail is None:
                 try:
                     print("{:-^100}\n".format(" INDEXING: "))
                     self.index()
@@ -456,7 +455,7 @@ class Integrator(object):
                 except Exception as e:
                     print("Bravais / Reindexing Error: ", e)
 
-            if self.fail == None:
+            if self.fail is None:
                 try:
                     self.refine()
                     print("{:-^100}\n".format(" INTEGRATING: "))
@@ -479,7 +478,7 @@ class Integrator(object):
                     print(error_message)
                     self.fail = "failed integration"
 
-        if self.fail == None and self.params.dials.filter.flag_on:
+        if self.fail is None and self.params.dials.filter.flag_on:
             selector = Selector(
                 frame=self.frame,
                 uc_tol=self.params.dials.filter.target_uc_tolerance,
@@ -495,7 +494,7 @@ class Integrator(object):
                 if "cxi_version" not in i:
                     tf.write("\n{}".format(i))
 
-        if self.fail == None:
+        if self.fail is None:
             # Collect information
             obs = self.frame["observations"][0]
             Bravais_lattice = self.frame["pointgroup"]
@@ -605,7 +604,7 @@ class Selector(object):
         deviate. Optional step. Unit cell tolerance user-defined.
         """
 
-        if self.uc != None:
+        if self.uc is not None:
             user_uc = [prm for prm in self.uc.parameters()]
             delta_a = abs(self.obs_uc[0] - user_uc[0])
             delta_b = abs(self.obs_uc[1] - user_uc[1])
@@ -626,9 +625,9 @@ class Selector(object):
 
         i_fail = (
             self.obs_ref <= self.min_ref
-            or (self.min_res != None and self.obs_res >= self.min_res)
+            or (self.min_res is not None and self.obs_res >= self.min_res)
             or (
-                self.pg != None
+                self.pg is not None
                 and self.pg.replace(" ", "") != self.obs_pg.replace(" ", "")
             )
             or not uc_check
@@ -646,6 +645,7 @@ class Selector(object):
 
 if __name__ == "__main__":
 
+    # noinspection PyArgumentList
     test = Integrator(sys.argv[1])
     test.find_spots()
 

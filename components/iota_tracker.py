@@ -4,7 +4,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 07/21/2017
-Last Changed: 08/29/2018
+Last Changed: 10/16/2018
 Description : IOTA image-tracking GUI module
 """
 
@@ -28,12 +28,13 @@ from matplotlib.widgets import SpanSelector
 
 from iotbx import phil as ip
 
+from iota import iota_version
 from iota.components.iota_dialogs import DIALSSpfDialog
 from iota.components.iota_utils import InputFinder
 from iota.components.iota_dials import phil_scope
 import iota.components.iota_threads as thr
 import iota.components.iota_controls as ct
-import iota.components.iota_misc as misc
+import iota.components.iota_utils as util
 
 import time
 
@@ -155,7 +156,7 @@ def parse_command_args(help_message):
     parser.add_argument(
         "--version",
         action="version",
-        version="IOTA {}".format(misc.iota_version),
+        version="IOTA {}".format(iota_version),
         help="Prints version info of IOTA",
     )
     parser.add_argument(
@@ -453,8 +454,8 @@ class TrackChart(wx.Panel):
             self.x_min = -1
             self.x_max = 1
 
-        acc = [int(i) for i in all_acc if i > self.x_min and i < self.x_max]
-        rej = [int(i) for i in all_rej if i > self.x_min and i < self.x_max]
+        acc = [int(i) for i in all_acc if self.x_min < i < self.x_max]
+        rej = [int(i) for i in all_rej if self.x_min < i < self.x_max]
 
         self.acc_plot.set_xdata(nref_x)
         self.rej_plot.set_xdata(nref_x)
@@ -688,16 +689,12 @@ class TrackerPanel(wx.Panel):
         self.min_bragg = ct.SpinCtrl(
             self.graph_panel,
             label="Min. Bragg spots",
-            label_size=wx.DefaultSize,
             ctrl_size=(100, -1),
             ctrl_value=10,
-            ctrl_min=0,
         )
         self.chart_window = ct.SpinCtrl(
             self.graph_panel,
-            label_size=wx.DefaultSize,
             checkbox=True,
-            checkbox_state=False,
             checkbox_label="Finite chart window",
             ctrl_size=(100, -1),
             ctrl_value=100,
@@ -1205,7 +1202,7 @@ class TrackerWindow(wx.Frame):
                 self.cluster_info, key=lambda i: i["number"], reverse=True
             )
             uc_dims = clusters[0]["uc"].rsplit()
-            u = misc.UnicodeCharacters()
+            u = util.UnicodeCharacters()
             uc_line = (
                 "{} = {}, {} = {}, {} = {}, {} = {}, {} = {}, {} =  {} "
                 "".format(
