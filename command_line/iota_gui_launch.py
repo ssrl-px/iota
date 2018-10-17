@@ -13,7 +13,7 @@ Description : IOTA GUI startup module.
 
 import wx
 from iota import iota_version
-from iota.components.iota_gui_init import MainWindow
+from iota.components.iota_ui_init import MainWindow
 
 
 class MainApp(wx.App):
