@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/10/2014
-Last Changed: 08/29/2018
+Last Changed: 10/16/2018
 Description : Runs cctbx.xfel integration module either in grid-search or final
               integration mode. Has options to output diagnostic visualizations.
               Includes selector class for best integration result selection
@@ -20,12 +20,13 @@ except ImportError:
 
 from spotfinder.array_family import flex
 
-import iota.components.iota_misc as misc
+import iota.components.iota_utils as util
 from libtbx import easy_pickle, easy_run
 
 
 class Empty:
-    pass
+    def __init__(self):
+        pass
 
 
 class Triage(object):
@@ -47,7 +48,7 @@ class Triage(object):
         from spotfinder.applications import signal_strength
 
         # run DISTL spotfinder
-        with misc.Capturing() as distl_output:
+        with util.Capturing() as distl_output:
             Org = signal_strength.run_signal_strength(params)
 
         # Extract relevant spotfinding info
@@ -300,7 +301,7 @@ class Integrator(object):
 
         # Actually run integration using iota.bulletproof
         error_message = ""
-        with misc.Capturing() as index_log:
+        with util.Capturing() as index_log:
             arguments = [
                 "distl.minimum_signal_height={}".format(str(self.s)),
                 "distl.minimum_spot_height={}".format(str(self.h)),
@@ -344,14 +345,14 @@ class Integrator(object):
 
         # Output results of integration (from the "info" object returned by
         # run_one_index_core)
-        if int_final == None:
+        if int_final is None:
             if error_message != "":
                 reason_for_failure = " - {}".format(error_message)
             else:
                 reason_for_failure = ""
             int_status = "not integrated" + reason_for_failure
             int_results = {"info": int_status}
-        elif int_final["observations"][0] == None:
+        elif int_final["observations"][0] is None:
             int_status = "no data recorded"
             int_results = {"info": int_status}
         else:
@@ -409,7 +410,7 @@ class Integrator(object):
 
         # write integration logfile
         if self.tag == "integrate":
-            misc.main_log(
+            util.main_log(
                 self.int_log,
                 "{:-^100}\n{:-^100}\n{:-^100}\n"
                 "".format(
@@ -421,7 +422,7 @@ class Integrator(object):
                 ),
             )
         else:
-            misc.main_log(
+            util.main_log(
                 self.int_log,
                 "{:-^100}\n".format(
                     " INTEGRATION: "
@@ -430,9 +431,9 @@ class Integrator(object):
                 ),
             )
         for item in index_log:
-            misc.main_log(self.int_log, item)
+            util.main_log(self.int_log, item)
 
-        misc.main_log(self.int_log, "\n[ {:^100} ]\n\n".format(int_status))
+        util.main_log(self.int_log, "\n[ {:^100} ]\n\n".format(int_status))
 
         # In single-image mode, write a file with h, k, l, I, sigma
         if self.single_image == True and self.tag == "integrate":
@@ -489,7 +490,7 @@ class Selector(object):
         """
 
         for i in self.grid:
-            if self.uc != None:
+            if self.uc is not None:
                 user_uc = [prm for prm in self.uc.parameters()]
                 delta_a = abs(i["a"] - user_uc[0])
                 delta_b = abs(i["b"] - user_uc[1])
@@ -510,9 +511,9 @@ class Selector(object):
 
             i_fail = (
                 i["strong"] <= self.min_ref
-                or (self.min_res != None and i["res"] >= self.min_res)
+                or (self.min_res is not None and i["res"] >= self.min_res)
                 or (
-                    self.pg != None
+                    self.pg is not None
                     and self.pg.replace(" ", "") != i["sg"].replace(" ", "")
                 )
                 or not uc_check

@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 08/31/2018
+Last Changed: 10/16/2018
 Description : IOTA GUI Threads and PostEvents
 """
 
@@ -26,10 +26,8 @@ from cctbx import crystal, statistics
 
 from prime.postrefine.mod_mx import mx_handler
 
-from iota.components.iota_utils import InputFinder, ObjectFinder
-from iota.components.iota_misc import Capturing
+from iota.components.iota_utils import InputFinder, ObjectFinder, Capturing
 import iota.components.iota_image as img
-import iota.components.iota_misc as misc
 
 ginp = InputFinder()
 
@@ -320,6 +318,7 @@ class ProcessingInfo(object):
         self.test_attribute = 0
 
 
+# noinspection PyDunderSlots
 class IOTAUIThread(Thread):
     """Main thread for IOTA UI; will contain all times and call all the other.
 
@@ -381,6 +380,7 @@ class IOTAUIThread(Thread):
         else:
             self.process_images()
 
+    # noinspection PyDunderSlots
     def onPlotTimer(self, e):
         """One second timer for status check and plotting."""
 
@@ -396,21 +396,24 @@ class IOTAUIThread(Thread):
                 self.state = "new images"
                 self.process_images()
             else:
-                if self.monitor_mode_timeout != None:
+                if self.monitor_mode_timeout is not None:
                     if self.timeout_start is None:
                         self.timeout_start = time.time()
                     else:
                         interval = time.time() - self.timeout_start
                         if interval >= self.monitor_mode_timeout:
+                            # noinspection PyDunderSlots
                             self.info.msg = "Timed out. Finishing..."
                             self.info.finished = True
                         else:
+                            # noinspection PyDunderSlots
                             self.info.msg = (
                                 "No images found! Timing out in {} seconds"
                                 "".format(int(self.monitor_mode_timeout - interval))
                             )
                 else:
                     self.find_new_images = self.monitor_mode
+                    # noinspection PyDunderSlots
                     self.info.msg = "No new images found! Waiting ..."
         else:
             self.info.msg = "Wrapping up ..."
@@ -465,7 +468,7 @@ class IOTAUIThread(Thread):
                 len(iterable), len(self.info.img_list)
             )
         else:
-            iterable = self.find_images(mode="start")
+            iterable = self.find_images()
             self.info.img_list = iterable
             self.info.msg = "Processing {} images...".format(len(self.info.img_list))
 
@@ -817,11 +820,11 @@ class SpotFinderMosflmThread:
             final_cell_line = [l for l in out.stdout_lines if "Final cell" in l]
             final_sg_line = [l for l in out.stdout_lines if "space group" in l]
 
-            if final_spots != []:
+            if final_spots:
                 spots = final_spots[0].rsplit()[0]
             else:
                 spots = 0
-            if final_cell_line != []:
+            if final_cell_line:
                 cell = (
                     final_cell_line[0]
                     .replace("Final cell (after refinement) is", "")
@@ -829,7 +832,7 @@ class SpotFinderMosflmThread:
                 )
             else:
                 cell = None
-            if final_sg_line != []:
+            if final_sg_line:
                 sg = final_sg_line[0].rsplit()[6]
             else:
                 sg = None
@@ -1008,8 +1011,8 @@ class InterceptorFileThread(Thread):
                         split_info.index(i) + idx_offset,
                         int(i[1]),
                         i[2],
-                        misc.makenone(i[3]),
-                        misc.makenone(i[4]),
+                        util.makenone(i[3]),
+                        util.makenone(i[4]),
                     ]
                     for i in split_info
                 ]
@@ -1021,8 +1024,8 @@ class InterceptorFileThread(Thread):
                         int(i[0]),
                         int(i[1]),
                         i[2],
-                        misc.makenone(i[3]),
-                        misc.makenone(i[4]),
+                        util.makenone(i[3]),
+                        util.makenone(i[4]),
                     ]
                     for i in split_info
                 ]
@@ -1146,7 +1149,7 @@ class InterceptorThread(Thread):
         wx.PostEvent(self.parent, evt)
 
         # Find new images
-        if self.data_list != []:
+        if self.data_list:
             last_file = self.data_list[-1]
         else:
             last_file = None

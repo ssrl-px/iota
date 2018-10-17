@@ -1,10 +1,10 @@
-from __future__ import division  # , print_function, absolute_import
+from __future__ import division, print_function, absolute_import
 from past.builtins import range
 
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 08/29/2018
+Last Changed: 10/16/2018
 Description : IOTA GUI Initialization module
 """
 
@@ -25,12 +25,11 @@ assert miller
 
 from iota import iota_version, gui_description, gui_license
 import iota.components.iota_input as inp
-import iota.components.iota_misc as misc
+import iota.components.iota_utils as util
 import iota.components.iota_frames as frm
 import iota.components.iota_dialogs as dlg
-from iota.components.iota_utils import InputFinder
 
-ginp = InputFinder()
+ginp = util.InputFinder()
 pid = os.getpid()
 
 try:
@@ -81,7 +80,7 @@ def parse_command_args(help_message):
     parser.add_argument(
         "--version",
         action="version",
-        version="IOTA {}".format(misc.iota_version),
+        version="IOTA {}".format(iota_version),
         help="Prints version info of IOTA",
     )
     parser.add_argument(
@@ -122,8 +121,7 @@ class MainWindow(wx.Frame):
 
     def __init__(self, parent, id, title):
         wx.Frame.__init__(self, parent, id, title, size=(800, 500))
-
-        # TODO: Allow GUI to be loaded with command line args, parse into PHIL
+        self.parent = parent
         self.iota_phil = inp.master_phil
         self.prefs_phil = None
         self.target_phil = None
@@ -268,6 +266,19 @@ class MainWindow(wx.Frame):
         self.Bind(
             ulc.EVT_LIST_INSERT_ITEM, self.onItemInserted, self.input_window.input
         )
+
+    def place_and_size(self):
+        """Place and size the frame."""
+
+        # Determine effective minimum size
+        self.SetMinSize(self.GetEffectiveMinSize())
+
+        # Find mouse position
+        mx, my = wx.GetMousePosition()
+
+        # Center on display
+        self.SetPosition((mx, my))
+        self.Center()
 
     def read_command_line_options(self):
 
@@ -437,7 +448,7 @@ class MainWindow(wx.Frame):
         # Set all main window params (including inputs)
         self.gparams = self.iota_phil.extract()
         self.gparams.input = inputs
-        self.gparams.description = misc.noneset(
+        self.gparams.description = util.noneset(
             self.input_window.project_title.ctr.GetValue()
         )
         self.gparams.output = self.input_window.project_folder.ctr.GetValue()
@@ -520,7 +531,7 @@ class MainWindow(wx.Frame):
                     log_phil = ip.parse("".join(lines))
                 self.iota_phil = self.iota_phil.fetch(source=log_phil)
                 rec_init.params = self.iota_phil.extract()
-                input_entries = [i for i in rec_init.params.input if i != None]
+                input_entries = [i for i in rec_init.params.input if i is not None]
                 rec_init.input_list = ginp.make_input_list(input_entries)
 
             self.gparams = self.iota_phil.extract()
@@ -548,6 +559,7 @@ class MainWindow(wx.Frame):
                     status=selected[0],
                     params=self.gparams,
                 )
+                self.proc_window.set_position()
                 self.proc_window.Show(True)
 
     def onRun(self, e):
@@ -569,12 +581,14 @@ class MainWindow(wx.Frame):
         self.proc_window = frm.ProcWindow(
             self, -1, title=title, target_phil=self.target_phil, phil=self.iota_phil
         )
-        init = InitAll(iver=misc.iota_version, input_list=input_list)
+        init = InitAll(iver=iota_version, input_list=input_list)
 
         self.proc_window.run(init)
 
         if self.proc_window.good_to_go:
             self.term_file = self.proc_window.tmp_abort_file
+
+            self.proc_window.set_position()
             self.proc_window.Show(True)
 
     def onOutputScript(self, e):
@@ -613,7 +627,7 @@ class MainWindow(wx.Frame):
 
             test_params = final_phil.extract()
 
-            with misc.Capturing() as txt_output:
+            with util.Capturing() as txt_output:
                 final_phil.show()
             txt_out = ""
             for one_output in txt_output:
@@ -647,6 +661,7 @@ class MainWindow(wx.Frame):
     def load_script(self, filepath, update_input_window=True):
         """Clears settings and loads new settings from IOTA param file.
 
+        :param update_input_window:
         :param filepath: path to script file
         :return:
         """
@@ -813,7 +828,7 @@ class InitAll(object):
 
         Optional selection of a random subset
         """
-        input_entries = [i for i in self.params.input if i != None]
+        input_entries = [i for i in self.params.input if i is not None]
         input_list = ginp.make_input_list(
             input_entries, filter=True, filter_type="image"
         )
@@ -880,7 +895,7 @@ class InitAll(object):
     #   from libtbx import easy_pickle as ep
     #
     #   if self.params.cctbx.selection.select_only.grid_search_path == None:
-    #     int_dir = misc.set_base_dir('integration', True)
+    #     int_dir = util.set_base_dir('integration', True)
     #   else:
     #     int_dir = self.params.cctbx.selection.select_only.grid_search_path
     #
@@ -912,7 +927,7 @@ class InitAll(object):
         # Check for existence of appropriate target files. If none are specified,
         # ask to generate defaults; if user says no, fail sanity check. If file is
         # specified but doesn't exist, show error message and fail sanity check
-        if self.target_phil == None:
+        if self.target_phil is None:
             if self.params.advanced.integrate_with == "cctbx":
                 write_def = wx.MessageDialog(
                     None,
@@ -922,9 +937,7 @@ class InitAll(object):
                 )
                 if write_def.ShowModal() == wx.ID_YES:
                     self.target_phil, _ = inp.write_defaults(
-                        current_path=self.params.output,
-                        write_param_file=False,
-                        method="cctbx",
+                        current_path=self.params.output, write_param_file=False
                     )
                     return True
                 else:
@@ -982,7 +995,7 @@ class InitAll(object):
             return False
 
         # If list-only option selected, output list only
-        if list_file != None:
+        if list_file is not None:
             with open(list_file, "w") as lf:
                 for i, input_file in enumerate(self.input_list, 1):
                     lf.write("{}\n".format(input_file))
@@ -999,10 +1012,10 @@ class InitAll(object):
                 self.params.n_processors = len(self.input_list)
 
         # Generate base folder paths
-        self.conv_base = misc.set_base_dir(
+        self.conv_base = util.set_base_dir(
             "converted_pickles", out_dir=self.params.output
         )
-        self.int_base = misc.set_base_dir("integration", out_dir=self.params.output)
+        self.int_base = util.set_base_dir("integration", out_dir=self.params.output)
         self.obj_base = os.path.join(self.int_base, "image_objects")
         self.fin_base = os.path.join(self.int_base, "final")
         self.log_base = os.path.join(self.int_base, "logs")
@@ -1051,23 +1064,23 @@ class InitAll(object):
         final_phil = inp.master_phil.format(python_object=self.params)
 
         # Generate text of params
-        with misc.Capturing() as txt_output:
+        with util.Capturing() as txt_output:
             final_phil.show()
         self.txt_out = ""
         for one_output in txt_output:
             self.txt_out += one_output + "\n"
 
         # Log starting info
-        misc.main_log(self.logfile, "{:=^80} \n".format(" IOTA MAIN LOG "))
-        misc.main_log(self.logfile, "{:-^80} \n".format(" SETTINGS FOR THIS RUN "))
-        misc.main_log(self.logfile, self.txt_out)
+        util.main_log(self.logfile, "{:*^80} \n".format(" IOTA MAIN LOG "))
+        util.main_log(self.logfile, "{:-^80} \n".format(" SETTINGS FOR THIS RUN "))
+        util.main_log(self.logfile, self.txt_out)
 
         # Log cctbx.xfel / DIALS settings
-        misc.main_log(
+        util.main_log(
             self.logfile,
             "{:-^80} \n\n"
             "".format(" TARGET FILE ({}) CONTENTS " "".format(local_target_file)),
         )
-        misc.main_log(self.logfile, self.target_phil)
+        util.main_log(self.logfile, self.target_phil)
 
         return True
