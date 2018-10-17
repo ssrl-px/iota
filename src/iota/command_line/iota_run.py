@@ -5,20 +5,22 @@ from __future__ import division, print_function, absolute_import
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 02/22/2018
+Last Changed: 10/16/2018
 Description : IOTA command-line module.
 """
 import os
 from libtbx import easy_pickle as ep
 
+from iota import iota_version
 from iota.components.iota_analysis import Analyzer
 from iota.components.iota_init import InitAll
 import iota.components.iota_image as img
 import iota.components.iota_cmd as cmd
-import iota.components.iota_misc as misc
+import iota.components.iota_utils as util
+
 from libtbx.easy_mp import parallel_map
 
-iota_version = misc.iota_version
+iota_version = iota_version
 
 help_message = (
     "\n{:-^70}"
@@ -186,9 +188,7 @@ class XTermIOTA:
     def run_analysis(self):
         """Run analysis of integrated images."""
         cmd.Command.start("Analyzing results ")
-        analysis = Analyzer(
-            init=self.init, all_objects=self.img_objects, gui_mode=False
-        )
+        analysis = Analyzer(init=self.init, all_objects=self.img_objects)
         cmd.Command.end("Analyzing results -- DONE")
         analysis.print_results()
         analysis.unit_cell_analysis()
@@ -204,14 +204,14 @@ class XTermIOTA:
         self.run_all()
 
         # Analysis of integration results
-        final_objects = [i for i in self.img_objects if i.fail == None]
+        final_objects = [i for i in self.img_objects if i.fail is None]
         if len(final_objects) > 0:
             self.run_analysis()
         else:
             print("No images successfully integrated!")
 
         # Exit IOTA
-        misc.iota_exit()
+        util.iota_exit()
 
     def run(self):
         """Run IOTA."""
@@ -221,7 +221,7 @@ class XTermIOTA:
         self.run_import()
 
         # Remove rejected images from image object list
-        acc_img_objects = [i.fail for i in self.img_objects if i.fail == None]
+        acc_img_objects = [i.fail for i in self.img_objects if i.fail is None]
         cmd.Command.end(
             "Accepted {} of {} images -- DONE "
             "".format(len(acc_img_objects), len(self.img_objects))
@@ -230,10 +230,10 @@ class XTermIOTA:
         # Exit if none of the images have diffraction
         if str(self.init.params.image_triage.type).lower() != "none":
             if len(acc_img_objects) == 0:
-                misc.main_log(self.init.logfile, "No images have diffraction!", True)
-                misc.iota_exit()
+                util.main_log(self.init.logfile, "No images have diffraction!", True)
+                util.iota_exit()
             else:
-                misc.main_log(
+                util.main_log(
                     self.init.logfile,
                     "{} out of {} images have diffraction "
                     "(at least {} Bragg peaks)"
@@ -246,21 +246,21 @@ class XTermIOTA:
 
         # Check for -c option and exit if true
         if self.init.params.image_conversion.convert_only:
-            misc.iota_exit()
+            util.iota_exit()
 
         # Process Images
         self.stage = "process"
         self.run_process()
 
         # Analysis of integration results
-        final_objects = [i for i in self.img_objects if i.fail == None]
+        final_objects = [i for i in self.img_objects if i.fail is None]
         if len(final_objects) > 0:
             self.run_analysis()
         else:
             print("No images successfully integrated!")
 
         # Exit IOTA
-        misc.iota_exit()
+        util.iota_exit()
 
 
 # ============================================================================ #

@@ -5,7 +5,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/07/2015
-Last Changed: 08/29/2018
+Last Changed: 10/16/2018
 Description : Analyzes integration results and outputs them in an accessible
               format. Includes (optional) unit cell analysis by hierarchical
               clustering (Zeldin, et al., Acta Cryst D, 2013). In case of
@@ -20,6 +20,7 @@ import os
 import numpy as np
 from collections import Counter
 import math
+import warnings
 
 try:  # for Py3 compatibility
     import itertools.izip as zip
@@ -44,8 +45,8 @@ import time
 
 assert time
 
-import iota.components.iota_misc as misc
-from iota.components.iota_misc import Capturing
+from iota import iota_version, now
+import iota.components.iota_utils as util
 from prime.postrefine import mod_input
 
 
@@ -91,6 +92,7 @@ class Plotter(object):
         fig, ax = plt.subplots()
         fig.canvas.draw()
         heatmap = plt.pcolor(hm_data, cmap="Reds")
+
         ax.set_yticks(np.arange(len(rows)) + 0.5, minor=False)
         ax.set_xticks(np.arange(len(cols)) + 0.5, minor=False)
         ax.set_yticklabels(row_labels, minor=False)
@@ -305,12 +307,7 @@ class Plotter(object):
             # Plot histogram of distances to each beam center from median
             ax2 = fig.add_subplot(gsp[1, :])
             ax2_n, ax2_bins, ax2_patches = plt.hist(
-                beam_dist,
-                20,
-                normed=False,
-                facecolor="b",
-                alpha=0.75,
-                histtype="stepfilled",
+                beam_dist, 20, facecolor="b", alpha=0.75, histtype="stepfilled"
             )
             ax2_height = (np.max(ax2_n) + 9) // 10 * 10
             ax2.axis([0, np.max(beam_dist), 0, ax2_height])
@@ -336,7 +333,7 @@ class Plotter(object):
         gsp = gridspec.GridSpec(2, 1)
         hr = fig.add_subplot(gsp[0, :])
         hr_n, hr_bins, hr_patches = plt.hist(
-            hres, 20, normed=False, facecolor="b", alpha=0.75, histtype="stepfilled"
+            hres, 20, facecolor="b", alpha=0.75, histtype="stepfilled"
         )
         hr_height = (np.max(hr_n) + 9) // 10 * 10
         hr.axis([np.min(hres), np.max(hres), 0, hr_height])
@@ -346,7 +343,7 @@ class Plotter(object):
 
         lr = fig.add_subplot(gsp[1, :])
         lr_n, lr_bins, lr_patches = plt.hist(
-            lres, 20, normed=False, facecolor="b", alpha=0.75, histtype="stepfilled"
+            lres, 20, facecolor="b", alpha=0.75, histtype="stepfilled"
         )
         lr_height = (np.max(lr_n) + 9) // 10 * 10
         lr.axis([np.min(lres), np.max(lres), 0, lr_height])
@@ -365,8 +362,8 @@ class Analyzer(object):
 
     def __init__(self, init, all_objects, gui_mode=False):
 
-        self.ver = misc.iota_version
-        self.now = init.now
+        self.ver = iota_version
+        self.now = now
         self.params = init.params
         self.output_dir = init.int_base
         self.viz_dir = init.viz_base
@@ -387,7 +384,7 @@ class Analyzer(object):
 
         # Analyze image objects
         self.all_objects = all_objects
-        self.final_objects = [i for i in all_objects if i.fail == None]
+        self.final_objects = [i for i in all_objects if i.fail is None]
 
         self.analysis_result.__setattr__("image_objects", self.all_objects)
 
@@ -422,7 +419,6 @@ class Analyzer(object):
                     i for i in self.all_objects if i.fail == "failed integration"
                 ]
 
-            self.pickles = [i.final["final"] for i in self.final_objects]
             self.hres = [i.final["res"] for i in self.final_objects]
             self.lres = [i.final["lres"] for i in self.final_objects]
             self.spots = [i.final["strong"] for i in self.final_objects]
@@ -470,8 +466,7 @@ class Analyzer(object):
         cons_a = Counter(self.a).most_common(1)[0][0]
 
         if final_table is None:
-            final_table = []
-            final_table.append("\n\n{:-^80}\n".format("ANALYSIS OF RESULTS"))
+            final_table = ["\n\n{:-^80}\n".format("ANALYSIS OF RESULTS")]
 
             # In case no images were integrated
             if self.final_objects is None:
@@ -536,7 +531,7 @@ class Analyzer(object):
                     if self.params.analysis.summary_graphs:
                         if (
                             self.params.advanced.integrate_with == "cctbx"
-                            and self.params.cctbx.grid_search.type != None
+                            and self.params.cctbx.grid_search.type is not None
                         ):
                             plot.plot_spotfinding_heatmap(write_files=True)
                         plot.plot_res_histogram(write_files=True)
@@ -544,11 +539,14 @@ class Analyzer(object):
                             write_files=True, return_values=True
                         )
                     else:
-                        beamXY_info = plot.calculate_beam_xy()
-                        beamX, beamY = beamXY_info[:2]
-                        med_beamX = np.median(beamX)
-                        med_beamY = np.median(beamY)
-                        pixel_size = beamXY_info[-1]
+                        with warnings.catch_warnings():
+                            # To catch any 'mean of empty slice' runtime warnings
+                            warnings.simplefilter("ignore", category=RuntimeWarning)
+                            beamXY_info = plot.calculate_beam_xy()
+                            beamX, beamY = beamXY_info[:2]
+                            med_beamX = np.median(beamX)
+                            med_beamY = np.median(beamY)
+                            pixel_size = beamXY_info[-1]
 
                     final_table.append(
                         "Median Beam Center:    X = {:<4.2f}, Y = {:<4.2f}"
@@ -560,7 +558,7 @@ class Analyzer(object):
             self.analysis_result.__setattr__("final_table", final_table)
 
         for item in final_table:
-            misc.main_log(self.logfile, item, (not self.gui_mode))
+            util.main_log(self.logfile, item, (not self.gui_mode))
 
     def unit_cell_analysis(self):
         """Calls unit cell analysis module, which uses hierarchical clustering
@@ -575,10 +573,10 @@ class Analyzer(object):
         if self.final_objects is None:
             self.cons_uc = None
             self.cons_pg = None
-            misc.main_log(
+            util.main_log(
                 self.logfile, "\n\n{:-^80}\n".format(" UNIT CELL ANALYSIS "), True
             )
-            misc.main_log(self.logfile, "\n UNIT CELL CANNOT BE DETERMINED!", True)
+            util.main_log(self.logfile, "\n UNIT CELL CANNOT BE DETERMINED!", True)
 
         elif len(self.final_objects) == 1:
             unit_cell = (
@@ -590,7 +588,7 @@ class Analyzer(object):
                 self.final_objects[0].final["gamma"],
             )
             point_group = self.final_objects[0].final["sg"]
-            misc.main_log(
+            util.main_log(
                 self.logfile, "\n\n{:-^80}\n".format(" UNIT CELL ANALYSIS "), True
             )
             uc_line = (
@@ -606,7 +604,7 @@ class Analyzer(object):
                     unit_cell[5],
                 )
             )
-            misc.main_log(self.logfile, uc_line, True)
+            util.main_log(self.logfile, uc_line, True)
 
             self.cons_pg = point_group
             self.cons_uc = unit_cell
@@ -642,8 +640,11 @@ class Analyzer(object):
                             obj_list.append(self.final_objects[random_number])
                         else:
                             obj_list.append(self.final_objects[random_number])
-                if obj_list == []:
-                    obj_list = self.final_objects
+
+                if obj_list:
+                    pickles = [i.final["final"] for i in obj_list]
+                else:
+                    pickles = [i.final["final"] for i in self.final_objects]
 
                 # Cluster from iterable (this doesn't keep filenames - bad!)
                 # with Capturing() as suppressed_output:
@@ -660,7 +661,7 @@ class Analyzer(object):
                 #   ucs = Cluster.from_iterable(iterable=uc_iterable)
 
                 # Cluster from files (slow, but will keep for now)
-                ucs = Cluster.from_files(pickle_list=self.pickles)
+                ucs = Cluster.from_files(pickle_list=pickles)
 
                 # Do clustering
                 clusters, _ = ucs.ab_cluster(
@@ -674,10 +675,10 @@ class Analyzer(object):
 
                 # extract clustering info and add to summary output list
                 if cluster_limit is None:
-                    if len(self.pickles) / 10 >= 10:
+                    if len(pickles) / 10 >= 10:
                         cluster_limit = 10
                     else:
-                        cluster_limit = len(self.pickles) / 10
+                        cluster_limit = len(pickles) / 10
 
                 for cluster in clusters:
                     sorted_pg_comp = sorted(
@@ -875,11 +876,11 @@ class Analyzer(object):
             self.cons_pg = uc_pick[1]
             self.cons_uc = uc_pick[2]
 
-            if uc_pick[3] != None:
+            if uc_pick[3] is not None:
                 self.prime_data_path = uc_pick[3]
 
             for item in uc_table:
-                misc.main_log(self.logfile, item, (not self.gui_mode))
+                util.main_log(self.logfile, item, (not self.gui_mode))
 
             self.analysis_result.__setattr__("clusters", self.clusters)
             self.analysis_result.__setattr__("cons_pg", self.cons_pg)
@@ -897,7 +898,7 @@ class Analyzer(object):
 
         summary = []
 
-        misc.main_log(
+        util.main_log(
             self.logfile, "\n\n{:-^80}\n".format("SUMMARY"), (not self.gui_mode)
         )
 
@@ -940,10 +941,10 @@ class Analyzer(object):
         )
 
         for item in summary:
-            misc.main_log(self.logfile, "{}".format(item), (not self.gui_mode))
+            util.main_log(self.logfile, "{}".format(item), (not self.gui_mode))
 
-        misc.main_log(self.logfile, "\n\nIOTA version {0}".format(self.ver))
-        misc.main_log(self.logfile, "{}\n".format(self.now))
+        util.main_log(self.logfile, "\n\nIOTA version {0}".format(self.ver))
+        util.main_log(self.logfile, "{}\n".format(self.now))
 
         # Write list files:
         if write_files:
@@ -964,7 +965,7 @@ class Analyzer(object):
             int_images_file = os.path.join(self.output_dir, "int_image_pickles.lst")
             analyzer_file = os.path.join(self.output_dir, "analysis.pickle")
 
-            if self.prime_data_path == None:
+            if self.prime_data_path is None:
                 self.prime_data_path = integrated_file
 
             if len(self.no_diff_objects) > 0:
@@ -1149,7 +1150,7 @@ class Analyzer(object):
 
         prime_phil = mod_input.master_phil.format(python_object=prime_params)
 
-        with Capturing() as output:
+        with util.Capturing() as output:
             prime_phil.show()
 
         txt_out = ""
