@@ -4,7 +4,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 10/30/2018
+Last Changed: 11/05/2018
 Description : Reads command line arguments. Initializes all IOTA starting
               parameters. Starts main log.
 """
@@ -19,7 +19,7 @@ import dials.util.command_line as cmd
 
 import iota.components.iota_input as inp
 from iota.components.iota_utils import InputFinder, get_mpi_rank_and_size
-from iota.components.iota_base import InitGeneral
+from iota.components.iota_base import InitBase
 
 
 # --------------------------- Initialize IOTA -------------------------------- #
@@ -121,11 +121,11 @@ def parse_command_args(iver, help_message):
     return parser
 
 
-class XInitAll(InitGeneral):
+class XInitAll(InitBase):
     """Class to initialize IOTA parameters for command-line jobs."""
 
     def __init__(self, help_message):
-        InitGeneral.__init__(self)
+        InitBase.__init__(self)
 
         self.logo = (
             "\n\n"
@@ -188,8 +188,6 @@ class XInitAll(InitGeneral):
 
         :return: True if successful, False if fails
         """
-        print("DEBUG: INITIALIZING XTERM UI... ")
-
         self.args, self.phil_args = parse_command_args(
             self.iver, self.help_message
         ).parse_known_args()
@@ -221,7 +219,7 @@ class XInitAll(InitGeneral):
             carg = os.path.abspath(self.args.path[0])
             if os.path.isfile(carg):
                 ptype = ginp.get_file_type(carg)
-                if "image" and "file" in ptype.lower():
+                if ptype.lower() in ("raw image", "image pickle"):
                     msg = "\nIOTA will run in SINGLE-FILE mode using {}:\n".format(carg)
                     mode = "auto"
                 elif "iota" and "settings" in ptype.lower():
@@ -356,6 +354,15 @@ class XInitAll(InitGeneral):
 
         return True, "IOTA_XTERM_INIT: Initialization complete!"
 
+    def initialize_info_object(self):
+        # Add input to info object
+        self.info.img_list = [
+            [i, len(self.input_list) + 1, j] for i, j in enumerate(self.input_list, 1)
+        ]
+        self.info.nref_list = [0] * len(self.info.img_list)
+        self.info.nref_xaxis = [i[0] for i in self.info.img_list]
+        self.info.res_list = [0] * len(self.info.img_list)
+
     def run(self):
         """Override of base INIT class to account for XTerm specifics.
 
@@ -377,6 +384,9 @@ class XInitAll(InitGeneral):
         if not init_param:
             return False, msg
 
+        # Initialize info object
+        self.initialize_info_object()
+
         # Initalize main log (iota.log)
         init_log, msg = self.initialize_main_log()
         if not init_log:
@@ -392,5 +402,5 @@ if __name__ == "__main__":
     iota_version = "1.0.001G"
     help_message = ""
 
-    initialize = InitGeneral()
+    initialize = InitBase()
     initialize.run()

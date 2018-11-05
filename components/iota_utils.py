@@ -4,7 +4,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 12/19/2016
-Last Changed: 10/18/2018
+Last Changed: 11/05/2018
 Description : Module with basic utilities of broad applications in IOTA
 """
 
@@ -221,7 +221,7 @@ def make_image_path(raw_img, input_base, base_path):
     # return dest_folder
 
 
-def make_filename(path):
+def make_filename(path, prefix=None, suffix=None, new_ext=None):
     bname = os.path.basename(path)
     ext = bname.split(os.extsep)[-1]
     if ext.isdigit():
@@ -229,6 +229,16 @@ def make_filename(path):
     else:
         fn_list = bname.split(".")
         filename = ".".join(fn_list[0:-1])
+
+    if prefix:
+        filename = "{}_{}".format(prefix, filename)
+
+    if suffix:
+        filename = "{}_{}".format(filename, suffix)
+
+    if new_ext:
+        filename = "{}.{}".format(filename, new_ext)
+
     return filename
 
 
@@ -716,5 +726,10 @@ class RadAverageCalculator(object):
 
 
 class IOTATermination(Exception):
+    def __init__(self, termination):
+        Exception.__init__(self, termination)
+
+
+class InputError(Exception):
     def __init__(self, termination):
         Exception.__init__(self, termination)
