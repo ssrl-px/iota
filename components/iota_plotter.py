@@ -5,7 +5,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/07/2015
-Last Changed: 11/05/2018
+Last Changed: 11/21/2018
 Description : IOTA Plotter module. Exists to provide custom MatPlotLib plots
               that are dynamic, fast-updating, interactive, and keep up with
               local wxPython upgrades.
@@ -32,7 +32,7 @@ from iota.components.iota_ui_base import IOTABaseFrame, IOTABasePanel
 
 
 class PlotWindow(IOTABaseFrame):
-    def __init__(self, parent, id, title):
+    def __init__(self, parent, id, title, plot_panel=None):
         IOTABaseFrame.__init__(self, parent, id, title, size=(500, 500))
 
         self.initialize_toolbar()
@@ -49,14 +49,14 @@ class PlotWindow(IOTABaseFrame):
         self.Bind(wx.EVT_TOOL, self.onSave, self.tb_btn_save)
         self.Bind(wx.EVT_TOOL, self.onQuit, self.tb_btn_quit)
 
-        self.plot_panel = PlotPanel(self)
-        self.main_sizer.Add(self.plot_panel, 1, flag=wx.EXPAND)
+        self.plot_panel = plot_panel
 
-    def plot(self, figure, axes3D=False):
-        self.figure = figure
-        self.plot_panel.embed_plot(self.figure, axes3D)
-        self.plot_panel.canvas.draw()
-        self.Layout()
+    def plot(self):
+        if self.plot_panel:
+            self.main_sizer.Add(self.plot_panel, 1, flag=wx.EXPAND)
+            self.SetSize(self.plot_panel.canvas.GetSize())
+            self.plot_panel.canvas.draw()
+            self.Layout()
 
     def onSave(self, e):
         save_dlg = wx.FileDialog(
@@ -69,34 +69,38 @@ class PlotWindow(IOTABaseFrame):
         )
         if save_dlg.ShowModal() == wx.ID_OK:
             script_filepath = save_dlg.GetPath()
-            self.figure.savefig(script_filepath, format="pdf", bbox_inches=0)
+            self.plot_panel.figure.savefig(script_filepath, format="pdf", bbox_inches=0)
 
     def onQuit(self, e):
         self.Close()
 
 
-class PlotPanel(IOTABasePanel):
-    def __init__(self, parent, *args, **kwargs):
-        IOTABasePanel.__init__(self, parent=parent, *args, **kwargs)
-
-    def embed_plot(self, figure, axes3D=False):
-        self.canvas = FigureCanvas(self, -1, figure)
-        self.main_sizer.Add(self.canvas, 1, flag=wx.EXPAND)
-
-
-class Plotter:
+class Plotter(IOTABasePanel):
     """Generic Plotter (will plot anything given specific data)"""
 
-    def __init__(self, params=None, final_objects=None, viz_dir=None):
-        """constructor."""
+    def __init__(
+        self,
+        parent,
+        params=None,
+        final_objects=None,
+        # viz_dir=None,
+        *args,
+        **kwargs
+    ):
+        IOTABasePanel.__init__(self, parent=parent, *args, **kwargs)
         self.final_objects = final_objects
         self.params = params
-        if viz_dir:
-            self.hm_file = os.path.join(viz_dir, "heatmap.pdf")
-            self.xy_file = os.path.join(viz_dir, "beam_xy.pdf")
-            self.hi_file = os.path.join(viz_dir, "res_histogram.pdf")
+        # if viz_dir:
+        #   self.hm_file = os.path.join(viz_dir, 'heatmap.pdf')
+        #   self.xy_file = os.path.join(viz_dir, 'beam_xy.pdf')
+        #   self.hi_file = os.path.join(viz_dir, 'res_histogram.pdf')
 
         self.font = {"fontfamily": "sans-serif", "fontsize": 12}
+
+    def initialize_figure(self, figsize=(9, 9)):
+        self.figure = Figure(figsize=figsize)
+        self.canvas = FigureCanvas(self, -1, self.figure)
+        self.main_sizer.Add(self.canvas, 1, flag=wx.EXPAND)
 
     def plot_res_histogram(self):
 
@@ -105,9 +109,8 @@ class Plotter:
         lres = [i.final["lres"] for i in self.final_objects]
 
         # Plot figure
-        fig = Figure(figsize=(9, 13))
         gsp = gridspec.GridSpec(2, 1)
-        hr = fig.add_subplot(gsp[0, :])
+        hr = self.figure.add_subplot(gsp[0, :])
         hr_n, hr_bins, hr_patches = hr.hist(
             hres, 20, facecolor="b", alpha=0.75, histtype="stepfilled"
         )
@@ -117,7 +120,7 @@ class Plotter:
         hr.set_xlabel(reslim, fontsize=15)
         hr.set_ylabel("No. of frames", fontsize=15)
 
-        lr = fig.add_subplot(gsp[1, :])
+        lr = self.figure.add_subplot(gsp[1, :])
         lr_n, lr_bins, lr_patches = lr.hist(
             lres, 20, facecolor="b", alpha=0.75, histtype="stepfilled"
         )
@@ -127,8 +130,7 @@ class Plotter:
         lr.set_xlabel(reslim, fontsize=15)
         lr.set_ylabel("No. of frames", fontsize=15)
 
-        fig.set_tight_layout(tight=True)
-        return fig
+        self.figure.set_tight_layout(tight=True)
 
     def plot_spotfinding_heatmap(self):
 
@@ -149,8 +151,7 @@ class Plotter:
         row_labels = [str(i) for i in rows]
         col_labels = [str(j) for j in cols]
 
-        fig = Figure()
-        ax = fig.add_subplot(111)
+        ax = self.figure.add_subplot(111)
         ax.pcolor(hm_data, cmap="Reds")
 
         ax.set_yticks(np.arange(len(rows)) + 0.5, minor=False)
@@ -174,81 +175,7 @@ class Plotter:
                     verticalalignment="center",
                 )
 
-        fig.set_tight_layout(True)
-        return fig
-
-    def calculate_beam_xy(self):
-        """calculates beam xy and other parameters."""
-        info = []
-
-        # Import relevant info
-        pixel_size = self.final_objects[0].final["pixel_size"]
-        for i in [j.final for j in self.final_objects]:
-            try:
-                info.append(
-                    [
-                        i,
-                        i["beamX"],
-                        i["beamY"],
-                        i["wavelength"],
-                        i["distance"],
-                        (i["a"], i["b"], i["c"], i["alpha"], i["beta"], i["gamma"]),
-                    ]
-                )
-            except IOError as e:
-                print("IOTA ANALYSIS ERROR: BEAMXY failed! ", e)
-                pass
-
-        # Calculate beam center coordinates and distances
-        beamX = [i[1] for i in info]
-        beamY = [j[2] for j in info]
-        beam_dist = [
-            math.hypot(i[1] - np.median(beamX), i[2] - np.median(beamY)) for i in info
-        ]
-        beam_dist_std = np.std(beam_dist)
-        img_list = [
-            [i[0], i[1], i[2], i[3], i[4], i[5], j] for i, j in zip(info, beam_dist)
-        ]
-
-        # Separate out outliers
-        outliers = [i for i in img_list if i[3] > 2 * beam_dist_std]
-        clean = [i for i in img_list if i[3] <= 2 * beam_dist_std]
-        cbeamX = [i[1] for i in clean]
-        cbeamY = [j[2] for j in clean]
-        obeamX = [i[1] for i in outliers]
-        obeamY = [j[2] for j in outliers]
-
-        # Calculate median wavelength, detector distance and unit cell params from
-        # non-outliers only
-        wavelengths = [i[3] for i in clean]
-        distances = [i[4] for i in clean]
-        cells = [i[5] for i in clean]
-
-        wavelength = np.median(wavelengths)
-        det_distance = np.median(distances)
-        a = np.median([i[0] for i in cells])
-        b = np.median([i[1] for i in cells])
-        c = np.median([i[2] for i in cells])
-
-        # Calculate predicted L +/- 1 misindexing distance for each cell edge
-        aD = det_distance * math.tan(2 * math.asin(wavelength / (2 * a)))
-        bD = det_distance * math.tan(2 * math.asin(wavelength / (2 * b)))
-        cD = det_distance * math.tan(2 * math.asin(wavelength / (2 * c)))
-
-        return (
-            beamX,
-            beamY,
-            cbeamX,
-            cbeamY,
-            obeamX,
-            obeamY,
-            beam_dist,
-            [i[4] for i in info],
-            aD,
-            bD,
-            cD,
-            pixel_size,
-        )
+        self.figure.set_tight_layout(True)
 
     def plot_beam_xy(self, write_files=False, return_values=False, threeD=False):
         """Plot beam center coordinates and a histogram of distances from the
@@ -259,6 +186,7 @@ class Plotter:
         """
 
         # Get values
+        calculator = Calculator(final_objects=self.final_objects)
         (
             beamX,
             beamY,
@@ -272,17 +200,17 @@ class Plotter:
             bD,
             cD,
             pixel_size,
-        ) = self.calculate_beam_xy()
+        ) = calculator.calculate_beam_xy()
 
         # Plot figure
         if threeD:
-            fig = Figure(figsize=(8, 8))
-            ax1 = fig.add_subplot(111, projection="3d")
+            self.figure.set_size_inches(w=8, h=8)
+            ax1 = self.figure.add_subplot(111, projection="3d")
             Axes3D.mouse_init(ax1)
         else:
-            fig = Figure(figsize=(9, 13))
+            self.figure.set_size_inches(w=9, h=13)
             gsp = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
-            ax1 = fig.add_subplot(gsp[0, :], aspect="equal")
+            ax1 = self.figure.add_subplot(gsp[0, :], aspect="equal")
 
         # Calculate axis limits of beam center scatter plot
         ax1_delta = np.ceil(np.max(beam_dist))
@@ -361,7 +289,7 @@ class Plotter:
 
         if not threeD:
             # Plot histogram of distances to each beam center from median
-            ax2 = fig.add_subplot(gsp[1, :])
+            ax2 = self.figure.add_subplot(gsp[1, :])
             ax2_n, ax2_bins, ax2_patches = ax2.hist(
                 beam_dist, 20, facecolor="b", alpha=0.75, histtype="stepfilled"
             )
@@ -370,5 +298,82 @@ class Plotter:
             ax2.set_xlabel("Distance from median (mm)", fontsize=15)
             ax2.set_ylabel("No. of images", fontsize=15)
 
-        fig.set_tight_layout(True)
-        return fig
+        self.figure.set_tight_layout(True)
+
+
+class Calculator:
+    def __init__(self, final_objects=None):
+        self.final_objects = final_objects
+
+    def calculate_beam_xy(self):
+        """calculates beam xy and other parameters."""
+        info = []
+
+        # Import relevant info
+        pixel_size = self.final_objects[0].final["pixel_size"]
+        for i in [j.final for j in self.final_objects]:
+            try:
+                info.append(
+                    [
+                        i,
+                        i["beamX"],
+                        i["beamY"],
+                        i["wavelength"],
+                        i["distance"],
+                        (i["a"], i["b"], i["c"], i["alpha"], i["beta"], i["gamma"]),
+                    ]
+                )
+            except IOError as e:
+                print("IOTA ANALYSIS ERROR: BEAMXY failed! ", e)
+                pass
+
+        # Calculate beam center coordinates and distances
+        beamX = [i[1] for i in info]
+        beamY = [j[2] for j in info]
+        beam_dist = [
+            math.hypot(i[1] - np.median(beamX), i[2] - np.median(beamY)) for i in info
+        ]
+        beam_dist_std = np.std(beam_dist)
+        img_list = [
+            [i[0], i[1], i[2], i[3], i[4], i[5], j] for i, j in zip(info, beam_dist)
+        ]
+
+        # Separate out outliers
+        outliers = [i for i in img_list if i[3] > 2 * beam_dist_std]
+        clean = [i for i in img_list if i[3] <= 2 * beam_dist_std]
+        cbeamX = [i[1] for i in clean]
+        cbeamY = [j[2] for j in clean]
+        obeamX = [i[1] for i in outliers]
+        obeamY = [j[2] for j in outliers]
+
+        # Calculate median wavelength, detector distance and unit cell params from
+        # non-outliers only
+        wavelengths = [i[3] for i in clean]
+        distances = [i[4] for i in clean]
+        cells = [i[5] for i in clean]
+
+        wavelength = np.median(wavelengths)
+        det_distance = np.median(distances)
+        a = np.median([i[0] for i in cells])
+        b = np.median([i[1] for i in cells])
+        c = np.median([i[2] for i in cells])
+
+        # Calculate predicted L +/- 1 misindexing distance for each cell edge
+        aD = det_distance * math.tan(2 * math.asin(wavelength / (2 * a)))
+        bD = det_distance * math.tan(2 * math.asin(wavelength / (2 * b)))
+        cD = det_distance * math.tan(2 * math.asin(wavelength / (2 * c)))
+
+        return (
+            beamX,
+            beamY,
+            cbeamX,
+            cbeamY,
+            obeamX,
+            obeamY,
+            beam_dist,
+            [i[4] for i in info],
+            aD,
+            bD,
+            cD,
+            pixel_size,
+        )

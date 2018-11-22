@@ -4,14 +4,13 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 11/05/2018
+Last Changed: 11/21/2018
 Description : IOTA GUI Initialization module
 """
 
+
 import os
 import wx
-
-print(wx.version())
 
 import wx.lib.agw.ultimatelistctrl as ulc
 import multiprocessing
@@ -226,18 +225,10 @@ class MainWindow(IOTABaseFrame):
             ulc.EVT_LIST_INSERT_ITEM, self.onItemInserted, self.input_window.input
         )
 
-    # def place_and_size(self):
-    #   """ Place and size the frame"""
-    #
-    #   # Determine effective minimum size
-    #   self.SetMinSize(self.GetEffectiveMinSize())
-    #
-    #   # Find mouse position
-    #   mx, my = wx.GetMousePosition()
-    #
-    #   # Center on display
-    #   self.SetPosition((mx, my))
-    #   self.Center()
+        from platform import python_version
+
+        print("Python  : ", python_version())
+        print("wxPython: ", wx.__version__)
 
     def read_command_line_options(self):
 
@@ -496,10 +487,11 @@ class MainWindow(IOTABaseFrame):
 
             # Re-open processing window with results of the run
             if recovery_mode == 0:
+                title = "Image Processing Run {}".format(selected[2])
                 self.proc_window = frm.ProcWindow(
                     self,
                     -1,
-                    title="Image Processing",
+                    title=title,
                     target_phil=rec_target_phil,
                     phil=self.iota_phil,
                 )
@@ -516,8 +508,6 @@ class MainWindow(IOTABaseFrame):
         # Run full processing
 
         self.init_settings()
-        title = "Image Processing"
-
         input_list = []
         input_items = self.input_window.input.all_data_images
 
@@ -525,7 +515,7 @@ class MainWindow(IOTABaseFrame):
             input_list.extend(imageset)
 
         self.proc_window = frm.ProcWindow(
-            self, -1, title=title, target_phil=self.target_phil, phil=self.iota_phil
+            self, -1, title="", target_phil=self.target_phil, phil=self.iota_phil
         )
         init = UIInitAll()
 
@@ -538,6 +528,10 @@ class MainWindow(IOTABaseFrame):
             self.term_file = self.proc_window.tmp_abort_file
 
             self.proc_window.place_and_size(set_by="parent")
+            self.proc_window.SetTitle(
+                "Image Processing Run {}"
+                "".format(int(os.path.basename(init.int_base)))
+            )
             self.proc_window.Show(True)
 
     def onOutputScript(self, e):
@@ -720,12 +714,6 @@ class MainWindow(IOTABaseFrame):
 # ------------------------------ Initialization  ----------------------------- #
 
 from iota.components.iota_base import InitBase
-
-
-class ProcessInfo(object):
-    """Object with all the processing info UI needs to plot results."""
-
-    pass
 
 
 class UIInitAll(InitBase):
