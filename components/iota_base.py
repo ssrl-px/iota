@@ -4,7 +4,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/18/2018
-Last Changed: 11/21/2018
+Last Changed: 11/29/2018
 Description : IOTA base classes
 """
 
@@ -213,6 +213,16 @@ class ImageImporterBase:
         )
         self.viz_file = os.path.join(self.img_object.viz_path, fname)
 
+        # Make paths if they don't exist already
+        for path in [
+            self.img_object.obj_path,
+            self.img_object.int_path,
+            self.img_object.log_path,
+            self.img_object.viz_path,
+        ]:
+            if not os.path.isdir(path):
+                os.makedirs(path)
+
         # Populate the 'final' dictionary
         self.img_object.final["final"] = self.img_object.int_file
         self.img_object.final["img"] = self.img_object.img_path
@@ -271,6 +281,7 @@ class ImageImporterBase:
     def make_image_object(self, input_entry):
         """Run image importer (override as needed)"""
         img_object, error = self.import_image(input_entry=input_entry)
+
         if error:
             print(error)
         return img_object
@@ -285,10 +296,15 @@ class ImageImporterBase:
 class ProcessingThreadBase(Thread):
     """Base class for submitting processing jobs to multiple cores."""
 
-    def __init__(self, init=None, iterable=None, stage="all"):
+    def __init__(
+        self,
+        init=None,
+        # iterable=None,
+        stage="all",
+    ):
         Thread.__init__(self, name="iota_proc")
         self.init = init
-        self.iterable = iterable
+        self.iterable = self.init.iterable
         self.stage = stage
         self.importer = None
         self.integrator = None
@@ -314,16 +330,10 @@ class ProcessingThreadBase(Thread):
                 for i, j in enumerate(self.img_objects, 1)
             ]
         else:
-            if self.init.params.cctbx_ha14.selection.select_only.flag_on:
-                self.iterable = [
-                    [i, len(self.init.gs_img_objects) + 1, j]
-                    for i, j in enumerate(self.init.gs_img_objects, 1)
-                ]
-            else:
-                self.iterable = [
-                    [i, len(self.init.input_list) + 1, j]
-                    for i, j in enumerate(self.init.input_list, 1)
-                ]
+            self.iterable = [
+                [i, len(self.init.input_list) + 1, j]
+                for i, j in enumerate(self.init.input_list, 1)
+            ]
 
     def run_process(self):
         self.img_objects = parallel_map(
@@ -445,6 +455,7 @@ class InitBase(object):
         self.obj_base = None
         self.int_base = None
 
+        self.iota_phil = None
         self.params = None
         self.target_phil = None
         self.input_list = None
@@ -549,11 +560,12 @@ class InitBase(object):
                     self.params.advanced.temporary_output_folder
                 )
 
-            # Determine input base
+            # Determine input base (that'd be the lowest common folder, so that the
+            # directory tree of the input would be mirrored in the output)
             common_pfx = os.path.abspath(
                 os.path.dirname(os.path.commonprefix(self.input_list))
             )
-            if len(self.params.input) == 1:
+            if os.path.isdir(self.params.input[0]):
                 self.input_base = os.path.commonprefix(
                     [self.params.input[0], common_pfx]
                 )
@@ -599,12 +611,7 @@ class InitBase(object):
 
             # Read in backend parameters
             if self.target_phil is None:
-                if self.params.advanced.processing_backend == "ha14":
-                    target_file = self.params.cctbx_ha14.target
-                elif self.params.advanced.processing_backend == "cctbx.xfel":
-                    target_file = self.params.cctbx_xfel.target
-                else:
-                    target_file = None
+                target_file = self.params.cctbx_xfel.target
 
                 if target_file:
                     with open(target_file, "r") as phil_file:
@@ -620,19 +627,17 @@ class InitBase(object):
                 tf.write(self.target_phil)
 
             # Point IOTA parameters at local target file
-            if self.params.advanced.processing_backend == "ha14":
-                self.params.cctbx_ha14.target = local_target_file
-            elif self.params.advanced.processing_backend == "cctbx.xfel":
-                self.params.cctbx_xfel.target = local_target_file
+            self.params.cctbx_xfel.target = local_target_file
 
             # Collect final params and convert to PHIL object
-            from iota.components.iota_input import master_phil
-
-            self.iota_phil = master_phil.format(python_object=self.params)
+            self.iota_phil = self.iota_phil.format(python_object=self.params)
 
             return True, "IOTA_INIT: PARAMS INITIALIZED"
 
         except Exception as e:
+            import traceback
+
+            traceback.print_exc()
             return False, "IOTA_INIT_ERROR: PARAMS NOT INITIALIZED, {}".format(e)
 
     def initialize_main_log(self):
