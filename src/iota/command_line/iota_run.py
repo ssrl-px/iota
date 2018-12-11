@@ -5,7 +5,7 @@ from __future__ import division, print_function, absolute_import
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 11/29/2018
+Last Changed: 12/10/2018
 Description : IOTA command-line module.
 """
 import os
