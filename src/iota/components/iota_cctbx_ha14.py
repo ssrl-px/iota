@@ -22,8 +22,6 @@ except ImportError:
 import dxtbx
 from scitbx.array_family import flex
 from xfel.cxi.cspad_ana.cspad_tbx import evt_timestamp, dpack
-from xfel.cxi.display_spots import run_one_index_core
-from xfel.phil_preferences import load_cxi_phil
 from libtbx import easy_pickle as ep
 
 import iota.components.iota_utils as util
@@ -133,10 +131,9 @@ analysis {
   }
 """
 
-
-class Empty:
-    def __init__(self):
-        pass
+# class Empty:
+#   def __init__(self):
+#     pass
 
 
 class Triage(object):
@@ -155,9 +152,11 @@ class Triage(object):
     def run_distl(self, params):
         """Performs a quick DISTL spotfinding and returns Bragg spots
         information."""
+        # run DISTL spotfinder
+
         from spotfinder.applications import signal_strength
 
-        # run DISTL spotfinder
+        Org = None
         try:
             with util.Capturing() as distl_output:
                 Org = signal_strength.run_signal_strength(params)
@@ -165,11 +164,13 @@ class Triage(object):
             print("NOT IMPLEMENTED ERROR FOR {}".format(self.img))
 
         # Extract relevant spotfinding info
-        for frame in Org.S.images.keys():
-            saturation = Org.Files.imageindex(frame).saturation
-            Bragg_spots = [
-                flex.sum(spot.wts) for spot in Org.S.images[frame]["inlier_spots"]
-            ]
+        Bragg_spots = []
+        if Org:
+            for frame in Org.S.images.keys():
+                saturation = Org.Files.imageindex(frame).saturation
+                Bragg_spots = [
+                    flex.sum(spot.wts) for spot in Org.S.images[frame]["inlier_spots"]
+                ]
 
         return Bragg_spots
 
@@ -177,30 +178,24 @@ class Triage(object):
         """Performs a quick DISTL spotfinding without grid search."""
         from spotfinder.command_line.signal_strength import master_params as sf_params
 
-        sf_params = sf_params.extract()
-        sf_params.distl.image = self.img
+        params = sf_params.extract()
+        params.distl.image = self.img
 
-        E = Empty()
-        E.argv = ["Empty"]
-        E.argv.append(sf_params.distl.image)
+        # E = Empty()
+        # E.argv=['Empty']
+        # E.argv.append(sf_params.distl.image)
 
         log_info = ["{}\n".format(self.img)]
         img_filename = os.path.basename(self.img)
 
         # Perform spotfinding
         # Set spotfinding params
-        sf_params.distl.minimum_spot_area = (
-            self.params.cctbx_xfel.grid_search.area_median
-        )
-        sf_params.distl.minimum_spot_height = (
-            self.params.cctbx_xfel.grid_search.height_median
-        )
-        sf_params.distl.minimum_signal_height = (
-            self.params.cctbx_xfel.grid_search.height_median
-        )
+        # params.distl.minimum_spot_area = self.params.cctbx_xfel.grid_search.area_median
+        # params.distl.minimum_spot_height = self.params.cctbx_xfel.grid_search.height_median
+        # params.distl.minimum_signal_height = self.params.cctbx_xfel.grid_search.height_median
 
         # Perform spotfinding
-        Bragg_spots = self.run_distl(sf_params)
+        Bragg_spots = self.run_distl(params)
 
         # Extract spotfinding results
         N_Bragg_spots = len(Bragg_spots)
@@ -479,7 +474,7 @@ class Processor(object):
         self.params = params
         self.img = source_image
         self.out_img = output_image
-        self.min_sigma = self.params.image_import.min_sigma
+        self.min_sigma = self.params.image_import.strong_sigma
         self.target = os.path.abspath(self.params.cctbx_xfel.target)
         self.viz = viz
         self.tag = tag
@@ -585,6 +580,9 @@ class Processor(object):
             self.args.append("indexing.completeness_pickle={}".format(self.out_img))
 
         # Actually run integration
+        from xfel.cxi.display_spots import run_one_index_core
+        from xfel.phil_preferences import load_cxi_phil
+
         error_message = ""
         with util.Capturing() as index_log:
             arguments = [
@@ -594,11 +592,14 @@ class Processor(object):
                 "indexing.open_wx_viewer=False",
             ] + list(self.args[1:])
             try:
-                horizons_phil = load_cxi_phil(self.target, " ".join(arguments))
+                horizons_phil = load_cxi_phil(self.target, arguments)
                 info = run_one_index_core(horizons_phil)
                 int_final = info.last_saved_best
             except Exception, e:
                 int_final = None
+                import traceback
+
+                traceback.print_exc()
                 if hasattr(e, "classname"):
                     print(e.classname, "for {}: ".format(self.img))
                     error_message = "{}: {}".format(
