@@ -370,4 +370,4 @@ class BaseBackendDialog(BaseDialog):
         default_phil, _ = write_defaults(
             method=method, write_target_file=False, write_param_file=False
         )
-        self.target_phil = "\n".join(default_phil)
+        self.target_phil = default_phil
