@@ -4,7 +4,7 @@ from past.builtins import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 07/21/2017
-Last Changed: 11/05/2018
+Last Changed: 01/30/2019
 Description : IOTA image-tracking GUI module
 """
 
@@ -1197,7 +1197,7 @@ class TrackerWindow(wx.Frame):
                 )
 
         # Plot clustering results
-        if self.cluster_info is not None:
+        if self.cluster_info:
             clusters = sorted(
                 self.cluster_info, key=lambda i: i["number"], reverse=True
             )
