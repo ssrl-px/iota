@@ -7,7 +7,7 @@ from __future__ import division, print_function, absolute_import
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 01/28/2019
+Last Changed: 02/15/2019
 Description : IOTA GUI startup module.
 """
 
@@ -104,7 +104,12 @@ class MainApp(wx.App):
 
         # Initialize Main window
         self.frame = MainWindow(
-            None, -1, title="IOTA v.{}".format(iota_version), phil=phil, msg=msg
+            None,
+            -1,
+            title="IOTA v.{}".format(iota_version),
+            input_dict=input_dict,
+            phil=phil,
+            msg=msg,
         )
         self.frame.place_and_size(set_size=True, set_by="mouse", center=True)
 
