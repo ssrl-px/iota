@@ -437,7 +437,6 @@ def write_defaults(
     indexing
     {
       refinement_protocol {
-        n_macro_cycles = 1
         d_min_start = 2.0
       }
       basis_vector_combinations.max_combinations = 10
