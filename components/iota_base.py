@@ -126,8 +126,6 @@ class ImageImporterBase:
 
         # Load image information from experiment list
         try:
-            print("DEBUG: ", filepath, experiments)
-
             imgset = experiments.imagesets()[0]
             beam = imgset.get_beam()
             s0 = beam.get_s0()
