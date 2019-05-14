@@ -260,7 +260,7 @@ class VirtualInputListCtrl(
     def InitializeDataMap(self, data):
         self.data = data
         self.itemDataMap = self.data
-        self.itemIndexMap = self.data.keys()
+        self.itemIndexMap = list(self.data.keys())
         self.SetItemCount(len(self.data))
 
     def GetListCtrl(self):
