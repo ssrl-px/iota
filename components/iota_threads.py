@@ -342,10 +342,9 @@ class PRIMEThread(Thread):
 
             # Create PRIME input file
             analyzer = Analyzer(info=self.info, params=self.params)
-
             analyzer.prime_data_path = int_pickles_file
-            analyzer.cons_pg = self.best_pg
-            analyzer.cons_uc = self.best_uc
+            analyzer.best_pg = self.best_pg
+            analyzer.best_uc = self.best_uc
 
             prime_phil = analyzer.make_prime_input(
                 filename="live_prime.phil", run_zero=True
@@ -428,9 +427,10 @@ class PRIMEThread(Thread):
             cmd = "prime.run {} {}".format(prime_file, cmd_args)
 
             try:
-                # easy_run.fully_buffered(cmd, join_stdout_stderr=True).show_stdout()
-                self.job = CustomRun(command=cmd, join_stdout_stderr=True)
-                self.job.run()
+                easy_run.fully_buffered(cmd, join_stdout_stderr=True).show_stdout()
+                # self.job = CustomRun(command=cmd,
+                #                      join_stdout_stderr=True)
+                # self.job.run()
                 prime_info = self.get_prime_stats()
             except Exception as e:
                 import traceback
