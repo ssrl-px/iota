@@ -356,6 +356,10 @@ class Analyzer(object):
         self.params = params
         self.gui_mode = gui_mode
 
+        # Attributes for LivePRIME override
+        self.best_pg = None
+        self.best_uc = None
+
     def get_results(self, finished_objects=None):
         if not finished_objects:
             finished_objects = self.info.get_finished_objects()
@@ -894,13 +898,19 @@ class Analyzer(object):
         hres = self.info.stats["res"]
         lres = self.info.stats["lres"]
 
-        try:
-            sg = self.info.best_pg.replace(" ", "")
-        except AttributeError as e:
-            print("PRIME INPUT ERROR, SPACE GROUP: ", e)
-            sg = "P1"
+        # If symmetry / unit cell were not overridden from GUI, set from INFO
+        if not self.best_pg:
+            try:
+                self.best_pg = self.info.best_pg.replace(" ", "")
+            except AttributeError as e:
+                print("PRIME INPUT ERROR, SPACE GROUP: ", e)
+                self.best_pg = "P1"
 
-        sym = crystal.symmetry(space_group_symbol=sg)
+        if not self.best_uc:
+            self.best_uc = self.info.best_uc
+
+        # Determine crystal system from crystal symmetry
+        sym = crystal.symmetry(space_group_symbol=self.best_pg)
         crystal_system = str(sym.space_group().crystal_system())
 
         # Determine number of images for indexing ambiguity resolution
@@ -914,14 +924,14 @@ class Analyzer(object):
             )
             idx_ambiguity_selected = int(round(idx_ambiguity_sample / 3))
 
-        prime_params = mod_input.master_phil.extract()
-
+        # Set run number to 000 if running LivePRIME
         if run_zero:
             run_no = "000"
         else:
             run_no = "001"
 
         # Populate pertinent data parameters
+        prime_params = mod_input.master_phil.extract()
         prime_params.run_no = os.path.join(
             os.path.dirname(self.prime_data_path), "prime/{}".format(run_no)
         )
@@ -943,8 +953,8 @@ class Analyzer(object):
         prime_params.postref.allparams.d_max = lres["max"]
         prime_params.merge.d_min = hres["mean"]
         prime_params.merge.d_max = lres["max"]
-        prime_params.target_unit_cell = uctbx.unit_cell(self.info.best_uc)
-        prime_params.target_space_group = sg
+        prime_params.target_unit_cell = uctbx.unit_cell(self.best_uc)
+        prime_params.target_space_group = self.best_pg
         prime_params.target_crystal_system = crystal_system
         prime_params.pixel_size_mm = pixel_size
         prime_params.n_residues = 500

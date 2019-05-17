@@ -24,7 +24,7 @@ def parse_command_args():
     parser = argparse.ArgumentParser(
         prog="iota.run",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=(help_message),
+        description=help_message,
         epilog=("\n{:-^70}\n".format("")),
     )
     parser.add_argument(
@@ -92,11 +92,13 @@ class MainApp(wx.App):
     """App to launch the main GUI window."""
 
     def OnInit(self):
-
         from platform import python_version
+        import matplotlib
 
-        print("Python  : ", python_version())
-        print("wxPython: ", wx.__version__)
+        print("Library Versions:")
+        print("  Python     : ", python_version())
+        print("  wxPython   : ", wx.__version__)
+        print("  MatPlotLib : ", matplotlib.__version__)
 
         # Initialize IOTA instance
         args, phil_args = parse_command_args().parse_known_args()
