@@ -13,6 +13,7 @@ Description : IOTA GUI Windows / frames
 import os
 import numpy as np
 import time
+import warnings
 
 import wx
 from wx.lib.agw import ultimatelistctrl as ulc
@@ -817,6 +818,8 @@ class ProcessingTab(wx.Panel):
         self.res_x = []
         self.res_y = []
 
+        self.dblclick = False
+
         self.main_fig_sizer = wx.GridBagSizer(0, 0)
 
         # Set regular font
@@ -870,10 +873,10 @@ class ProcessingTab(wx.Panel):
 
         self.nsref_axes = self.int_figure.add_subplot(int_gsp[1])
         self.nsref_axes.set_xlabel("Frame")
-        self.nsref_axes.set_ylabel(
-            "Reflections (I/{0}(I) > {1})"
-            "".format(r"$\sigma$", self.gparams.image_import.strong_sigma)
-        )
+        self.nsref_axes.set_ylabel("No. Spots")
+        # self.nsref_axes.set_ylabel('Spots (I/{0}(I)>{1})'
+        #                            ''.format(r'$\sigma$',
+        #                                      self.gparams.image_import.strong_sigma))
 
         # Initialize blank charts, medians, and picks
         self.res_chart = self.res_axes.plot(
@@ -914,10 +917,10 @@ class ProcessingTab(wx.Panel):
         self.btn_left.Show()
         self.btn_viewer.Show()
 
-        self.int_figure.set_tight_layout(True)
         self.int_canvas = FigureCanvas(self.int_panel, -1, self.int_figure)
         int_sizer.Add(self.int_canvas, 1, flag=wx.EXPAND)
         self.int_canvas.draw()
+        self.int_figure.set_tight_layout(True)
 
         # Wilson (<I> vs. res) plot
         self.wp_panel = wx.Panel(self)
@@ -976,9 +979,9 @@ class ProcessingTab(wx.Panel):
             (0, 0), 1, 1, fc="white", ec="black", lw=2, visible=False
         )
 
-        self.proc_figure.set_tight_layout(True)
         self.proc_canvas = FigureCanvas(self.proc_panel, -1, self.proc_figure)
         self.proc_canvas.draw()
+        self.proc_figure.set_tight_layout(True)
         proc_sizer.Add(self.proc_canvas, flag=wx.EXPAND | wx.BOTTOM, border=10)
 
         self.main_fig_sizer.Add(self.int_panel, pos=(0, 0), span=(2, 6), flag=wx.EXPAND)
@@ -1009,10 +1012,27 @@ class ProcessingTab(wx.Panel):
 
         self.SetSizer(self.main_fig_sizer)
 
+    def _update_canvas(self, canvas, draw_idle=True):
+        """Update a canvas (passed as arg)
+
+        :param canvas: A canvas to be updated via draw_idle
+        """
+        # Draw_idle is useful for regular updating of the chart; straight-up draw
+        # without flush_events() will have to be used when buttons are clicked to
+        # avoid recursive calling of wxYield
+        if draw_idle:
+            canvas.draw_idle()
+            try:
+                canvas.flush_events()
+            except (NotImplementedError, AssertionError):
+                pass
+        else:
+            canvas.draw()
+        self.Refresh()
+
     def onSGTextEnter(self, e):
         self.user_sg = str(self.hkl_sg.sg.GetValue())
         self.draw_measured_indices()
-        self.Layout()
 
     def onSGCheckbox(self, e):
         if e.IsChecked():
@@ -1024,7 +1044,6 @@ class ProcessingTab(wx.Panel):
         else:
             self.user_sg = "P1"
         self.draw_measured_indices()
-        self.Layout()
 
     def draw_summary(self):
 
@@ -1106,8 +1125,8 @@ class ProcessingTab(wx.Panel):
                 self.bracket.set_bounds(px, py, pw, ph)
                 self.sum_axes.add_patch(self.bracket)
 
-            self.proc_canvas.draw()
-            self.Layout()
+            self._update_canvas(canvas=self.proc_canvas)
+
         except ValueError as e:
             print("SUMMARY PLOT ERROR: ", e)
             return
@@ -1117,7 +1136,6 @@ class ProcessingTab(wx.Panel):
         self.draw_integration_plots()
         self.draw_b_factors()
         self.draw_measured_indices()
-        self.Layout()
 
     def draw_integration_plots(self):
 
@@ -1181,8 +1199,7 @@ class ProcessingTab(wx.Panel):
             self.nsref_axes.set_ylim(ymin=0, ymax=nsref_ymax)
             self.nsref_axes.draw_artist(self.nsref_chart)
 
-            self.int_canvas.draw()
-            # self.int_canvas.flush_events()
+            self._update_canvas(canvas=self.int_canvas)
 
     def draw_b_factors(self):
         self.wp_axes.clear()
@@ -1198,8 +1215,7 @@ class ProcessingTab(wx.Panel):
                 histtype="stepfilled",
             )
 
-        self.wp_canvas.draw()
-        # self.wp_canvas.flush_events()
+        self._update_canvas(canvas=self.wp_canvas)
 
     def draw_measured_indices(self):
         # Draw a h0, k0, or l0 slice of merged data so far
@@ -1265,6 +1281,14 @@ class ProcessingTab(wx.Panel):
         try:
             xmax = abs(max(x, key=abs))
             ymax = abs(max(y, key=abs))
+
+            # Zero values will result in a matplotlib UserWarning; set to an
+            # arbitrarily small number to avoid this
+            if xmax == 0:
+                xmax += 0.00001
+            if ymax == 0:
+                ymax += 0.00001
+
             self.hkl_axes.set_xlim(xmin=-xmax, xmax=xmax)
             self.hkl_axes.set_ylim(ymin=-ymax, ymax=ymax)
         except ValueError:
@@ -1281,8 +1305,7 @@ class ProcessingTab(wx.Panel):
             aspect=40,
         )
 
-        self.hkl_canvas.draw()
-        # self.hkl_canvas.flush_events()
+        self._update_canvas(canvas=self.hkl_canvas)
 
     def onImageView(self, e):
         filepath = self.info_txt.GetValue()
@@ -1345,14 +1368,14 @@ class ProcessingTab(wx.Panel):
                     self.res_pick.set_data(idx, res)
                 else:
                     search = True
-        # self.Layout()
-        self.int_canvas.draw()
+
+        self._update_canvas(canvas=self.int_canvas, draw_idle=False)
 
     def on_pick(self, event):
         self.bracket.set_visible(False)
         self.nsref_pick.set_visible(True)
         self.res_pick.set_visible(True)
-        self.proc_canvas.draw()
+        self._update_canvas(canvas=self.proc_canvas, draw_idle=False)
 
         idx = int(round(event.mouseevent.xdata))
         entry = [i for i in self.processed if i[0] == idx]
@@ -1368,15 +1391,15 @@ class ProcessingTab(wx.Panel):
             self.nsref_pick.set_data(img_idx, spt)
             self.res_pick.set_data(img_idx, res)
             self.toggle_pick(enabled=True, img=img)
-        # self.Layout()
-        self.int_canvas.draw()
+
+        self._update_canvas(canvas=self.int_canvas, draw_idle=False)
 
     def on_bar_pick(self, event):
-        self.nsref_pick.set_visible(False)
-        self.res_pick.set_visible(False)
+        # self.nsref_pick.set_visible(False)
+        # self.res_pick.set_visible(False)
+        # self._update_canvas(canvas=self.int_canvas, draw_idle=False)
+
         self.show_image_group(e=event.mouseevent)
-        self.draw_summary()
-        self.int_canvas.draw()
 
     def show_image_group(self, e):
         self.pick["picked"] = True
@@ -1384,6 +1407,7 @@ class ProcessingTab(wx.Panel):
             self.pick["axis"] = "summary"
             self.pick["index"] = e.xdata
             self.bracket.set_visible(True)
+            self.draw_summary()
         self.toggle_pick(enabled=False)
 
     def toggle_pick(self, enabled=False, img=""):
@@ -1400,7 +1424,8 @@ class ProcessingTab(wx.Panel):
             self.btn_right.Disable()
             self.btn_viewer.Disable()
 
-        self.Layout()
+        self._update_canvas(canvas=self.int_canvas, draw_idle=False)
+        self.Refresh()
 
     def on_hkl_press(self, event):
         if event.inaxes == self.hkl_axes:
@@ -1411,14 +1436,14 @@ class ProcessingTab(wx.Panel):
             elif self.hkl_view_axis == "l":
                 self.hkl_view_axis = "h"
             self.draw_measured_indices()
-        self.Layout()
+        self.Refresh()
 
     def on_button_press(self, event):
         if event.button != 1:
             self.pick["picked"] = False
             if event.inaxes == self.sum_axes:
                 self.bracket.set_visible(False)
-                self.draw_summary()
+                self._update_canvas(canvas=self.proc_canvas, draw_idle=False)
             elif event.inaxes in (self.nsref_axes, self.res_axes):
                 self.nsref_pick.set_visible(False)
                 self.res_pick.set_visible(False)
@@ -1426,16 +1451,20 @@ class ProcessingTab(wx.Panel):
                 self.btn_left.Disable()
                 self.btn_right.Disable()
                 self.btn_viewer.Disable()
+                self._update_canvas(canvas=self.int_canvas, draw_idle=False)
 
         if event.dblclick:
             self.dblclick = True
         else:
             self.dblclick = False
-        self.Layout()
+
+        self.Refresh()
 
     def on_button_release(self, event):
         if event.button == 1 and self.dblclick:
-            self.show_image_group(e=event)
+            self.dblclick = False
+            if not self.bracket.get_visible():
+                self.show_image_group(e=event)
             self.view_proc_images()
 
 
@@ -2372,7 +2401,10 @@ class ProcWindow(IOTABaseFrame):
             self.info = ProcInfo.from_json(self.info.info_file)
             return
 
-        sw_means = np.mean(self.plotter_time) + np.mean(self.obj_reader_time)
+        # Catch mean of empty slice warning (for cosmetic reasons)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            sw_means = np.mean(self.plotter_time) + np.mean(self.obj_reader_time)
         timer_adjustment = np.ceil(sw_means * 5 / 1000) * 1000
         if not (
             np.isnan(timer_adjustment)
