@@ -137,6 +137,7 @@ def initialize_new_run(phil, input_dict=None, target_phil=None):
             paramfile=paramfile,
             logfile=logfile,
             run_number=run_no,
+            description=params.description,
             status="initialized",
             init_proc=False,
         )
