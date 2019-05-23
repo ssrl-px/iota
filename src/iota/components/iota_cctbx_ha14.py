@@ -706,7 +706,7 @@ class Processor(object):
                 os.path.basename(self.out_img).split(".")[0], "hkli"
             )
             hklI_file = os.path.join(os.path.dirname(self.out_img), hklI_filename)
-            hklI = zip(obs.indices(), obs.data(), obs.sigmas())
+            hklI = list(zip(obs.indices(), obs.data(), obs.sigmas()))
             for i in hklI:
                 with open(hklI_file, "a") as f:
                     entry = "{},{},{},{},{}".format(
