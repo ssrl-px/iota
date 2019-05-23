@@ -28,8 +28,8 @@ def main(hdf5Filename, data, destDir, powder):
 
     goodRayonixTime = {}
     goodRayonixIpm3 = {}
-    for _rt, _evr92, _evr95, _evr97, rot, _ipm3 in zip(
-        rayonixTime, evr92, evr95, evr97, rot_wrap, ipm3
+    for _rt, _evr92, _evr95, _evr97, rot, _ipm3 in list(
+        zip(rayonixTime, evr92, evr95, evr97, rot_wrap, ipm3)
     ):
         if (_evr95 == 1 and _evr97 == 1) or powder:
             if (_evr92, _evr95, _evr97, rot) in goodRayonixTime:
@@ -73,7 +73,7 @@ def main(hdf5Filename, data, destDir, powder):
     txtOff = ""
     txtError = ""
     cnSuccess, cnErrors = (0, 0)
-    for _key, _rt, _ipm3 in zip(sortedKey, sortedRayonixTime, sortedRayonixIpm3):
+    for _key, _rt, _ipm3 in list(zip(sortedKey, sortedRayonixTime, sortedRayonixIpm3)):
         filename_pattern = "shot-" + str(_rt) + "*"
         # copy to a good directory
         try:
