@@ -868,6 +868,7 @@ class Analyzer(object):
             "failed_indexing",
             "failed_grid_search",
             "failed_integration",
+            "failed_filter",
             "integrated",
         ]
         for cat in categories:
@@ -925,10 +926,7 @@ class Analyzer(object):
             idx_ambiguity_selected = int(round(idx_ambiguity_sample / 3))
 
         # Set run number to 000 if running LivePRIME
-        if run_zero:
-            run_no = "000"
-        else:
-            run_no = "001"
+        run_no = "000" if run_zero else "001"
 
         # Populate pertinent data parameters
         prime_params = mod_input.master_phil.extract()
@@ -979,11 +977,18 @@ class Analyzer(object):
 
         return prime_phil
 
+    def run_get_results(self, finished_objects=None):
+        self.info.have_results = self.get_results(finished_objects=finished_objects)
+        return self.info.have_results
+
     def run_all(self, get_results=True):
         if get_results:
-            results = self.get_results()
-        self.print_results()
-        self.unit_cell_analysis()
-        self.print_summary()
-        self.make_prime_input()
+            self.info.have_results = self.get_results()
+
+        if self.info.have_results:
+            self.print_results()
+            self.unit_cell_analysis()
+            self.print_summary()
+            self.make_prime_input()
+
         return self.info
