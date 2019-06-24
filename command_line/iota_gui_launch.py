@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 02/15/2019
+Last Changed: 07/17/2019
 Description : IOTA GUI startup module.
 """
 
@@ -88,14 +88,18 @@ def parse_command_args():
     return parser
 
 
-class MainApp(wx.App):
+class IOTAMainApp(wx.App):
     """App to launch the main GUI window."""
+
+    def __init__(self, *args, **kwargs):
+        self.frame = None
+        super(IOTAMainApp, self).__init__(*args, **kwargs)
 
     def OnInit(self):
         from platform import python_version
         import matplotlib
 
-        print("Library Versions:")
+        print("Versions:")
         print("  Python     : ", python_version())
         print("  wxPython   : ", wx.__version__)
         print("  MatPlotLib : ", matplotlib.__version__)
@@ -113,7 +117,7 @@ class MainApp(wx.App):
             phil=phil,
             msg=msg,
         )
-        self.frame.place_and_size(set_size=True, set_by="mouse", center=True)
+        self.frame.place_and_size(set_size="v_default", set_by="mouse", center=True)
 
         # Show main window
         self.frame.Show(True)
@@ -123,5 +127,5 @@ class MainApp(wx.App):
 
 
 if __name__ == "__main__":
-    app = MainApp(0)
-    app.MainLoop()
+    iota = IOTAMainApp(0)
+    iota.MainLoop()

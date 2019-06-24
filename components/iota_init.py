@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 01/30/2019
+Last Changed: 07/17/2019
 Description : Interprets command line arguments. Initializes all IOTA starting
               parameters. Starts main log. Options for a variety of running
               modes, including resuming an aborted run.
@@ -110,10 +110,7 @@ def initialize_new_run(phil, input_dict=None, target_phil=None):
             else:
                 method = params.advanced.processing_backend
                 target_phil, _ = inp.write_defaults(
-                    method=method,
-                    write_target_file=True,
-                    write_param_file=False,
-                    filepath=target_fp,
+                    method=method, write_param_file=False, filepath=target_fp
                 )
         params.cctbx_xfel.target = target_fp
 
@@ -140,11 +137,16 @@ def initialize_new_run(phil, input_dict=None, target_phil=None):
             description=params.description,
             status="initialized",
             have_results=False,
+            errors=[],
             init_proc=False,
         )
         info.export_json()
         return True, info, "IOTA_XTERM_INIT: Initialization complete!"
     except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+
         msg = "IOTA_INIT_ERROR: Could not initialize run! {}".format(e)
         return False, None, msg
 
@@ -256,7 +258,7 @@ def initialize_single_image(
 
     params.input = [img]
     params.mp.n_processors = 1
-    params.image_import.minimum_Bragg_peaks = min_bragg
+    params.data_selection.image_triage.minimum_Bragg_peaks = min_bragg
 
     info = ProcInfo.from_args(iota_phil=phil.as_str(), paramfile=paramfile)
 
