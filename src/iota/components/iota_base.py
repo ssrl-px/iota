@@ -11,11 +11,6 @@ Description : IOTA base classes
 import os
 import json
 
-try:  # for Py3 compatibility
-    import itertools.ifilter as filter
-except ImportError:
-    pass
-
 from dxtbx.model import experiment_list as exp
 from libtbx.easy_mp import parallel_map
 from libtbx import easy_pickle as ep
