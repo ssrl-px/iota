@@ -342,6 +342,7 @@ class MainWindow(IOTABaseFrame):
                 lambda evt: self.open_options_dialog(
                     phil_index=self.bknd_index,
                     include=[
+                        "verbosity",
                         "geometry",
                         "profile",
                         "prediction",
@@ -2456,8 +2457,6 @@ class ProcWindow(IOTABaseFrame):
             for err in errors:
                 print("IOTA ERROR (CLUSTERING): ", err)
             self.info.errors.extend(errors)
-
-        print("debug: errors = ", errors)
 
         # Output cluster results
         ep.dump(self.info.cluster_info_file, obj=self.clusters)
