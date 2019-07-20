@@ -12,6 +12,7 @@ Description : Runs spotfinding, indexing, refinement and integration using
 
 import os
 import numpy as np
+import traceback
 
 from iotbx.phil import parse
 from cctbx import sgtbx, crystal
@@ -51,7 +52,7 @@ cctbx_xfel
     .help = Target unit cell parameters (if known)
     .alias = Target Unit Cell
     .expert_level = 0
-  use_fft3d = False
+  use_fft3d = True
     .type = bool
     .help = Set to True to use FFT3D in indexing
     .alias = Use FFT3D in indexing
@@ -353,7 +354,7 @@ class IOTAImageProcessor(Processor):
 
     def error_handler(self, error, p_name, img_object, output=None):
         if not output:
-            output = []
+            output = ""
 
         if hasattr(error, "classname"):
             # print(error.classname, "for {}:".format(img_object.img_path), )
@@ -378,7 +379,8 @@ class IOTAImageProcessor(Processor):
         img_object.log_info.append(log_entry)
 
         # Write log entry into log file
-        if self.write_logs and output:
+        output += "\n{}".format(error_message)
+        if self.write_logs:
             with open(img_object.int_log, "w") as tf:
                 for o in output:
                     tf.write("\n{}".format(o))
@@ -417,7 +419,8 @@ class IOTAImageProcessor(Processor):
 
         # Auto-set threshold and gain (not saved for target.phil)
         if self.iparams.cctbx_xfel.auto_threshold:
-            threshold = int(img_object.center_int)
+            center_int = img_object.center_int if img_object.center_int else 0
+            threshold = int(center_int)
             self.params.spotfinder.threshold.dispersion.global_threshold = threshold
         if self.iparams.image_import.estimate_gain:
             self.params.spotfinder.threshold.dispersion.gain = img_object.gain
@@ -452,7 +455,7 @@ class IOTAImageProcessor(Processor):
             except Exception as e:
                 print("DEBUG: cannot set detector! ", e)
 
-        proc_output = []
+        # proc_output = []
 
         # **** SPOTFINDING **** #
         with util.Capturing() as output:
@@ -460,8 +463,8 @@ class IOTAImageProcessor(Processor):
                 print("{:-^100}\n".format(" SPOTFINDING: "))
                 observed = self.find_spots(img_object.experiments)
                 img_object.final["spots"] = len(observed)
-            except Exception as e:
-                return self.error_handler(e, "spotfinding", img_object, output)
+            except Exception as e_spf:
+                observed = None
             else:
                 if (
                     self.iparams.data_selection.image_triage
@@ -475,7 +478,11 @@ class IOTAImageProcessor(Processor):
                     print("{:-^100}\n\n".format(msg))
                     e = "Insufficient spots found ({})!".format(len(observed))
                     return self.error_handler(e, "triage", img_object, output)
-        proc_output.extend(output)
+        # proc_output.extend(output)
+        if not observed:
+            return self.error_handler(e_spf, "spotfinding", img_object, output)
+
+        self.write_int_log(path=img_object.int_log, output=output)
 
         # Finish if spotfinding is the last processing stage
         if "spotfind" in self.last_stage:
@@ -500,8 +507,8 @@ class IOTAImageProcessor(Processor):
             try:
                 print("{:-^100}\n".format(" INDEXING "))
                 experiments, indexed = self.index(img_object.experiments, observed)
-            except Exception as e:
-                return self.error_handler(e, "indexing", img_object, output)
+            except Exception as e_idx:
+                indexed = None
             else:
                 if indexed:
                     img_object.final["indexed"] = len(indexed)
@@ -512,8 +519,13 @@ class IOTAImageProcessor(Processor):
                     )
                 else:
                     img_object.fail = "failed indexing"
-                    return img_object
 
+        if indexed:
+            self.write_int_log(path=img_object.int_log, output=output)
+        else:
+            return self.error_handler(e_idx, "indexing", img_object, output)
+
+        with util.Capturing() as output:
             # Bravais lattice and reindex
             if self.iparams.cctbx_xfel.determine_sg_and_reindex:
                 try:
@@ -530,9 +542,14 @@ class IOTAImageProcessor(Processor):
                         )
                     else:
                         print("{:-^100}\n".format(" RETAINED TRICLINIC (P1) SYMMETRY "))
-                except Exception as e:
-                    return self.error_handler(e, "indexing", img_object, output)
-        proc_output.extend(output)
+                    reindex_success = True
+                except Exception as e_ridx:
+                    reindex_success = False
+
+        if reindex_success:
+            self.write_int_log(path=img_object.int_log, output=output)
+        else:
+            return self.error_handler(e_ridx, "indexing", img_object, output)
 
         # **** INTEGRATION **** #
         with util.Capturing() as output:
@@ -540,8 +557,9 @@ class IOTAImageProcessor(Processor):
                 experiments, indexed = self.refine(experiments, indexed)
                 print("{:-^100}\n".format(" INTEGRATING "))
                 integrated = self.integrate(experiments, indexed)
-            except Exception as e:
-                return self.error_handler(e, "integration", img_object, output)
+            except Exception as e_int:
+
+                integrated = None
             else:
                 if integrated:
                     img_object.final["integrated"] = len(integrated)
@@ -551,7 +569,8 @@ class IOTAImageProcessor(Processor):
                             "".format(len(integrated))
                         )
                     )
-        proc_output.extend(output)
+        if not integrated:
+            return self.error_handler(e_int, "integration", img_object, output)
 
         # Filter
         if self.iparams.cctbx_xfel.filter.flag_on:
@@ -566,7 +585,7 @@ class IOTAImageProcessor(Processor):
             )
             fail, e = self.selector.result_filter()
             if fail:
-                return self.error_handler(e, "filter", img_object, proc_output)
+                return self.error_handler(e, "filter", img_object, output)
 
         int_results, log_entry = self.collect_information(img_object=img_object)
 
@@ -578,13 +597,24 @@ class IOTAImageProcessor(Processor):
         img_object.log_info.append(log_entry)
 
         if self.write_logs:
-            with open(img_object.int_log, "w") as tf:
-                for i in proc_output:
-                    if "cxi_version" not in i:
-                        tf.write("\n{}".format(i))
-                tf.write("\n{}".format(log_entry))
+            self.write_int_log(
+                path=img_object.int_log, output=output, log_entry=log_entry
+            )
+            # with open(img_object.int_log, 'w') as tf:
+            #   for i in proc_output:
+            #     if 'cxi_version' not in i:
+            #       tf.write('\n{}'.format(i))
+            #   tf.write('\n{}'.format(log_entry))
 
         return img_object
+
+    def write_int_log(self, path, output, log_entry=None):
+        with open(path, "a") as tf:
+            for i in output:
+                if "cxi_version" not in i:
+                    tf.write("\n{}".format(i))
+            if log_entry:
+                tf.write("\n{}".format(log_entry))
 
     def collect_information(self, img_object):
         # Collect information
