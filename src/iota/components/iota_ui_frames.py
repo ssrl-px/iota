@@ -5,7 +5,7 @@ from six.moves import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 07/20/2019
+Last Changed: 08/01/2019
 Description : IOTA GUI Windows / frames
 """
 
@@ -265,7 +265,7 @@ class MainWindow(IOTABaseFrame):
     def onReset(self, e):
         self.reset_settings()
 
-    def open_options_dialog(self, phil_index, include=None, name=None):
+    def open_options_dialog(self, phil_index, include=None, name=None, title=None):
         if not name:
             if isinstance(include, list):
                 name = include[0]
@@ -276,7 +276,7 @@ class MainWindow(IOTABaseFrame):
 
         phil_scope = phil_index.get_scopes(include=include)
         phil_dlg = pct.PHILDialog(
-            self, scope=phil_scope, phil_index=phil_index, name=name
+            self, scope=phil_scope, phil_index=phil_index, name=name, title=title
         )
 
         if phil_dlg.ShowModal() == wx.ID_OK:
@@ -288,14 +288,16 @@ class MainWindow(IOTABaseFrame):
         return OK
 
     def onPreferences(self, e):
-        self.open_options_dialog(
-            phil_index=self.iota_index, include=["mp", "gui"], name="IOTA Preferences"
+        opt_OK = self.open_options_dialog(
+            phil_index=self.iota_index, include=["mp", "gui"], title="GUI Preferences"
         )
+        if opt_OK:
+            self.gparams = self.iota_index.get_python_object(make_copy=True)
 
     def onIOTAOptions(self, e):
         iota_scopes = ["image_import", "cctbx_xfel", "analysis", "advanced"]
         opt_OK = self.open_options_dialog(
-            phil_index=self.iota_index, include=iota_scopes
+            phil_index=self.iota_index, include=iota_scopes, title="IOTA Settings"
         )
         if opt_OK:
             self.gparams = self.iota_index.get_python_object(make_copy=True)
@@ -314,27 +316,35 @@ class MainWindow(IOTABaseFrame):
     def onProcOptions(self, e):
         command_list = [
             (
-                "Spotfinding...",
+                "Spotfinder...",
                 lambda evt: self.open_options_dialog(
-                    phil_index=self.bknd_index, include=["spotfinder"]
+                    phil_index=self.bknd_index,
+                    include=["spotfinder"],
+                    title="Backend Spotfinder Options",
                 ),
             ),
             (
                 "Indexing...",
                 lambda evt: self.open_options_dialog(
-                    phil_index=self.bknd_index, include=["indexing"]
+                    phil_index=self.bknd_index,
+                    include=["indexing"],
+                    title="Backend Indexing Options",
                 ),
             ),
             (
                 "Refinement...",
                 lambda evt: self.open_options_dialog(
-                    phil_index=self.bknd_index, include=["refinement"]
+                    phil_index=self.bknd_index,
+                    include=["refinement"],
+                    title="Backend Refinement Options",
                 ),
             ),
             (
                 "Integration...",
                 lambda evt: self.open_options_dialog(
-                    phil_index=self.bknd_index, include=["integration"]
+                    phil_index=self.bknd_index,
+                    include=["integration"],
+                    title="Backend Integration Options",
                 ),
             ),
             (
@@ -348,6 +358,7 @@ class MainWindow(IOTABaseFrame):
                         "prediction",
                         "significance_filter",
                     ],
+                    title="Advanced Backend Options",
                 ),
             ),
         ]
@@ -1893,7 +1904,9 @@ class SummaryTab(IOTABaseScrolledPanel):
             None, -1, title="PRIME", prefix=self.gparams.advanced.prime_prefix
         )
         self.prime_window.load_script(out_dir=self.info.int_base)
-        self.prime_window.place_and_size(set_by="mouse", center=True)
+        self.prime_window.place_and_size(
+            set_size="v_default", set_by="mouse", center=True
+        )
 
         os.chdir(self.info.int_base)
         self.prime_window.Show(True)
