@@ -717,9 +717,9 @@ class InputFinder:
                             )
                     else:
                         input_dict["neither"].extend(contents)
-                        input_dict["badpaths"].append(os.path.abspath(path))
+                        input_dict["badpaths"].append(path)
             else:
-                input_dict["badpaths"].append(os.path.abspath(path))
+                input_dict["badpaths"].append(path)
 
             # Make paths unique
             if input_dict["imagefiles"]:
