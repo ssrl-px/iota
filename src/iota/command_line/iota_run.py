@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
-Last Changed: 01/28/2019
+Last Changed: 08/05/2019
 Description : IOTA command-line module.
 """
 
@@ -206,6 +206,7 @@ if __name__ == "__main__":
                 help_out, txt_out = print_params()
                 print("\n{:-^70}\n".format("IOTA Parameters"))
                 print(help_out)
+                util.iota_exit()
 
         with prog_message("Interpreting input", prog="UI INIT", out_type=args.out_type):
             input_dict, phil, msg = iota_init.initialize_interface(args, phil_args)

@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 """
 Author      : Lyubimov, A.Y.
 Created     : 05/31/2018
-Last Changed: 01/30/2019
+Last Changed: 08/05/2019
 Description : IOTA Single Image: can process single image using DIALS,
 with an array of options (i.e. anything from only spotfinding, to indexing,
 space group determination, refinement, integration)
@@ -26,8 +26,6 @@ def parse_command_args():
     parser.add_argument(
         "path", type=str, nargs="?", default=None, help="Path to data file"
     )
-    # parser.add_argument('--backend', type=str, default='dials',
-    #                     help='Backend for processing')
     parser.add_argument(
         "--paramfile", type=str, default=None, help="Parameter file for processing"
     )
@@ -86,7 +84,6 @@ class SingleImageProcessor(ProcessingBase):
             elapsed = time.time() - file_wait_start
             if elapsed > 30:
                 errors.append("{} does not exist".format(img))
-                print("DEBUG: ELAPSED = ", time.time() - file_wait_start)
 
                 break
             if os.path.isfile(img):
@@ -114,10 +111,10 @@ class SingleImageProcessor(ProcessingBase):
         if img_object:
             if self.verbose:
                 print("SPOTS FOUND: {}".format(n_spots))
-                print("INDEXING: {} INDEXED SPOTS".format(score))
                 if res[0] != 999:
                     print("RESOLUTION: {:.2f} - {:.2f}".format(lres, hres))
                 if sg and uc:
+                    print("INDEXING: {} INDEXED SPOTS".format(score))
                     print("BRAVAIS LATTICE: {}".format(sg))
                     print("UNIT CELL: {}".format(uc))
                 print(
