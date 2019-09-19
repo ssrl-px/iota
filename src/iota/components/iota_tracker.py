@@ -60,7 +60,6 @@ user = os.getlogin()
 
 default_target = "\n".join(
     [
-        "verbosity=10",
         "spotfinder {",
         "  threshold {",
         "    dispersion {",
