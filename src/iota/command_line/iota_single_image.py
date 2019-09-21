@@ -84,8 +84,8 @@ class SingleImageProcessor(ProcessingBase):
             elapsed = time.time() - file_wait_start
             if elapsed > 30:
                 errors.append("{} does not exist".format(img))
-
                 break
+
             if os.path.isfile(img):
                 input_entry = (1, img)
                 img_object = self.import_and_process(input_entry)
@@ -108,6 +108,8 @@ class SingleImageProcessor(ProcessingBase):
                 errors.extend(img_object.errors)
                 break
 
+        proc_time = time.time() - file_wait_start
+
         if img_object:
             if self.verbose:
                 print("SPOTS FOUND: {}".format(n_spots))
@@ -117,10 +119,7 @@ class SingleImageProcessor(ProcessingBase):
                     print("INDEXING: {} INDEXED SPOTS".format(score))
                     print("BRAVAIS LATTICE: {}".format(sg))
                     print("UNIT CELL: {}".format(uc))
-                print(
-                    "TOTAL PROCESSING TIME: {:.2f} SEC"
-                    "".format(time.time() - file_wait_start)
-                )
+                print("TOTAL PROCESSING TIME: {:.2f} SEC".format(proc_time))
 
                 if errors:
                     for e in errors:
