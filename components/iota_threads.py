@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 """
 Author      : Lyubimov, A.Y.
 Created     : 04/14/2014
-Last Changed: 09/18/2019
+Last Changed: 10/31/2019
 Description : IOTA GUI Threads and PostEvents
 """
 
@@ -111,6 +111,7 @@ class JobSubmitThread(Thread):
             print(command)
             self.job = CustomRun(command=str(command), join_stdout_stderr=True)
             self.job.run()
+            self.job.show_stdout()
             if self.job_id is not None:
                 print("JOB NAME = ", self.job_id)
             return
@@ -217,12 +218,13 @@ class ImageFinderThread(Thread):
     def run(self):
         # Poll filesystem and determine which files are new (if any)
 
-        ext_file_list = ginp.make_input_list(
+        ext_file_list, _ = ginp.make_input_list(
             self.input,
             filter_results=True,
             filter_type="image",
             min_back=self.min_back,
             last=self.last_file,
+            expand_multiple=True,
         )
         new_input_list = list(set(ext_file_list) - set(self.input_list))
 
@@ -251,7 +253,9 @@ class ObjectFinderThread(Thread):
             last = self.last_object.obj_file
         else:
             last = None
-        object_files = ginp.get_file_list(self.object_folder, ext_only="int", last=last)
+        object_files, _ = ginp.get_input_from_folder(
+            self.object_folder, ext_only="int", last=last
+        )
         new_objects = [self.read_object_file(i) for i in object_files]
         new_finished_objects = [i for i in new_objects if i is not None]
 
@@ -997,12 +1001,13 @@ class InterceptorThread(Thread):
                 self.cluster_info = cluster_thread.run(iterable=input)
 
     def find_new_images(self, min_back=None, last_file=None):
-        found_files = ginp.make_input_list(
+        found_files, _ = ginp.make_input_list(
             [self.data_folder],
             filter_results=True,
             filter_type="image",
             last=last_file,
             min_back=min_back,
+            expand_multiple=True,
         )
 
         # Sometimes duplicate files are found anyway; clean that up
@@ -1072,7 +1077,7 @@ class ClusterWorkThread:
         except Exception as e:
             print("IOTA ERROR (CLUSTERING): ", e)
             clusters = []
-            errors.append(e)
+            errors.append(str(e))
 
         info = []
         if clusters:
