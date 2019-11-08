@@ -210,10 +210,17 @@ class ImageFinderThread(Thread):
         Thread.__init__(self)
         self.parent = parent
         self.input = input
-        self.input_list = input_list
         self.min_back = min_back
         self.last_file = last_file
         self.back_to_thread = back_to_thread
+
+        # Generate comparable input list
+        self.input_list = []
+        for item in input_list:
+            if isinstance(item, list) or isinstance(item, tuple):
+                self.input_list.append((item[1], item[2]))
+            else:
+                self.input_list.append(item)
 
     def run(self):
         # Poll filesystem and determine which files are new (if any)
@@ -226,6 +233,7 @@ class ImageFinderThread(Thread):
             last=self.last_file,
             expand_multiple=True,
         )
+
         new_input_list = list(set(ext_file_list) - set(self.input_list))
 
         if self.back_to_thread:
