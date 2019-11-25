@@ -352,6 +352,7 @@ def generate_stat_containers(info, params):
             ),
         ),
         stats={},
+        pointers={},
         pixel_size=None,
         status="processing",
         init_proc=True,
