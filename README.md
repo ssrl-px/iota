@@ -1,6 +1,8 @@
 # IOTA: Integration Optimization, Triage and Analysis
 
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/ssrl-px/iota.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ssrl-px/iota/context:python)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/ssrl-px/iota.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ssrl-px/iota/alerts/)
 
 IOTA is a user-friendly front end for `dials.stills_process`, a serial
 diffraction data processing program. IOTA is comprised of three main modules:
