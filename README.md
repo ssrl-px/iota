@@ -45,7 +45,8 @@ Young, I. D., O'Riordan, L. J., Yano, J., Winter, G., Evans, G. & Sauter, N. K.
 (2018). Acta Cryst. D74, 877-894.
 
 
-Disclaimer Notice
+
+## Disclaimer Notice
 
 The items furnished herewith were developed under the sponsorship 
 of the U.S. Government (U.S.).  Neither the U.S., nor the U.S. 
