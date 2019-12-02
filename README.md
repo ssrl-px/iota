@@ -44,6 +44,9 @@ refinement. Brewster, A. S., Waterman, D. G., Parkhurst, J. M., Gildea, R. J.,
 Young, I. D., O'Riordan, L. J., Yano, J., Winter, G., Evans, G. & Sauter, N. K.
 (2018). Acta Cryst. D74, 877-894.
 
+For an example of how the IOTA/PRIME pipeline was used to solve a structure from a small dataset, see
+
+**[4]** Advances in X-ray free electron laser (XFEL) diffraction data processing applied to the crystal structure of the synaptotagmin-1 / SNARE complex. Lyubimov AY, Uervirojnangkoorn M, Zeldin OB, Zhou Q, Zhao M, Brewster AS, Michels-Clark T, Holton JM, Sauter NK, Weis WI, Brunger AT. Elife. 2016 Oct 12;5.
 
 
 ## Disclaimer Notice
