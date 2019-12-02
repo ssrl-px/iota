@@ -5,7 +5,7 @@ from six.moves import range
 """
 Author      : Lyubimov, A.Y.
 Created     : 01/17/2017
-Last Changed: 11/25/2019
+Last Changed: 12/02/2019
 Description : IOTA GUI Windows / frames
 """
 
@@ -182,6 +182,7 @@ class MainWindow(IOTABaseFrame):
                     "image folder",
                 ],
                 "data_types": ["image"],
+                "input_filter": "image",
             },
         )
 
