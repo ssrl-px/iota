@@ -87,7 +87,7 @@ class SingleImageProcessor(ProcessingBase):
                 break
 
             if os.path.isfile(img):
-                input_entry = (1, img)
+                input_entry = (1, img, 0)
                 img_object = self.import_and_process(input_entry)
 
                 n_spots = img_object.final["spots"]
@@ -123,7 +123,7 @@ class SingleImageProcessor(ProcessingBase):
 
                 if errors:
                     for e in errors:
-                        print(e)
+                        print("SINGLE IMAGE ERROR: ", e)
 
             # info = [self.index, len(observed), self.img, sg, uc]
 
