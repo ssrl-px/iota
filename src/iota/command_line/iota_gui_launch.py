@@ -1,9 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_SET_DISPATCHER_NAME iota
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export BOOST_ADAPTBX_FPE_DEFAULT=1
-
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
@@ -126,6 +122,10 @@ class IOTAMainApp(wx.App):
         return True
 
 
-if __name__ == "__main__":
+def entry_point():
     iota = IOTAMainApp(0)
     iota.MainLoop()
+
+
+if __name__ == "__main__":
+    entry_point()

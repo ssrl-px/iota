@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_SET_DISPATCHER_NAME iota.filter_pickles
-
 import h5py
 import os, shutil, argparse, glob, ntpath
 import numpy as np
@@ -111,7 +109,7 @@ def main(hdf5Filename, data, destDir, powder):
     print("%d files not found" % (cnErrors))
 
 
-if __name__ == "__main__":
+def entry_point():
     parser = argparse.ArgumentParser(
         description="Filers out pickle files read out from xtc with insignificant events"
     )
@@ -132,3 +130,7 @@ if __name__ == "__main__":
     if args.powder:
         print("Powder diffraction. Ignore event codes")
     main(args.hdf5Filename, args.data, args.destDir, args.powder)
+
+
+if __name__ == "__main__":
+    entry_point()

@@ -2,14 +2,6 @@ from __future__ import absolute_import, division, print_function
 
 import setuptools
 
-command_line_scripts = [
-"iota_filter_pickles",
-"iota_gui_launch",
-"iota_run",
-"iota_single_image",
-"iota_track_images",
-]
-
 setuptools.setup(
     name="iota",
     description="IOTA: Integration Optimization, Triage and Analysis",
@@ -22,15 +14,23 @@ setuptools.setup(
     download_url="https://github.com/ssrl-px/iota/releases",
     license="BSD",
     install_requires=[],
-    package_dir={'': 'src'},
+    package_dir={"": "src"},
     packages=["iota"],
     entry_points={
         "console_scripts": [
-#            "iota.double_gauss_visualizer,  is prime
-        "iota.single_image = iota.command_line.iota_single_image",
-#"iota.filter_pickles"          , "iota.run" , "iota.track_images",
-],
-        "libtbx.dispatcher.script": ["iota.single_image = iota.single_image"],
+            "iota = iota.command_line.iota_gui_launch:entry_point",
+            "iota.filter_pickles = iota.command_line.iota_filter_pickles:entry_point",
+            "iota.run = iota.command_line.iota_run:entry_point",
+            "iota.single_image = iota.command_line.iota_single_image:entry_point",
+            "iota.track_images = iota.command_line.iota_track_images:entry_point",
+        ],
+        "libtbx.dispatcher.script": [
+            "iota = iota",
+            "iota.filter_pickles = iota.filter_pickles",
+            "iota.run = iota.run",
+            "iota.single_image = iota.single_image"
+            "iota.track_images = iota.track_images",
+        ],
         "libtbx.precommit": ["iota = iota"],
     },
     scripts=[],
