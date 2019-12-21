@@ -14,10 +14,23 @@ setuptools.setup(
     download_url="https://github.com/ssrl-px/iota/releases",
     license="BSD",
     install_requires=[],
-    package_dir={'': 'src'},
+    package_dir={"": "src"},
     packages=["iota"],
     entry_points={
-        "libtbx.dispatcher.script": [],
+        "console_scripts": [
+            "iota = iota.command_line.iota_gui_launch:entry_point",
+            "iota.filter_pickles = iota.command_line.iota_filter_pickles:entry_point",
+            "iota.run = iota.command_line.iota_run:entry_point",
+            "iota.single_image = iota.command_line.iota_single_image:entry_point",
+            "iota.track_images = iota.command_line.iota_track_images:entry_point",
+        ],
+        "libtbx.dispatcher.script": [
+            "iota = iota",
+            "iota.filter_pickles = iota.filter_pickles",
+            "iota.run = iota.run",
+            "iota.single_image = iota.single_image"
+            "iota.track_images = iota.track_images",
+        ],
         "libtbx.precommit": ["iota = iota"],
     },
     scripts=[],

@@ -1,9 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_SET_DISPATCHER_NAME iota.single_image
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export BOOST_ADAPTBX_FPE_DEFAULT=1
-
 """
 Author      : Lyubimov, A.Y.
 Created     : 05/31/2018
@@ -154,7 +150,7 @@ class SingleImageProcessor(ProcessingBase):
 
 
 # ============================================================================ #
-if __name__ == "__main__":
+def entry_point():
     import argparse
 
     args, unk_args = parse_command_args().parse_known_args()
@@ -175,3 +171,7 @@ if __name__ == "__main__":
             os.makedirs(args.output_dir)
 
     interceptor.start()
+
+
+if __name__ == "__main__":
+    entry_point()

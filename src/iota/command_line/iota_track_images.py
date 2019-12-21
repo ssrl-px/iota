@@ -1,9 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_SET_DISPATCHER_NAME iota.track_images
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export PHENIX_GUI_ENVIRONMENT=1
-# LIBTBX_PRE_DISPATCHER_INCLUDE_SH export BOOST_ADAPTBX_FPE_DEFAULT=1
-
 """
 Author      : Lyubimov, A.Y.
 Created     : 07/21/2017
@@ -33,6 +29,11 @@ class MainApp(wx.App):
 
 # ---------------------------------------------------------------------------- #
 
-if __name__ == "__main__":
+
+def entry_point():
     app = MainApp(0)
     app.MainLoop()
+
+
+if __name__ == "__main__":
+    entry_point()

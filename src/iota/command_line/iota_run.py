@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-# LIBTBX_SET_DISPATCHER_NAME iota.run
-
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
@@ -210,7 +208,7 @@ class Process(ProcessingBase):
 
 
 # ============================================================================ #
-if __name__ == "__main__":
+def entry_point():
     from iota.components.iota_init import initialize_interface, initialize_new_run
 
     args, phil_args = parse_command_args().parse_known_args()
@@ -251,3 +249,7 @@ if __name__ == "__main__":
         )
 
     proc.run()
+
+
+if __name__ == "__main__":
+    entry_point()
