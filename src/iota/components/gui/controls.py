@@ -18,7 +18,6 @@ import wx.lib.agw.knobctrl as kc
 from wx.lib.mixins.listctrl import (
     ListCtrlAutoWidthMixin,
     ColumnSorterMixin,
-    CheckListCtrlMixin,
 )
 import wx.lib.buttons as btn
 
