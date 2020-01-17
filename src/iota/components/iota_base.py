@@ -8,8 +8,12 @@ Last Changed: 11/25/2019
 Description : IOTA base classes
 """
 
+import collections
 import os
 import json
+
+# Python 2/3 compatibility
+from past.builtins import basestring
 
 from dxtbx.model.experiment_list import ExperimentListFactory as ExLF
 from libtbx.easy_mp import parallel_map
@@ -468,7 +472,6 @@ class ProcessingBase(Thread):
             callback=self.callback,
             processes=self.params.mp.n_processors,
         )
-
         return img_objects
 
     def run_analysis(self):
@@ -560,7 +563,7 @@ class ProcInfo(object):
         if info_dict:
 
             # Convert all unicode values to strings
-            info_dict = self._convert_unicode_to_string(info_dict)
+            info_dict = self._make_serializable(info_dict)
 
             # update with values from dictionary
             self.update(info_dict)
@@ -813,19 +816,26 @@ class ProcInfo(object):
         try:
             with open(json_file, "w") as jf:
                 json.dump(self.__dict__, jf)
-        except TypeError as e:
-            raise Exception("IOTA JSON ERROR: {}".format(e))
+        except TypeError:
+            # pick up non-serializable objects when json.dump fails; putting this
+            # into a try block because inefficient with large INFO objects, esp. in
+            # Python2
+            try:
+                with open(json_file, "w") as jf:
+                    json.dump(self._make_serializable(self.__dict__), jf)
+            except TypeError as e:
+                raise Exception("IOTA JSON ERROR: {}".format(e))
 
-    def _convert_unicode_to_string(self, info_dict):
-        import collections
-
+    def _make_serializable(self, info_dict):
         if isinstance(info_dict, basestring):
             return str(info_dict)
         elif isinstance(info_dict, collections.Mapping):
-            return dict(map(self._convert_unicode_to_string, info_dict.iteritems()))
+            return dict(map(self._make_serializable, info_dict.items()))
         elif isinstance(info_dict, collections.Iterable):
-            return type(info_dict)(map(self._convert_unicode_to_string, info_dict))
+            return type(info_dict)(map(self._make_serializable, info_dict))
         else:
+            if type(info_dict).__module__ == "numpy":
+                info_dict = info_dict.item()
             return info_dict
 
     @classmethod

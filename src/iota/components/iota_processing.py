@@ -244,7 +244,7 @@ class IOTAImageProcessor(Processor):
             )
             possible_bravais_settings = {s["bravais"] for s in refined_settings}
             bravais_lattice_to_space_group_table(possible_bravais_settings)
-        except Exception as e:
+        except Exception:
             for expt in experiments:
                 expt.crystal = crystal_P1
             return None
@@ -479,7 +479,8 @@ class IOTAImageProcessor(Processor):
                 print("<--->")
                 observed = self.find_spots(img_object.experiments)
                 img_object.final["spots"] = len(observed)
-            except Exception as e_spf:
+            except Exception as e:
+                e_spf = str(e)
                 observed = None
             else:
                 if (
@@ -530,7 +531,8 @@ class IOTAImageProcessor(Processor):
                 print("{:-^100}\n".format(" INDEXING"))
                 print("<--->")
                 experiments, indexed = self.index(img_object.experiments, observed)
-            except Exception as e_idx:
+            except Exception as e:
+                e_idx = str(e)
                 indexed = None
             else:
                 if indexed:
@@ -541,6 +543,7 @@ class IOTAImageProcessor(Processor):
                         )
                     )
                 else:
+                    e_idx = "Not indexed for unspecified reason(s)"
                     img_object.fail = "failed indexing"
 
         if indexed:
@@ -570,7 +573,8 @@ class IOTAImageProcessor(Processor):
                     else:
                         print("{:-^100}\n".format(" RETAINED TRICLINIC (P1) SYMMETRY "))
                     reindex_success = True
-                except Exception as e_ridx:
+                except Exception as e:
+                    e_ridx = str(e)
                     reindex_success = False
 
                 if reindex_success:
@@ -588,7 +592,8 @@ class IOTAImageProcessor(Processor):
             try:
                 experiments, indexed = self.refine(experiments, indexed)
                 refined = True
-            except Exception as e_ref:
+            except Exception as e:
+                e_ref = str(e)
                 refined = False
         if refined:
             if self.write_logs:
@@ -604,7 +609,8 @@ class IOTAImageProcessor(Processor):
                 print("{:-^100}\n".format(" INTEGRATING "))
                 print("<--->")
                 integrated = self.integrate(experiments, indexed)
-            except Exception as e_int:
+            except Exception as e:
+                e_int = str(e)
                 integrated = None
             else:
                 if integrated:
