@@ -1,0 +1,10 @@
+repos:
+
+# Automatic source code formatting
+- repo: https://github.com/psf/black
+  rev: 19.10b0
+  hooks:
+  - id: black
+    args: [--safe, --quiet]
+    files: \.pyi?$|SConscript$|^libtbx_config$
+    types: [file]
