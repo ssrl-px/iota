@@ -719,6 +719,8 @@ class MultiChoiceCtrl(wx.Panel):
         self.SetSizer(sizer)
 
         self.parent = parent
+        self.window = parent.GetTopLevelParent()
+
         self.choices = None
         self.selection = None
         self.value_string = None
@@ -735,7 +737,6 @@ class MultiChoiceCtrl(wx.Panel):
 
         max_length = max([dc.GetTextExtent(i)[0] for i in choices]) * 2.0
         self.widget.SetSize((max_length, -1))
-
         return max_length
 
     def SetItems(self, choices):
@@ -759,7 +760,10 @@ class MultiChoiceCtrl(wx.Panel):
             rect = self.widget.GetScreenRect()
             dlg_pos = wx.Point(x=rect[0], y=rect[1] + rect[3])
             self.dlg = DropdownDialog(
-                parent=self, choices=self.choices, selection=self.selection, pos=dlg_pos
+                parent=self,
+                choices=self.choices,
+                selection=self.selection,
+                pos=dlg_pos
             )
             self.dlg.ShowModal()
             self.widget.SetValue(False)
@@ -784,15 +788,22 @@ class MultiChoiceCtrl(wx.Panel):
             dc = wx.WindowDC(self)
             part_widths = dc.GetPartialTextExtents(value_string)
             box_width = self.widget.GetSize()[0]
+            window_width = self.window.GetSize()[0]
             if part_widths[-1] > box_width:
-                for te in part_widths:
-                    if te >= box_width:
-                        idx = part_widths.index(te) - 4
-                        box_string = value_string[:idx] + "..."
-                        break
+                if window_width * 0.75 <= part_widths[-1]:
+                    for te in part_widths:
+                        if te >= box_width:
+                            idx = part_widths.index(te) - 4
+                            box_string = value_string[:idx] + "..."
+                            break
+                else:
+                    box_string = value_string
+                    self.widget.SetSize((part_widths[-1], -1))
             else:
                 box_string = value_string
         self.widget.SetLabel(box_string)
+        self.window.Layout()
+
         wx.PostEvent(self.parent, wx.PyCommandEvent(wx.EVT_CHOICE.typeId, self.GetId()))
 
 

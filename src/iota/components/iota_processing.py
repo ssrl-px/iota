@@ -775,12 +775,12 @@ class Selector(object):
         self.obs_pg = frame["pointgroup"]
         self.obs_uc = [prm for prm in obs.unit_cell().parameters()]
         self.obs_res = obs.d_max_min()[1]
-        self.obs_ref = len(obs.data())
+        self.obs_ref = obs.size()
         self.uc = uc
-        self.uc_tol = uc_tol
+        self.uc_tol = 0 if uc_tol is None else uc_tol
         self.xsys = xsys
         self.pg = pg
-        self.min_ref = min_ref
+        self.min_ref = 0 if min_ref is None else min_ref
         self.min_res = min_res
         self.fail = False
 

@@ -866,7 +866,7 @@ class PHILBaseDialog(base.FormattedDialog):
     def _set_default_size(self, disp_size):
         # Get x, y of Display as well as of Dialog
         sw, sh = disp_size
-        dw, dh = self.GetSize()
+        dw, dh = self.GetEffectiveMinSize()
 
         # Set dialog height (soft maximum to 2/3 of display height)
         soft_max_height = sh * (2 / 3)
@@ -2336,7 +2336,6 @@ class PHILBaseChoiceCtrl(PHILDefPanel):
         self._options = None
 
         # Set choice control
-        self.ctr = wx.Choice(self, size=ctrl_size)
         self.is_multi = phil_object.type.multi
         if self.is_multi:
             self.ctr = ct.MultiChoiceCtrl(self, size=ctrl_size)
