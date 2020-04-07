@@ -1967,7 +1967,7 @@ class SummaryTab(IOTABaseScrolledPanel):
             self.gparams.analysis.clustering.threshold)
         cluster_dlg.cluster_limit.ctr.SetValue(
             self.gparams.analysis.clustering.limit)
-        if self.gparams.analysis.clustering and\
+        if self.gparams.analysis.clustering.n_images and\
                 self.gparams.analysis.clustering.n_images > 0:
             cluster_dlg.cluster_n_images.ctr.SetValue(
                 self.gparams.analysis.clustering.n_images
