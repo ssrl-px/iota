@@ -1961,12 +1961,14 @@ class SummaryTab(IOTABaseScrolledPanel):
 
     def onCLUSTER(self, e):
         cluster_dlg = d.ClusterDialog(self)
-        cluster_dlg.write_files.SetValue(self.gparams.analysis.clustering.write_files)
+        cluster_dlg.write_files.SetValue(
+            self.gparams.analysis.clustering.write_files)
         cluster_dlg.cluster_threshold.ctr.SetValue(
-            self.gparams.analysis.clustering.threshold
-        )
-        cluster_dlg.cluster_limit.ctr.SetValue(self.gparams.analysis.clustering.limit)
-        if self.gparams.analysis.clustering.n_images > 0:
+            self.gparams.analysis.clustering.threshold)
+        cluster_dlg.cluster_limit.ctr.SetValue(
+            self.gparams.analysis.clustering.limit)
+        if self.gparams.analysis.clustering and\
+                self.gparams.analysis.clustering.n_images > 0:
             cluster_dlg.cluster_n_images.ctr.SetValue(
                 self.gparams.analysis.clustering.n_images
             )
