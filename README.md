@@ -1,5 +1,6 @@
 # IOTA: Integration Optimization, Triage and Analysis
 
+[![PyPI release](https://img.shields.io/pypi/v/iota.svg)](https://pypi.org/project/iota/)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/ssrl-px/iota.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ssrl-px/iota/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/ssrl-px/iota.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ssrl-px/iota/alerts/)
