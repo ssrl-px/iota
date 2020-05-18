@@ -9,11 +9,11 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     author="Leland Stanford Junior University",
     author_email="scientificsoftware@diamond.ac.uk",
-    version="1.4.018",
+    version="1.4.019",
     url="https://github.com/ssrl-px/iota",
     download_url="https://github.com/ssrl-px/iota/releases",
     license="BSD",
-    install_requires=[],
+    install_requires=["matplotlib", "numpy", "six", "wxpython"],
     package_dir={"": "src"},
     packages=["iota"],
     entry_points={
