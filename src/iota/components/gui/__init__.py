@@ -119,7 +119,7 @@ class IOTAWindowMixin(object):
         disp_idx = wx.Display.GetFromWindow(window)
         try:
             disp = wx.Display(disp_idx)
-        except ValueError:
+        except Exception:
             disp = wx.Display(0)
         disp_geom = disp.GetClientArea()
         return disp_geom
