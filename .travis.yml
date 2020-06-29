@@ -26,3 +26,18 @@ jobs:
       script:
          - .travis/run-flake8
       if: type = pull_request
+
+# Assuming you have installed the travis-ci CLI tool, after you
+# create the Github repo and add it to Travis, run the
+# following command to finish PyPI deployment setup:
+# $ travis encrypt --add deploy.password
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: mgerstel
+  password:
+    secure: fAaDQ0VZZU/vqgSS3rNkoyqTHg5oGAd77BbjB/FpYP3WXp8kYhesNPTwDDzqgmf4Lb24tD5T6h7akv/97F2L0oBxG2ALABuZ3b/h2UGUZVmKhqP96/dcuh6mgf+02r1hx/wVxWsLbgN7V5VE0Ast7PbD3AHfuG5birsksRXTrfsCZD6pR4NmY7ALxcdVLc3sgB6+BAmglksLzGtO2SCuxnzqXsLtgM65HYrBLwpSKuStXb0JG12aNtNmAIttqATycneQi5V4NXlVkyPvBkvqKM6pQREYBf4dixe7W9wtYFcp5AyuZJjINRaVtpB8CMYsqk5LkkT6s2zuWaSn2JkSNzPdM5RtCogo37T4+GQmv6Ho4nlsft/ZxV8jyXx4j/3HupkcmF+x8PIi2cTBOlI9rCPOHG2vSQiXJGUB4a+3mez4pq8MhV2HyFxva+NgCcC8LHNim+/CQBod/4WMxztcHgqMDl7swvk0uMNZfmNhjwHqDiZKQe2+JpFqx+jD9KRBkmakekojjwMS26iULQfdcj9QakgbP177/lsOrSVgXxKfj2TVid6UIkWwLi7zUi6u+rixTAp3rBPLVkkmpwtSIRF16qf1m5LJKRSeYlx6qX7tvCCxbxXhTQJTgjGS97b36gTuj/yz36kgaJIovDNdP64dEkZSgiCxqnUOXRTN7LE=
+  on:
+    tags: true
+    repo: ssrl-px/iota
+    python: 3.7
