@@ -15,7 +15,7 @@ setuptools.setup(
     license="BSD",
     install_requires=["matplotlib", "numpy", "six", "wxpython"],
     package_dir={"": "src"},
-    packages=["iota"],
+    packages=setuptools.find_packages(where="src"),
     entry_points={
         "console_scripts": [
             "iota = iota.command_line.iota_gui_launch:entry_point",
