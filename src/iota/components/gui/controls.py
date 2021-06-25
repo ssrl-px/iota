@@ -1063,7 +1063,7 @@ class OptionCtrl(CtrlBase):
             self.ctrl_box.Add(
                 item,
                 proportion=1,
-                flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.EXPAND,
+                flag=wx.ALIGN_RIGHT | wx.EXPAND,
             )
 
         cols = 1

@@ -2922,7 +2922,7 @@ class PHILDialog(PHILBaseDialog):
         # Dialog control
         self.dlg_ctr = ct.DialogButtonsCtrl(self, preset="PHIL_DIALOG")
         self.envelope.Add(
-            self.dlg_ctr, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            self.dlg_ctr, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         # Set up size and scrolling (adjust size if auto-fit dialog is too big

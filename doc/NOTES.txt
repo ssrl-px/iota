@@ -1,11 +1,5 @@
-IOTA v1.4.019 - processing and GUI bugfixes
+IOTA v1.4.021 - wxPython 4.1.1 bugfixes
 
-- Processing:
-    - accounted for NoneType GUI defaults in result filter
-
-- GUI:
-    - Choice control label no longer looks like choice control itself
-    - MultiChoice button resizes to accommodate multiple selections
-
-04.05.2020
-# -- end
+- Fixed a variety of wxPython 4.1.1 -associated bugs
+    - TB_3BUTTONS no longer used for toolbars
+    - removed vertical / horizontal centering in expanded widgets

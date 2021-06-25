@@ -105,7 +105,7 @@ class IOTABaseFrame(wx.Frame, gui.IOTAWindowMixin):
         e.Skip()
 
     def initialize_toolbar(self):
-        self.toolbar = self.CreateToolBar(style=wx.TB_3DBUTTONS | wx.TB_TEXT)
+        self.toolbar = self.CreateToolBar(style=wx.TB_TEXT)
 
     def add_tool(
         self,

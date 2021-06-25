@@ -884,7 +884,7 @@ class WidgetHandlerMixin(object):
         self.Add(panel, proportion=1, flag=wx.ALL | wx.EXPAND, border=border)
 
     def add_widget(self, widget, border=5, proportion=0, expand=False, center=False):
-        flags = wx.RIGHT | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL
+        flags = wx.RIGHT | wx.BOTTOM #| wx.ALIGN_CENTER_VERTICAL
         if expand:
             flags |= wx.EXPAND
         if center:
