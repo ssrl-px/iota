@@ -9,7 +9,7 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     author="Leland Stanford Junior University",
     author_email="scientificsoftware@diamond.ac.uk",
-    version="1.4.21",
+    version="1.4.22",
     url="https://github.com/ssrl-px/iota",
     download_url="https://github.com/ssrl-px/iota/releases",
     license="BSD",
