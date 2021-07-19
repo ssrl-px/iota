@@ -564,8 +564,8 @@ class InputFinder(object):
         exp_input_list = []
         with h5py.File(path, "r") as f:
             data_keys = f["entry"]["data"].keys()
-        for i in range(len(data_keys)):
-            exp_input_list.append((path, i))
+            for i in range(len(data_keys)):
+                exp_input_list.append((path, i))
         return [(str(il[0]), il[1]) for il in sorted(exp_input_list)]
 
     def _check_for_master_hdf5(self, path):
