@@ -562,13 +562,18 @@ class InputFinder(object):
                 return []
 
         exp_input_list = []
-        with h5py.File(path, "r") as f:
-            data_keys = f["entry"]["data"].keys()
-            data_idx = 0
-            for key in data_keys:
-                if "data" in key:
-                    exp_input_list.append((path, data_idx))
-                    data_idx += 1
+        n_images = self._get_hdf5_entry_count(path)
+        for i in range(n_images):
+            exp_input_list.append((path, i))
+        # with h5py.File(path, "r") as f:
+        #     data_keys = f["entry"]["data"].keys()
+        #     data_idx = 0
+        #     for key in data_keys:
+        #         if "data" in key:
+        #             for idx in range(f['entry']['data'][key].shape[0]):
+        #                 exp_input_list.append((path, data_idx+idx))
+        #             data_idx += f['entry']['data'][key].shape[0] + 1
+
         return [(str(il[0]), il[1]) for il in sorted(exp_input_list)]
 
     def _check_for_master_hdf5(self, path):
@@ -591,7 +596,11 @@ class InputFinder(object):
 
         if os.path.exists(path):
             with h5py.File(path, "r") as f:
-                n_images = len(f["entry"]["data"])
+                data_items = [k for k in f["entry"]["data"] if "data" in k]
+                print (data_items)
+                n_images = 0
+                for item in data_items:
+                    n_images += f['entry/data'][item].shape[0]
         else:
             n_images = 0
         return n_images

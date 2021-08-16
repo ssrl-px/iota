@@ -2500,7 +2500,7 @@ class ViewerWarning(IOTABaseDialog):
         # Dialog control
         self.main_sizer.Add(
             self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL),
-            flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL,
+            flag=wx.EXPAND | wx.ALL,
             border=10,
         )
 
@@ -2587,7 +2587,7 @@ class RecoveryDialog(IOTABaseDialog):
             choice_label="Recover: ",
         )
         self.main_sizer.Add(
-            self.dlg_ctr, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            self.dlg_ctr, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         # Bindings

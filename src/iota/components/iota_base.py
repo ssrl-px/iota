@@ -443,20 +443,32 @@ class ProcessingBase(Thread):
         # Create ExperimentList objects from image paths (doing it in the processor
         # because I can't have Python objects in the INFO JSON file)
         adj_iterable = []
-        imageseq = None
         crystal = None
         for entry in iterable:
             path = str(entry[1])
             if path.endswith(".h5"):
                 exp_idx = entry[0]
                 img_idx = entry[2]
-                if imageseq is None:
+
+                # Generate a list of single images if at img_idx = 0
+                if img_idx == 0:
+                    imageseqs = []
                     exps = ExLF.from_filenames(filenames=[path])
-                    imageseq = exps.imagesets()[0]
                     crystal = exps[0].crystal
-                one_image = imageseq.partial_set(img_idx, img_idx + 1)
+
+                    # flatten all imagesets into a single imagesequence
+                    for iset in exps.imagesets():
+                        if iset.size() == 1:
+                            imageseqs.append(iset)
+                        else:
+                            for i in range(iset.size()):
+                                one_image = imageseq.partial_set(i, i + 1)
+                                imageseqs.append(i)
+
+                # Create ExperimentList object from extracted imageset
+                current_image = imageseqs[img_idx]
                 one_exp = ExLF.from_imageset_and_crystal(
-                    imageset=one_image, crystal=crystal
+                    imageset=current_image, crystal=crystal
                 )
                 adj_iterable.append([exp_idx, path, img_idx, one_exp])
             else:

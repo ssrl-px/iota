@@ -1,5 +1,4 @@
-IOTA v1.4.021 - wxPython 4.1.1 bugfixes
+IOTA v1.4.24 - HDF5 bugfix
 
-- Fixed a variety of wxPython 4.1.1 -associated bugs
-    - TB_3BUTTONS no longer used for toolbars
-    - removed vertical / horizontal centering in expanded widgets
+- IOTA now properly flattens HDF5 formatted files with any kind of data distribution
+(which includes virtual datasets)
