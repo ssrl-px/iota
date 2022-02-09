@@ -1,4 +1,7 @@
 from __future__ import absolute_import, division, print_function
+
+import iota.threads.iota_threads
+import iota.threads.other_threads
 from six.moves import range, zip
 
 """
@@ -846,7 +849,7 @@ class TrackerWindow(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.onList, self.tb_btn_view)
 
         # Spotfinder / timer bindings
-        self.Bind(thr.EVT_SPFDONE, self.onSpfOneDone)
+        self.Bind(iota.threads.other_threads.EVT_SPFDONE, self.onSpfOneDone)
 
         # Settings bindings
         self.Bind(wx.EVT_SPINCTRL, self.onMinBragg, self.tracker_panel.min_bragg.ctr)
@@ -934,7 +937,7 @@ class TrackerWindow(wx.Frame):
 
         # Initialize processing thread
         if self.args.file is None:
-            self.proc_thread = thr.InterceptorThread(
+            self.proc_thread = iota.threads.other_threads.InterceptorThread(
                 self,
                 data_folder=self.data_folder,
                 term_file=self.term_file,
@@ -946,7 +949,7 @@ class TrackerWindow(wx.Frame):
                 run_integration=self.run_integration,
             )
         else:
-            self.proc_thread = thr.InterceptorFileThread(
+            self.proc_thread = iota.threads.other_threads.InterceptorFileThread(
                 self, results_file=self.args.file, reorder=self.args.reorder
             )
 
@@ -1006,7 +1009,7 @@ class TrackerWindow(wx.Frame):
         file_list = [self.data_dict[idx][1] for idx in idxs]
         file_string = " ".join(file_list)
 
-        viewer = thr.ImageViewerThread(self, file_string=file_string)
+        viewer = iota.threads.iota_threads.ImageViewerThread(self, file_string=file_string)
         viewer.start()
 
     def onStop(self, e):

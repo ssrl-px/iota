@@ -1,4 +1,6 @@
 from __future__ import absolute_import, division, print_function
+
+import iota.threads.iota_threads
 from six.moves import range
 
 """
@@ -774,7 +776,7 @@ class ImportWindow(IOTABaseDialog):
 
         filepath = self.mod_mask.ctr.GetValue()
         if os.path.isfile(filepath):
-            viewer = thr.ImageViewerThread(
+            viewer = iota.threads.iota_threads.ImageViewerThread(
                 self, viewer=self.params.gui.image_viewer, file_string=filepath
             )
             viewer.start()
@@ -986,7 +988,7 @@ class HA14ImportWindow(IOTABaseDialog):
 
         filepath = self.mod_mask.ctr.GetValue()
         if os.path.isfile(filepath):
-            viewer = thr.ImageViewerThread(
+            viewer = iota.threads.iota_threads.ImageViewerThread(
                 self, viewer=self.params.gui.image_viewer, file_string=filepath
             )
             viewer.start()
@@ -2781,7 +2783,7 @@ class DIALSSpfDialog(IOTABaseDialog):
 
         filepath = self.mod_mask.ctr.GetValue()
         if os.path.isfile(filepath):
-            viewer = thr.ImageViewerThread(self, file_string=filepath, viewer="dials")
+            viewer = iota.threads.iota_threads.ImageViewerThread(self, file_string=filepath, viewer="dials")
             viewer.start()
 
     def read_param_phil(self):

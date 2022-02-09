@@ -1,4 +1,7 @@
 from __future__ import division, print_function, absolute_import
+
+import iota.threads.analysis_threads
+import iota.threads.iota_threads
 from past.builtins import range
 from six.moves import range
 
@@ -37,7 +40,7 @@ import prime.postrefine.mod_plotter as ppl
 
 from iota import iota_version, gui_description, gui_license
 from iota.components import iota_init as init
-from iota.components.iota_base import ProcInfo
+from iota.base.info import ProcInfo
 from iota.components.gui.base import IOTABaseFrame, IOTABasePanel, IOTABaseScrolledPanel
 from iota.components.iota_analysis import Analyzer
 from iota.components.gui.plotter import Plotter, PlotWindow
@@ -616,7 +619,7 @@ class MainWindow(IOTABaseFrame):
         # Pass input from IOTA PHIL through Input Finder to resolve wildcards, etc.
         if self.gparams.input is not None:
             inputs = [self.gparams.input.pop(i) for i in range(len(self.gparams.input))]
-            phil_input_dict = ut.ginp.process_mixed_input(paths=inputs)
+            phil_input_dict = iota.threads.iota_threads.ginp.process_mixed_input(paths=inputs)
             if input_dict:
                 input_dict.update(phil_input_dict)
             else:
@@ -1400,7 +1403,7 @@ class ProcessingTab(IOTABasePanel):
         ref = self.info.pointers[idx]["reflections"]
         file_string = "experiments={} reflections={}".format(exp, ref)
         if os.path.isfile(exp) and os.path.isfile(ref):
-            viewer = thr.ImageViewerThread(
+            viewer = iota.threads.iota_threads.ImageViewerThread(
                 self, viewer=self.gparams.gui.image_viewer, file_string=file_string
             )
             viewer.start()
@@ -1435,7 +1438,7 @@ class ProcessingTab(IOTABasePanel):
         if filenames:
             file_string = " ".join(filenames)
             viewer = self.gparams.gui.image_viewer
-            viewer = thr.ImageViewerThread(self, viewer=viewer, file_string=file_string)
+            viewer = iota.threads.iota_threads.ImageViewerThread(self, viewer=viewer, file_string=file_string)
             viewer.start()
 
     def onArrow(self, e):
@@ -2258,11 +2261,11 @@ class ProcWindow(IOTABaseFrame):
         self.chart_timer = wx.Timer(self)
 
         # PostEvent bindings
-        self.Bind(thr.EVT_ALLDONE, self.onFinishedProcess)
-        self.Bind(thr.EVT_IMGDONE, self.onFinishedImageFinder)
-        self.Bind(thr.EVT_OBJDONE, self.onFinishedObjectReader)
-        self.Bind(thr.EVT_CLUSTERDONE, self.onFinishedCluster)
-        self.Bind(thr.EVT_PRIMEDONE, self.onFinishedPRIME)
+        self.Bind(iota.threads.iota_threads.EVT_ALLDONE, self.onFinishedProcess)
+        self.Bind(iota.threads.iota_threads.EVT_IMGDONE, self.onFinishedImageFinder)
+        self.Bind(iota.threads.iota_threads.EVT_OBJDONE, self.onFinishedObjectReader)
+        self.Bind(iota.threads.analysis_threads.EVT_CLUSTERDONE, self.onFinishedCluster)
+        self.Bind(iota.threads.analysis_threads.EVT_PRIMEDONE, self.onFinishedPRIME)
 
         # Event bindings
         self.Bind(wx.EVT_TIMER, self.onProcTimer, id=self.proc_timer.GetId())
@@ -2448,7 +2451,7 @@ class ProcWindow(IOTABaseFrame):
             self.finish_process()
 
         # Instantiate and start submit thread
-        self.proc_thread = thr.JobSubmitThread(self, params=self.gparams)
+        self.proc_thread = iota.threads.iota_threads.JobSubmitThread(self, params=self.gparams)
         self.proc_thread.name = "IOTAJobSubmitThread"
         self.proc_thread.start()
 
@@ -2492,7 +2495,7 @@ class ProcWindow(IOTABaseFrame):
     def run_clustering_thread(self):
         self.chart_tab.btn_run_analysis.Disable()
         self.running_cluster = True
-        self.cluster_thread = thr.ClusterThread(
+        self.cluster_thread = iota.threads.analysis_threads.ClusterThread(
             self, iterable=self.info.cluster_iterable
         )
         self.cluster_thread.start()
@@ -2523,7 +2526,7 @@ class ProcWindow(IOTABaseFrame):
         self.running_prime = True
         pg = ut.makenone(self.chart_tab.pg_uc.pg.GetValue())
         uc = ut.makenone(self.chart_tab.pg_uc.uc.GetValue())
-        self.prime_thread = thr.PRIMEThread(self, self.info, self.gparams, pg, uc)
+        self.prime_thread = iota.threads.analysis_threads.PRIMEThread(self, self.info, self.gparams, pg, uc)
         self.prime_thread.start()
 
     def onFinishedPRIME(self, e):
@@ -2603,7 +2606,7 @@ class ProcWindow(IOTABaseFrame):
                     hasattr(self, "object_reader") and self.object_reader.is_alive()
                 ):
                     self.obj_sw = wx.StopWatch()
-                    self.object_reader = thr.ObjectReaderThread(self, info=self.info)
+                    self.object_reader = iota.threads.iota_threads.ObjectReaderThread(self, info=self.info)
                     self.object_reader.name = "IOTAObjectReader"
                     self.object_reader.start()
 
@@ -2655,7 +2658,7 @@ class ProcWindow(IOTABaseFrame):
 
     def get_images_from_filesystem(self):
         self.find_new_images = False
-        img_finder = thr.ImageFinderThread(
+        img_finder = iota.threads.iota_threads.ImageFinderThread(
             self, input=self.gparams.input, input_list=self.info.categories["total"][0]
         )
         img_finder.start()

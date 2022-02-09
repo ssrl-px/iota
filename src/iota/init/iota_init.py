@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import iota.threads.iota_threads
+
 """
 Author      : Lyubimov, A.Y.
 Created     : 10/12/2014
@@ -17,14 +19,14 @@ assert time
 
 import iota.components.iota_input as inp
 from iota.components import iota_utils as util
-from iota.components.iota_base import ProcInfo
+from iota.base.info import ProcInfo
 
 
 def initialize_interface(args, phil_args=None, gui=False):
     """Read and process input, create PHIL."""
 
     msg = []
-    input_dict = util.ginp.process_mixed_input(args.path)
+    input_dict = iota.threads.iota_threads.ginp.process_mixed_input(args.path)
     if input_dict and not gui and not input_dict["imagefiles"]:
         return None, None, "IOTA_INIT_ERROR: No readable image files in path(s)!"
 

@@ -1,4 +1,12 @@
-IOTA v1.4.24 - HDF5 bugfix
+IOTA v1.5.0 - reorganization
 
-- IOTA now properly flattens HDF5 formatted files with any kind of data distribution
-(which includes virtual datasets)
+- Broke up "components" into separate folders by functionality
+    - base              - base components of IOTA
+    - init              - initalization modules
+    - processing        - processing and selection modules
+    - threads           - various job and GUI threads
+    - analysis          - analysis modules
+    - gui               - GUI modules
+    - utils             - Input Finder and other utilities
+    - etc               - Deprecated and other crap
+    - command_line      - as before

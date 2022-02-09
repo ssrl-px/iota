@@ -214,7 +214,7 @@ def entry_point():
     args, phil_args = parse_command_args().parse_known_args()
 
     if args.run_path:
-        from iota.components.iota_base import ProcInfo
+        from iota.base.info import ProcInfo
 
         info = ProcInfo.from_folder(args.run_path[0])
         proc = Process.for_existing_run(info=info, out_type=args.out_type[0])
