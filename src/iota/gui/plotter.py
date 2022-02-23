@@ -30,7 +30,7 @@ assert colors
 
 from libtbx.utils import to_unicode, Sorry
 
-from iota.components.gui.base import IOTABaseFrame, IOTABasePanel
+from iota.gui.base import IOTABaseFrame, IOTABasePanel
 
 
 class PlotWindow(IOTABaseFrame):
@@ -55,7 +55,8 @@ class PlotWindow(IOTABaseFrame):
 
     def add_plot_to_window(self):
         if self.plot_panel:
-            self.main_sizer.Add(self.plot_panel, 1, flag=wx.EXPAND)
+            self.main_sizer.Add(self.plot_panel, 1, flag=wx.EXPAND | wx.ALL)
+            self.Layout()
 
     def onSave(self, e):
         save_dlg = wx.FileDialog(
@@ -102,9 +103,9 @@ class Plotter(IOTABasePanel):
 
     def set_size_to_panel(self):
         size_in_pixels = tuple(self.GetSize())
+        size_in_inches = [float(x) / self.figure.get_dpi() for x in size_in_pixels]
         self.SetSize(size_in_pixels)
         self.canvas.SetSize(size_in_pixels)
-        size_in_inches = [float(x) / self.figure.get_dpi() for x in size_in_pixels]
         self.figure.set_size_inches(size_in_inches)
 
     def set_size_to_canvas(self):
@@ -131,10 +132,8 @@ class Plotter(IOTABasePanel):
             self.set_size_to_canvas()
         else:
             self.set_size_to_panel()
-
         if tight_layout:
             self.figure.tight_layout()
-
         self.canvas.draw()
         self.canvas.Refresh()
 

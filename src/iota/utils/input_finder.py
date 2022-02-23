@@ -2,7 +2,6 @@ import os
 from collections import Counter
 from glob import glob
 
-from iota.components.iota_utils import InputError
 from libtbx import easy_run, easy_pickle as ep
 
 
@@ -222,7 +221,7 @@ class InputFinder(object):
         else:
             if test_phil:
                 # Test if IOTA parameter file
-                from iota.components.iota_input import master_phil as iota_phil
+                from iota.init.iota_input import master_phil as iota_phil
 
                 new_phil, unused = iota_phil.fetch(
                     sources=[test_phil], track_unused_definitions=True
@@ -637,7 +636,7 @@ class InputFinder(object):
 
                     # If there's a paramfile, get data from it first (will always be
                     # imagefiles, never objects!)
-                    from iota.components.iota_input import get_input_phil
+                    from iota.init.iota_input import get_input_phil
 
                     phil, _ = get_input_phil(paramfile=input_dict["paramfile"])
                     prm = phil.extract()
@@ -684,3 +683,8 @@ class InputFinder(object):
                 input_dict["objectpaths"] = list(set(input_dict["objectpaths"]))
 
         return input_dict
+
+
+class InputError(Exception):
+    def __init__(self, termination):
+        Exception.__init__(self, termination)

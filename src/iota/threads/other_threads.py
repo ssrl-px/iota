@@ -275,7 +275,7 @@ class SpotFinderThread(Thread):
             proc_params.output.profile_filename = None
             proc_params.output.integration_pickle = None
 
-            from iota.components.iota_processing import IOTAImageProcessor
+            from iota.processing.processing import IOTAImageProcessor
 
             self.processor = IOTAImageProcessor(phil=proc_params)
 
@@ -502,11 +502,7 @@ class InterceptorThread(Thread):
             proc_params.output.integration_pickle = None
 
             self.proc_params = proc_params
-
-            # from iota.components.iota_dials import IOTADialsProcessor
-            # self.processor = IOTADialsProcessor(params=proc_params)
-
-        self.prc_timer = wx.Timer()
+            self.prc_timer = wx.Timer()
         self.cls_timer = wx.Timer()
 
         # Bindings

@@ -17,8 +17,8 @@ import time
 
 assert time
 
-import iota.components.iota_input as inp
-from iota.components import iota_utils as util
+import iota.init.iota_input as inp
+from iota.utils import utils as util
 from iota.base.info import ProcInfo
 
 

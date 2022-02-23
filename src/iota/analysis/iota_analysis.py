@@ -26,7 +26,7 @@ from cctbx import crystal, uctbx, statistics
 from cctbx.sgtbx.lattice_symmetry import metric_subgroups
 
 from iota import iota_version, now
-import iota.components.iota_utils as util
+import iota.utils.utils as util
 
 from prime.postrefine.mod_mx import mx_handler
 from prime.postrefine import mod_input

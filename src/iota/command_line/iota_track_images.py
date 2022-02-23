@@ -9,7 +9,7 @@ Description : IOTA image-tracking GUI launcher
 
 import wx
 from iota import intx_version
-from iota.components import iota_tracker as trk
+from iota.etc import iota_tracker as trk
 
 
 class MainApp(wx.App):

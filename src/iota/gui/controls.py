@@ -25,8 +25,8 @@ from wxtbx import metallicbutton as mb
 from wxtbx import bitmaps
 from libtbx.utils import Sorry
 
-from iota.components.iota_utils import noneset, InputFinder
-from iota.components.iota_threads import ImageViewerThread
+from iota.utils.utils import noneset, InputFinder
+from iota.threads.iota_threads import ImageViewerThread
 
 ginp = InputFinder()
 

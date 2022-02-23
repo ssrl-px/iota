@@ -15,6 +15,7 @@ import os
 
 from libtbx import easy_pickle as ep
 from past.types import basestring
+from iota.utils import utils
 
 
 class ProcInfo(object):
@@ -215,7 +216,7 @@ class ProcInfo(object):
     #       all_obs.append(obs)
     #
     #     # Combine miller_index objects into a single miller_index object
-    #     with util.Capturing():
+    #     with utils.Capturing():
     #       observations = None
     #       for o in all_obs[1:]:
     #         if to_p1:
@@ -234,7 +235,7 @@ class ProcInfo(object):
     #   if not obs:
     #     obs = ep.load(filepath)
     #
-    #   with util.Capturing():
+    #   with utils.Capturing():
     #     p1_mrg = obs.change_symmetry('P1').merge_equivalents()
     #     p1_red = p1_mrg.redundancies()
     #   for i in p1_red:
@@ -259,7 +260,7 @@ class ProcInfo(object):
         except IOError:
             return None
 
-        with util.Capturing():
+        with utils.Capturing():
             ext_sg = str(all_obs.space_group_info()).replace(" ", "").lower()
             sg = sg.replace(" ", "").lower()
             if ext_sg != sg:

@@ -17,11 +17,11 @@ from wxtbx import bitmaps
 from libtbx.utils import Sorry
 from libtbx import Auto
 
-from iota.components import gui
-from iota.components.gui import base
-from iota.components.gui import controls as ct
-from iota.components.iota_utils import InputFinder, makenone
-from iota.components.gui.dialogs import DirView
+from iota import gui
+from iota.gui import base
+from iota.gui import controls as ct
+from iota.utils.utils import InputFinder, makenone
+from iota.gui.dialogs import DirView
 
 ginp = InputFinder()
 

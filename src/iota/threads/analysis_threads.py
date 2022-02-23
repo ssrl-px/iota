@@ -15,7 +15,7 @@ import wx
 from cctbx import crystal
 from cctbx.sgtbx import lattice_symmetry
 from cctbx.uctbx import unit_cell
-from iota.components.iota_threads import SpotFinderOneDone
+from iota.threads.other_threads import SpotFinderOneDone
 from libtbx import easy_pickle as ep
 from xfel.clustering.cluster import Cluster
 
@@ -64,7 +64,7 @@ class PRIMEThread(Thread):
 
         # Only run PRIME if both pg and uc are provided
         if self.best_pg and self.best_uc:
-            from iota.components.iota_analysis import Analyzer
+            from iota.analysis.iota_analysis import Analyzer
 
             # Create a file with list of integrated pickles (overwrite old file)
             int_pickles_file = os.path.join(self.info.int_base, "int_pickles.lst")

@@ -12,8 +12,8 @@ import numpy as np
 import dxtbx
 from dials.command_line.estimate_gain import estimate_gain
 
-import iota.components.iota_utils as util
-from iota.components.iota_base import SingleImageBase, ImageImporterBase
+import iota.utils.utils as util
+from iota.base.importer import SingleImageBase, ImageImporterBase
 
 
 class SingleImage(SingleImageBase):  # For current cctbx.xfel

@@ -21,8 +21,8 @@ from xfel.cxi.display_spots import run_one_index_core
 from xfel.phil_preferences import load_cxi_phil
 from libtbx import easy_pickle as ep
 
-import iota.components.iota_utils as util
-from iota.components.iota_base import SingleImageBase, ImageImporterBase
+import iota.utils.utils as util
+from iota.base.importer import SingleImageBase, ImageImporterBase
 
 ha14_str = """
 image_import
@@ -326,7 +326,7 @@ class Integrator:
                 )
                 self.img_object.log_info.append(log_entry)
 
-                import iota.components.iota_vis_integration as viz
+                import iota.etc.iota_vis_integration as viz
 
                 if self.params.analysis.viz == "integration":
                     viz.make_png(

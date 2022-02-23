@@ -39,19 +39,19 @@ from prime.postrefine.mod_mx import mx_handler
 import prime.postrefine.mod_plotter as ppl
 
 from iota import iota_version, gui_description, gui_license
-from iota.components import iota_init as init
+from iota.init import iota_init as init
 from iota.base.info import ProcInfo
-from iota.components.gui.base import IOTABaseFrame, IOTABasePanel, IOTABaseScrolledPanel
-from iota.components.iota_analysis import Analyzer
-from iota.components.gui.plotter import Plotter, PlotWindow
-from iota.components.gui import make_phil_index
-import iota.components.iota_input as inp
-import iota.components.gui.controls as ct
-import iota.components.iota_threads as thr
-import iota.components.gui.dialogs as d
-import iota.components.iota_utils as ut
+from iota.gui.base import IOTABaseFrame, IOTABasePanel, IOTABaseScrolledPanel
+from iota.analysis.iota_analysis import Analyzer
+from iota.gui.plotter import Plotter, PlotWindow
+from iota.gui import make_phil_index
+import iota.init.iota_input as inp
+import iota.gui.controls as ct
+import iota.threads.iota_threads as thr
+import iota.gui.dialogs as d
+import iota.utils.utils as ut
 
-import iota.components.gui.phil_controls as pct
+import iota.gui.phil_controls as pct
 
 assert Axes3D
 f = ut.WxFlags()
@@ -2119,26 +2119,26 @@ class SummaryTab(IOTABaseScrolledPanel):
     def onPlotHeatmap(self, e):
         if self.info.final_objects is not None:
             self.initialize_standalone_plot()
+            self.show_plot()    # show first to properly size
             self.plot.plot_spotfinding_heatmap()
-            self.show_plot()
 
     def onPlotBeamXY(self, e):
         if self.info.final_objects is not None:
             self.initialize_standalone_plot()
+            self.show_plot()  # show first to properly size
             self.plot.plot_beam_xy()
-            self.show_plot()
 
     def onPlotBeam3D(self, e):
         if self.info.final_objects is not None:
             self.initialize_standalone_plot()
+            self.show_plot()  # show first to properly size
             self.plot.plot_beam_xy(threeD=True)
-            self.show_plot()
 
     def onPlotResHist(self, e):
         if self.info.final_objects is not None:
             self.initialize_standalone_plot()
+            self.show_plot()  # show first to properly size
             self.plot.plot_res_histogram()
-            self.show_plot()
 
 
 class ProcWindow(IOTABaseFrame):
@@ -2718,7 +2718,7 @@ class ProcWindow(IOTABaseFrame):
             successfully_processed = len(self.info.categories["integrated"][0])
             end_color = "blue"
             if successfully_processed > 0:
-                from iota.components.iota_analysis import Analyzer
+                from iota.analysis.iota_analysis import Analyzer
 
                 analyzer = Analyzer(info=self.info, params=self.gparams, gui_mode=True)
                 self.info = analyzer.run_all(get_results=False)

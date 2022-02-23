@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import iota.utils.input_finder
+
 """
 Author      : Lyubimov, A.Y.
 Created     : 02/08/2021
@@ -10,6 +12,8 @@ Description : IOTA Importer base class
 import os
 
 from dxtbx.model.experiment_list import ExperimentListFactory as ExLF
+
+from iota.utils import utils
 
 
 class SingleImageBase(object):
@@ -198,17 +202,17 @@ class ImageImporterBase:
             image_index = None
 
         # Object path (may not need)
-        self.img_object.obj_path = util.make_image_path(
+        self.img_object.obj_path = utils.make_image_path(
             self.img_object.img_path, input_base, obj_base
         )
-        fname = util.make_filename(
+        fname = utils.make_filename(
             prefix=image_index, path=self.img_object.img_path, new_ext="int"
         )
         self.img_object.obj_file = os.path.join(self.img_object.obj_path, fname)
 
         # DIALS process filepaths
         # Indexed reflections
-        ridx_path = util.make_filename(
+        ridx_path = utils.make_filename(
             prefix=image_index,
             path=self.img_object.img_path,
             suffix="indexed",
@@ -217,7 +221,7 @@ class ImageImporterBase:
         self.img_object.ridx_path = os.path.join(self.img_object.obj_path, ridx_path)
 
         # Spotfinding (strong) reflections
-        rspf_path = util.make_filename(
+        rspf_path = utils.make_filename(
             prefix=image_index,
             path=self.img_object.img_path,
             suffix="strong",
@@ -226,7 +230,7 @@ class ImageImporterBase:
         self.img_object.rspf_path = os.path.join(self.img_object.obj_path, rspf_path)
 
         # Refined experiments
-        eref_path = util.make_filename(
+        eref_path = utils.make_filename(
             prefix=image_index,
             path=self.img_object.img_path,
             suffix="refined",
@@ -235,7 +239,7 @@ class ImageImporterBase:
         self.img_object.eref_path = os.path.join(self.img_object.obj_path, eref_path)
 
         # Integrated experiments
-        eint_path = util.make_filename(
+        eint_path = utils.make_filename(
             prefix=image_index,
             path=self.img_object.img_path,
             suffix="integrated",
@@ -244,7 +248,7 @@ class ImageImporterBase:
         self.img_object.eint_path = os.path.join(self.img_object.obj_path, eint_path)
 
         # Integrated reflections
-        rint_path = util.make_filename(
+        rint_path = utils.make_filename(
             prefix=image_index,
             path=self.img_object.img_path,
             suffix="integrated",
@@ -253,10 +257,10 @@ class ImageImporterBase:
         self.img_object.rint_path = os.path.join(self.img_object.obj_path, rint_path)
 
         # Final integration pickle path
-        self.img_object.int_path = util.make_image_path(
+        self.img_object.int_path = utils.make_image_path(
             self.img_object.img_path, input_base, fin_base
         )
-        fname = util.make_filename(
+        fname = utils.make_filename(
             path=self.img_object.img_path,
             prefix="int",
             suffix=image_index,
@@ -265,20 +269,20 @@ class ImageImporterBase:
         self.img_object.int_file = os.path.join(self.img_object.int_path, fname)
 
         # Processing log path for image
-        self.img_object.log_path = util.make_image_path(
+        self.img_object.log_path = utils.make_image_path(
             self.img_object.img_path, input_base, log_base
         )
-        fname = util.make_filename(
+        fname = utils.make_filename(
             prefix=image_index, path=self.img_object.img_path, new_ext="log"
         )
         self.img_object.int_log = os.path.join(self.img_object.log_path, fname)
 
         # DIALS log path for image
         if dials_log_base:
-            self.img_object.dials_log_path = util.make_image_path(
+            self.img_object.dials_log_path = utils.make_image_path(
                 self.img_object.img_path, input_base, dials_log_base
             )
-            fname = util.make_filename(
+            fname = utils.make_filename(
                 prefix=image_index, path=self.img_object.img_path, new_ext="log"
             )
             self.img_object.dials_log = os.path.join(
@@ -286,10 +290,10 @@ class ImageImporterBase:
             )
 
         # Visualization path (may need to deprecate)
-        self.img_object.viz_path = util.make_image_path(
+        self.img_object.viz_path = utils.make_image_path(
             self.img_object.img_path, input_base, viz_base
         )
-        fname = util.make_filename(
+        fname = utils.make_filename(
             prefix="int",
             suffix=image_index,
             path=self.img_object.img_path,
@@ -334,7 +338,7 @@ class ImageImporterBase:
             filepath = input_entry
             img_idx = 0
         else:
-            raise util.InputError(
+            raise iota.utils.input_finder.InputError(
                 "IOTA IMPORT ERROR: Unrecognized input -- {}" "".format(input_entry)
             )
 

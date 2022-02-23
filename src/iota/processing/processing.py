@@ -22,13 +22,14 @@ from dials.array_family import flex
 from dials.algorithms.indexing.bravais_settings import (
     refined_settings_from_refined_triclinic,
 )
-from dials.command_line.stills_process import phil_scope, Processor
+# from dials.command_line.stills_process import phil_scope, Processor
 from dials.command_line.refine_bravais_settings import phil_scope as sg_scope
 from dials.command_line.refine_bravais_settings import (
     bravais_lattice_to_space_group_table,
 )
 
-import iota.components.iota_utils as util
+from iota.base.processor import phil_scope, Processor
+import iota.utils.utils as util
 
 cctbx_str = """
 cctbx_xfel
@@ -156,7 +157,7 @@ class IOTAImageProcessor(Processor):
                 tphil_string = tf.read()
             tparams = phil_scope.fetch(source=parse(tphil_string)).extract()
         else:
-            from iota.components.iota_input import write_defaults
+            from iota.init.iota_input import write_defaults
 
             method = self.iparams.advanced.processing_backend
             target_phil, _ = write_defaults(

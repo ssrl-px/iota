@@ -15,8 +15,8 @@ from multiprocessing import cpu_count
 
 import iotbx.phil as ip
 
-from iota.components.iota_utils import convert_phil_to_text
-from iota.components.iota_processing import cctbx_str
+from iota.utils.utils import convert_phil_to_text
+from iota.processing.processing import cctbx_str
 
 master_phil_str = """
 description = None
@@ -244,7 +244,7 @@ def get_input_phil(paramfile=None, phil_args=None, ha14=False, gui=False):
 
     else:
         if ha14:
-            from iota.components.iota_cctbx_ha14 import ha14_str
+            from iota.etc.iota_cctbx_ha14 import ha14_str
 
             working_phil = ip.parse(master_phil_str + ha14_str, process_includes=True)
         else:
@@ -254,7 +254,7 @@ def get_input_phil(paramfile=None, phil_args=None, ha14=False, gui=False):
         from libtbx.phil import find_scope
 
         if not find_scope(working_phil, "gui"):
-            from iota.components.gui.base import gui_phil
+            from iota.gui.base import gui_phil
 
             working_phil.adopt_scope(gui_phil)
 
@@ -682,7 +682,7 @@ class PHILFixer:
             return None
 
         if backend.lower() in ("ha14", "cctbx"):
-            from iota.components.iota_cctbx_ha14 import ha14_str
+            from iota.etc.iota_cctbx_ha14 import ha14_str
 
             new_phil = ip.parse(master_phil_str + ha14_str)
         else:
@@ -693,7 +693,7 @@ class PHILFixer:
 
         gui_phil = find_scope(phil, "gui")
         if gui_phil and not find_scope(new_phil, "gui"):
-            from iota.components.gui.base import gui_phil
+            from iota.gui.base import gui_phil
 
             new_phil.adopt_scope(gui_phil)
 

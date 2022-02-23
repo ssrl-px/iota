@@ -11,8 +11,8 @@ import wx
 import argparse
 
 from iota import iota_version, help_message
-from iota.components import iota_init as init
-from iota.components.iota_ui_frames import MainWindow
+from iota.init import iota_init as init
+from iota.gui.iota_ui_frames import MainWindow
 
 
 def parse_command_args():

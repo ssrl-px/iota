@@ -1,12 +1,5 @@
-IOTA v1.5.0 - reorganization
+IOTA v1.5.2 - reorganization bugfixes, etc.
 
-- Broke up "components" into separate folders by functionality
-    - base              - base components of IOTA
-    - init              - initalization modules
-    - processing        - processing and selection modules
-    - threads           - various job and GUI threads
-    - analysis          - analysis modules
-    - gui               - GUI modules
-    - utils             - Input Finder and other utilities
-    - etc               - Deprecated and other crap
-    - command_line      - as before
+- fixed the plethora of bugs that cropped up due to reorganization
+- new processor module
+- fixed bug that didn't size processing charts correctly

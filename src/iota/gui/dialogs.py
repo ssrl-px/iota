@@ -17,14 +17,14 @@ from wxtbx import bitmaps
 
 from iotbx import phil as ip
 
-from iota.components.gui.base import (
+from iota.gui.base import (
     IOTABaseDialog,
     BaseBackendDialog,
     BaseOptionsDialog,
 )
-import iota.components.gui.controls as ct
-from iota.components.iota_input import master_phil
-from iota.components.iota_utils import UnicodeCharacters, WxFlags, noneset
+import iota.gui.controls as ct
+from iota.init.iota_input import master_phil
+from iota.utils.utils import UnicodeCharacters, WxFlags, noneset
 
 # Platform-specific stuff
 # TODO: Will need to test this on Windows at some point
@@ -103,7 +103,7 @@ class IOTAPreferences(IOTABaseDialog):
 
         # Import current PHIL and set params to current values
         if phil is None:
-            from iota.components.gui.base import gui_phil
+            from iota.gui.base import gui_phil
 
             phil = master_phil.adopt(gui_phil)
 
@@ -772,7 +772,7 @@ class ImportWindow(IOTABaseDialog):
             self.mod_mask.ctr.SetValue(filepath)
 
     def onViewMask(self, e):
-        import iota.components.iota_threads as thr
+        import iota.threads.iota_threads as thr
 
         filepath = self.mod_mask.ctr.GetValue()
         if os.path.isfile(filepath):
@@ -984,7 +984,7 @@ class HA14ImportWindow(IOTABaseDialog):
             self.mod_mask.ctr.SetValue(filepath)
 
     def onViewMask(self, e):
-        import iota.components.iota_threads as thr
+        import iota.threads.iota_threads as thr
 
         filepath = self.mod_mask.ctr.GetValue()
         if os.path.isfile(filepath):
@@ -2779,7 +2779,7 @@ class DIALSSpfDialog(IOTABaseDialog):
             self.mod_mask.ctr.SetValue(filepath)
 
     def onViewMask(self, e):
-        import iota.components.iota_threads as thr
+        import iota.threads.iota_threads as thr
 
         filepath = self.mod_mask.ctr.GetValue()
         if os.path.isfile(filepath):

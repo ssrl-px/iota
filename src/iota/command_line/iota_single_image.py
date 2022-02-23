@@ -12,8 +12,8 @@ space group determination, refinement, integration)
 import os
 import time
 
-from iota.components.iota_init import initialize_single_image
-from iota.components.iota_base import ProcessingBase
+from iota.init.iota_init import initialize_single_image
+from iota.base.processor import ProcessingBase
 
 
 def parse_command_args():

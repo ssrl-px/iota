@@ -16,7 +16,7 @@ from libtbx import easy_pickle as ep
 import dials.util.command_line as cmd
 
 from iota import iota_version, help_message, logo
-from iota.components.iota_utils import main_log, iota_exit
+from iota.utils.utils import main_log, iota_exit
 
 
 def parse_command_args():
@@ -123,7 +123,7 @@ def prog_message(msg, prog="", msg2="", out_type="progress"):
                 print("IOTA {}: {}".format(prog, msg2))
 
 
-from iota.components.iota_base import ProcessingBase
+from iota.base.processor import ProcessingBase
 
 
 class Process(ProcessingBase):
@@ -209,7 +209,7 @@ class Process(ProcessingBase):
 
 # ============================================================================ #
 def entry_point():
-    from iota.components.iota_init import initialize_interface, initialize_new_run
+    from iota.init.iota_init import initialize_interface, initialize_new_run
 
     args, phil_args = parse_command_args().parse_known_args()
 
@@ -225,7 +225,7 @@ def entry_point():
         if not args.path:
             parse_command_args().print_help()  # Print usage
             if args.default:  # Write out default params and exit
-                from iota.components.iota_input import print_params
+                from iota.init.iota_input import print_params
 
                 help_out, txt_out = print_params()
                 print("\n{:-^70}\n".format("IOTA Parameters"))

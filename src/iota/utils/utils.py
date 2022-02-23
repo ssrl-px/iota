@@ -405,6 +405,3 @@ class IOTATermination(Exception):
         Exception.__init__(self, termination)
 
 
-class InputError(Exception):
-    def __init__(self, termination):
-        Exception.__init__(self, termination)

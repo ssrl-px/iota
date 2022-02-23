@@ -16,6 +16,9 @@ from threading import Thread
 import wx
 from libtbx import easy_pickle as ep, easy_run
 
+from iota.utils.input_finder import InputFinder
+from iota.analysis.iota_analysis import Analyzer
+
 ginp = InputFinder()
 tp_EVT_ALLDONE = wx.NewEventType()
 EVT_ALLDONE = wx.PyEventBinder(tp_EVT_ALLDONE, 1)
@@ -128,7 +131,7 @@ class ObjectReader:
         #
         # # Perform stat extraction
         # if filelist:
-        #   from iota.components.iota_analysis import Analyzer
+        #   from iota.analysis.iota_analysis import Analyzer
         #   analyzer = Analyzer(info=self.info)
         #   stats_OK = analyzer.get_results(filelist=filelist)
         #   if stats_OK:

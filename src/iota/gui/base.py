@@ -16,9 +16,9 @@ from wx.lib.scrolledpanel import ScrolledPanel
 from wxtbx import bitmaps
 from iotbx.phil import parse
 
-import iota.components.gui.controls as ct
-from iota.components import gui
-from iota.components.iota_utils import norm_font_size
+import iota.gui.controls as ct
+from iota import gui
+from iota.utils.utils import norm_font_size
 
 wx4 = wx.__version__[0] == "4"
 
@@ -396,7 +396,7 @@ class BaseBackendDialog(IOTABaseDialog):
             method = "ha14"
         else:
             method = "current"
-        from iota.components.iota_input import write_defaults
+        from iota.init.iota_input import write_defaults
 
         default_phil, _ = write_defaults(
             method=method, write_target_file=False, write_param_file=False
