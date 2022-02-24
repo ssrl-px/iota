@@ -250,7 +250,7 @@ class MainWindow(IOTABaseFrame):
         self.panel_sizer.Add(self.input_window, 1, flag=wx.EXPAND)
         self.panel_sizer.Add(self.bottom_sizer, flag=wx.EXPAND)
         self.main_sizer.Add(self.panel_sizer, 1, flag=wx.EXPAND | wx.ALL, border=15)
-        self.main_sizer.Add((0, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        self.main_sizer.Add((0, 0), flag=wx.EXPAND | wx.ALL, border=10)
         self.Fit()
         self.Layout()
         self.SetMinSize(self.GetSize())
