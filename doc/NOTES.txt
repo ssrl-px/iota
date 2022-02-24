@@ -1,5 +1,4 @@
-IOTA v1.5.2 - reorganization bugfixes, etc.
+IOTA v1.5.3 - bugfixes to utils
 
-- fixed the plethora of bugs that cropped up due to reorganization
-- new processor module
-- fixed bug that didn't size processing charts correctly
+- added font parameters for Linux that were missing
+- IOTA main widow now has minimum size

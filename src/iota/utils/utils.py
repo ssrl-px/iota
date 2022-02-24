@@ -34,7 +34,12 @@ assert time
 # Platform-specific stuff
 # TODO: Will need to test this on Windows at some point
 if wx.Platform == "__WXGTK__":
-    pass
+    plot_font_size = 9
+    norm_font_size = 9
+    button_font_size = 11
+    LABEL_SIZE = 11
+    CAPTION_SIZE = 9
+    python = "python"
 elif wx.Platform == "__WXMAC__":
     plot_font_size = 9
     norm_font_size = 12

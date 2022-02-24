@@ -253,6 +253,7 @@ class MainWindow(IOTABaseFrame):
         self.main_sizer.Add((0, 0), flag=wx.EXPAND | wx.ALL, border=5)
         self.Fit()
         self.Layout()
+        self.SetMinSize(self.GetSize())
 
     def onTest(self, e):
         self.test_index = getattr(self, "test_index", None)
