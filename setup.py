@@ -28,7 +28,7 @@ setuptools.setup(
             "iota = iota",
             "iota.filter_pickles = iota.filter_pickles",
             "iota.run = iota.run",
-            "iota.single_image = iota.single_image"
+            "iota.single_image = iota.single_image",
             "iota.track_images = iota.track_images",
         ],
         "libtbx.precommit": ["iota = iota"],
