@@ -19,6 +19,8 @@ from iota.threads.other_threads import SpotFinderOneDone
 from libtbx import easy_pickle as ep
 from xfel.clustering.cluster import Cluster
 
+from iota.threads.iota_threads import CustomRun
+
 tp_EVT_PRIMEDONE = wx.NewEventType()
 EVT_PRIMEDONE = wx.PyEventBinder(tp_EVT_PRIMEDONE, 1)
 

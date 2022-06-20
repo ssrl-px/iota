@@ -977,7 +977,7 @@ class SpinCtrl(CtrlBase):
 
         ctr_box.Add(self.txt, flag=wx.ALIGN_CENTER_VERTICAL)
         ctr_box.Add(
-            self.ctr, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.EXPAND
+            self.ctr, flag=wx.ALIGN_CENTER_VERTICAL | wx.EXPAND
         )
 
         self.SetSizer(ctr_box)
@@ -1449,7 +1449,7 @@ class FileListCtrl(CustomListCtrl):
             message="Load File",
             defaultDir=os.curdir,
             defaultFile="*",
-            wildcard="All Files (*.*)|*.*|",
+            #wildcard="All Files (*.*)|*.*|",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE,
         )
         if file_dlg.ShowModal() == wx.ID_OK:
@@ -1727,7 +1727,7 @@ class TextFileView(wx.Dialog):
         # Dialog control
         self.main_sizer.Add(
             self.CreateSeparatedButtonSizer(wx.OK),
-            flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL,
+            flag=wx.EXPAND | wx.ALL,
             border=10,
         )
 
@@ -1799,7 +1799,7 @@ class ViewerWarning(wx.Dialog):
         # Dialog control
         self.main_sizer.Add(
             self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL),
-            flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL,
+            flag=wx.EXPAND | wx.ALL,
             border=10,
         )
 

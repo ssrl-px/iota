@@ -277,7 +277,7 @@ class IOTAPreferences(IOTABaseDialog):
         # Dialog control
         dialog_box = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
         self.main_sizer.Add(
-            dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            dialog_box, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         self.Bind(wx.EVT_CHOICE, self.onQueue, self.queues.ctr)
@@ -742,7 +742,7 @@ class ImportWindow(IOTABaseDialog):
         self.main_sizer.Add(conv_box_sizer, flag=wx.ALL | wx.EXPAND, border=15)
         self.main_sizer.Add(trg_box_sizer, flag=wx.ALL | wx.EXPAND, border=15)
         self.main_sizer.Add(
-            dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            dialog_box, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         self.Bind(wx.EVT_CHECKBOX, self.onTriage, self.img_triage)
@@ -946,7 +946,7 @@ class HA14ImportWindow(IOTABaseDialog):
         self.main_sizer.Add(conv_box_sizer, flag=wx.ALL | wx.EXPAND, border=15)
         self.main_sizer.Add(trg_box_sizer, flag=wx.ALL | wx.EXPAND, border=15)
         self.main_sizer.Add(
-            dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            dialog_box, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         self.Bind(wx.EVT_CHOICE, self.onImageModChoice, self.mod_square.ctr)
@@ -2168,7 +2168,7 @@ class AnalysisWindow(IOTABaseDialog):
         options_sizer.Add(self.viz_box_sizer, flag=wx.EXPAND | wx.ALL, border=10)
         self.main_sizer.Add(self.options, 1, flag=wx.EXPAND | wx.ALL, border=10)
         self.main_sizer.Add(
-            dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            dialog_box, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         self.Layout()
@@ -2322,7 +2322,7 @@ class WatchModeTimeOut(wx.Dialog):
 
         # Dialog control
         dialog_box = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
-        main_sizer.Add(dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10)
+        main_sizer.Add(dialog_box, flag=wx.EXPAND | wx.ALL, border=10)
 
         self.rb_30sec.Bind(wx.EVT_RADIOBUTTON, self.onCustom)
         self.rb_60sec.Bind(wx.EVT_RADIOBUTTON, self.onCustom)
@@ -2376,7 +2376,7 @@ class DirView(IOTABaseDialog):
         # Dialog control
         self.main_sizer.Add(
             self.CreateSeparatedButtonSizer(wx.OK),
-            flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL,
+            flag=wx.EXPAND | wx.ALL,
             border=10,
         )
 
@@ -2418,7 +2418,7 @@ class TextFileView(IOTABaseDialog):
         # Dialog control
         self.main_sizer.Add(
             self.CreateSeparatedButtonSizer(wx.OK),
-            flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL,
+            flag=wx.EXPAND | wx.ALL,
             border=10,
         )
 
@@ -2754,7 +2754,7 @@ class DIALSSpfDialog(IOTABaseDialog):
 
         self.main_sizer.Add(self.options, 1, wx.EXPAND)
         self.main_sizer.Add(
-            dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            dialog_box, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         # Bindings:
@@ -2902,15 +2902,13 @@ class ClusterDialog(IOTABaseDialog):
 
         # Dialog control
         dialog_box = self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL)
-
         self.main_sizer.Add(self.cluster_options, 1, flag=wx.EXPAND | wx.ALL, border=10)
         self.main_sizer.Add(
-            dialog_box, flag=wx.EXPAND | wx.ALIGN_RIGHT | wx.ALL, border=10
+            dialog_box, flag=wx.EXPAND | wx.ALL, border=10
         )
 
         # Bindings:
         self.Bind(wx.EVT_BUTTON, self.onOK, id=wx.ID_OK)
-
         self.Fit()
 
     def onOK(self, e):

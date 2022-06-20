@@ -627,7 +627,7 @@ class Analyzer(object):
                 final_pickles = self.info.categories["integrated"][0]
 
                 pickles = []
-                if self.params.analysis.clustering.n_images > 0:
+                if self.params.analysis.clustering.n_images:
                     import random
 
                     for i in range(len(self.params.analysis.clustering.n_images)):
@@ -1001,25 +1001,25 @@ class Analyzer(object):
             try:
                 self.print_results()
             except Exception as e:
-                error = "IOTA PRINTING ERROR: " + e
+                error = "IOTA PRINTING ERROR: " + str(e)
                 self.info.errors.append(error)
 
             try:  # Using try block because it can fail silently
                 self.unit_cell_analysis()
             except Exception as e:
-                error = "IOTA CLUSTERING ERROR: " + e
+                error = "IOTA CLUSTERING ERROR: " + str(e)
                 self.info.errors.append(error)
 
             try:
                 self.print_summary()
             except Exception as e:
-                error = "IOTA SUMMARY ERROR: " + e
+                error = "IOTA SUMMARY ERROR: " + str(e)
                 self.info.errors.append(error)
 
             try:
                 self.make_prime_input()
             except Exception as e:
-                error = "IOTA PRIME INPUT ERROR: " + e
+                error = "IOTA PRIME INPUT ERROR: " + str(e)
                 self.info.errors.append(error)
 
         return self.info

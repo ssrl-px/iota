@@ -164,7 +164,7 @@ class IOTAImageProcessor(Processor):
                 method=method, write_param_file=False, write_target_file=False
             )
             tparams = phil_scope.fetch(source=target_phil).extract()
-        Processor.__init__(self, params=tparams)
+        Processor.__init__(self, params=tparams, verbose=True)
 
         # IOTA-specific settings from here
         # Turn off all peripheral output
@@ -233,121 +233,6 @@ class IOTAImageProcessor(Processor):
             else:
                 assert len(ref_experiments.detectors()) == 1
                 self.reference_detector = ref_experiments.detectors()[0]
-
-    def refine_bravais_settings(self, reflections, experiments):
-
-        # configure DIALS logging
-        if self.dials_log:
-            log.config(verbosity=1, logfile=self.dials_log)
-
-        proc_scope = phil_scope.format(python_object=self.params)
-        sgparams = sg_scope.fetch(proc_scope).extract()
-        sgparams.refinement.reflections.outlier.algorithm = "tukey"
-
-        crystal_P1 = copy.deepcopy(experiments[0].crystal)
-        try:
-            refined_settings = refined_settings_from_refined_triclinic(
-                experiments=experiments, reflections=reflections, params=sgparams
-            )
-            possible_bravais_settings = {s["bravais"] for s in refined_settings}
-            bravais_lattice_to_space_group_table(possible_bravais_settings)
-        except Exception:
-            for expt in experiments:
-                expt.crystal = crystal_P1
-            return None
-
-        # Generate Bravais settings
-        # try:
-        #   Lfat = refined_settings_factory_from_refined_triclinic(sgparams,
-        #                                                          experiments,
-        #                                                          reflections,
-        #                                                          lepage_max_delta=5)
-        # except Exception as e:
-        #   # If refinement fails, reset to P1 (experiments remain modified by Lfat
-        #   # if there's a refinement failure, which causes issues down the line)
-        #   for expt in experiments:
-        #     expt.crystal = crystal_P1
-        #   return None
-        #
-        # Lfat.labelit_printout()
-        #
-        # # Filter out not-recommended (i.e. too-high rmsd and too-high max angular
-        # # difference) solutions
-        # Lfat_recommended = [s for s in Lfat if s.recommended]
-        #
-        # # If none are recommended, return None (do not reindex)
-        # if len(Lfat_recommended) == 0:
-        #   return None
-        #
-        # # Find the highest symmetry group
-        # possible_bravais_settings = set(solution['bravais'] for solution in
-        #                                 Lfat_recommended)
-        # bravais_lattice_to_space_group_table(possible_bravais_settings)
-
-        lattice_to_sg_number = {
-            "aP": 1,
-            "mP": 3,
-            "mC": 5,
-            "oP": 16,
-            "oC": 20,
-            "oF": 22,
-            "oI": 23,
-            "tP": 75,
-            "tI": 79,
-            "hP": 143,
-            "hR": 146,
-            "cP": 195,
-            "cF": 196,
-            "cI": 197,
-        }
-        filtered_lattices = {}
-        for key, value in lattice_to_sg_number.items():
-            if key in possible_bravais_settings:
-                filtered_lattices[key] = value
-
-        highest_sym_lattice = max(filtered_lattices, key=filtered_lattices.get)
-        highest_sym_solutions = [
-            s for s in refined_settings if s["bravais"] == highest_sym_lattice
-        ]
-        if len(highest_sym_solutions) > 1:
-            highest_sym_solution = sorted(
-                highest_sym_solutions, key=lambda x: x["max_angular_difference"]
-            )[0]
-        else:
-            highest_sym_solution = highest_sym_solutions[0]
-
-        return highest_sym_solution
-
-    def reindex(self, reflections, experiments, solution):
-        """Reindex with newly-determined space group / unit cell."""
-
-        # Update space group / unit cell
-        experiment = experiments[0]
-        print("Old crystal:")
-        print(experiment.crystal, "\n")
-        experiment.crystal.update(solution.refined_crystal)
-        print("New crystal:")
-        print(experiment.crystal, "\n")
-
-        # Change basis
-        cb_op = solution["cb_op_inp_best"].as_abc()
-        change_of_basis_op = sgtbx.change_of_basis_op(cb_op)
-        miller_indices = reflections["miller_index"]
-        non_integral_indices = change_of_basis_op.apply_results_in_non_integral_indices(
-            miller_indices
-        )
-        if non_integral_indices.size() > 0:
-            print(
-                "Removing {}/{} reflections (change of basis results in non-integral indices)"
-                "".format(non_integral_indices.size(), miller_indices.size())
-            )
-        sel = flex.bool(miller_indices.size(), True)
-        sel.set_selected(non_integral_indices, False)
-        miller_indices_reindexed = change_of_basis_op.apply(miller_indices.select(sel))
-        reflections["miller_index"].set_selected(sel, miller_indices_reindexed)
-        reflections["miller_index"].set_selected(~sel, (0, 0, 0))
-
-        return experiments, reflections
 
     def write_integration_pickles(self, integrated, experiments, callback=None):
         """This is streamlined vs.

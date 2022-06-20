@@ -2517,7 +2517,7 @@ class ProcWindow(IOTABaseFrame):
         # Output cluster results
         ep.dump(self.info.cluster_info_file, obj=self.clusters)
 
-        if not (hasattr(self, "prime_thread") and self.prime_thread.isAlive()):
+        if not (hasattr(self, "prime_thread") and self.prime_thread.is_alive()):
             self.pparams = None
             self.run_prime_thread()
 

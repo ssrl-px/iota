@@ -17,6 +17,11 @@ from libtbx.phil import parse
 from libtbx.utils import Abort, Sorry
 
 from dials.array_family import flex
+from dials.command_line.refine_bravais_settings import (
+    phil_scope as sg_scope,
+    bravais_lattice_to_space_group_table,
+)
+from dials.algorithms.indexing.bravais_settings import refined_settings_from_refined_triclinic
 
 from iota.utils import utils
 
@@ -315,11 +320,13 @@ class Processor(object):
         # Reset z-coordiantes for dials.image_viewer
         if reset_z:
             self.reset_z_coordinates(reflections=observed)
-            print("Z-coordinates of reflections reset for dials.image_viewer")
+            if self.verbose:
+                print("Z-coordinates of reflections reset for dials.image_viewer")
 
         # Save strong spots to file if there's a filename
-        print("\n" + "-" * 80)
-        print("Strong spots saved to {}".format(self.params.output.strong_filename))
+        if self.verbose:
+            print("\n" + "-" * 80)
+            print("Strong spots saved to {}".format(self.params.output.strong_filename))
         if self.params.output.strong_filename:
             self.save_reflections(observed, self.params.output.strong_filename)
 
@@ -388,10 +395,11 @@ class Processor(object):
                 sel = indexed["miller_index"] == idx
                 if sel.count(True) == 1:
                     filtered.extend(indexed.select(sel))
-            print(
-                "Filtered duplicate reflections, %d out of %d remaining"
-                % (len(filtered), len(indexed))
-            )
+            if self.verbose:
+                print(
+                    "Filtered duplicate reflections, %d out of %d remaining"
+                    % (len(filtered), len(indexed))
+                )
             indexed = filtered
 
         return experiments, indexed
@@ -434,6 +442,86 @@ class Processor(object):
 
         return experiments, centroids
 
+    def refine_bravais_settings(self, reflections, experiments):
+        self.params.refinement.reflections.outlier.algorithm = "tukey"
+        crystal_P1 = copy.deepcopy(experiments[0].crystal)
+
+        try:
+            refined_settings = refined_settings_from_refined_triclinic(
+                experiments=experiments, reflections=reflections, params=self.params
+            )
+            possible_bravais_settings = {s["bravais"] for s in refined_settings}
+            bravais_lattice_to_space_group_table(possible_bravais_settings)
+        except Exception:
+            for expt in experiments:
+                expt.crystal = crystal_P1
+            return None
+
+        lattice_to_sg_number = {
+            "aP": 1,
+            "mP": 3,
+            "mC": 5,
+            "oP": 16,
+            "oC": 20,
+            "oF": 22,
+            "oI": 23,
+            "tP": 75,
+            "tI": 79,
+            "hP": 143,
+            "hR": 146,
+            "cP": 195,
+            "cF": 196,
+            "cI": 197,
+        }
+        filtered_lattices = {}
+        for key, value in lattice_to_sg_number.items():
+            if key in possible_bravais_settings:
+                filtered_lattices[key] = value
+
+        highest_sym_lattice = max(filtered_lattices, key=filtered_lattices.get)
+        highest_sym_solutions = [
+            s for s in refined_settings if s["bravais"] == highest_sym_lattice
+        ]
+        if len(highest_sym_solutions) > 1:
+            highest_sym_solution = sorted(
+                highest_sym_solutions, key=lambda x: x["max_angular_difference"]
+            )[0]
+        else:
+            highest_sym_solution = highest_sym_solutions[0]
+
+        return highest_sym_solution
+
+    def reindex(self, reflections, experiments, solution):
+        """ Reindex with newly-determined space group / unit cell """
+
+        # Update space group / unit cell
+        experiment = experiments[0]
+        experiment.crystal.update(solution.refined_crystal)
+
+        # Change basis
+        cb_op = solution["cb_op_inp_best"].as_abc()
+        change_of_basis_op = sgtbx.change_of_basis_op(cb_op)
+        miller_indices = reflections["miller_index"]
+        non_integral_indices = change_of_basis_op.apply_results_in_non_integral_indices(
+            miller_indices
+        )
+        sel = flex.bool(miller_indices.size(), True)
+        sel.set_selected(non_integral_indices, False)
+        miller_indices_reindexed = change_of_basis_op.apply(miller_indices.select(sel))
+        reflections["miller_index"].set_selected(sel, miller_indices_reindexed)
+        reflections["miller_index"].set_selected(~sel, (0, 0, 0))
+
+        return experiments, reflections
+
+    def pg_and_reindex(self, indexed, experiments):
+        """ Find highest-symmetry Bravais lattice """
+        solution = self.refine_bravais_settings(indexed, experiments)
+        if solution is not None:
+            experiments, indexed = self.reindex(indexed, experiments, solution)
+            return experiments, indexed, "success"
+        else:
+            return experiments, indexed, "failed"
+
     def integrate(self, experiments, indexed):
 
         # TODO: Figure out if this is necessary and/or how to do this better
@@ -472,10 +560,11 @@ class Processor(object):
                 new_experiments.append(expt)
             else:
                 # TODO: this can be done better, also
-                print(
-                    "Rejected expt %d with sigma_b %f"
-                    % (expt_id, expt.profile.sigma_b())
-                )
+                if self.verbose:
+                    print(
+                        "Rejected expt %d with sigma_b %f"
+                        % (expt_id, expt.profile.sigma_b())
+                    )
         experiments = new_experiments
         indexed = new_reflections
         if len(experiments) == 0:
@@ -526,10 +615,11 @@ class Processor(object):
                     refls["id"] = flex.int(len(refls), len(accepted_expts) - 1)
                     accepted_refls.extend(refls)
                 else:
-                    print(
-                        "Removed experiment %d which has no reflections left after applying significance filter",
-                        expt_id,
-                    )
+                    if self.verbose:
+                        print(
+                            "Removed experiment %d which has no reflections left after applying significance filter",
+                            expt_id,
+                        )
 
             if len(accepted_refls) == 0:
                 raise Sorry("No reflections left after applying significance filter")
@@ -582,8 +672,8 @@ class Processor(object):
                     crystal_model.get_domain_size_ang(),
                     crystal_model.get_half_mosaicity_deg(),
                 )
-
-        print(log_str)
+        if self.verbose:
+            print(log_str)
         return integrated
 
     def construct_frame(self, integrated, exeriments):
