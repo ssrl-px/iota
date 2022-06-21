@@ -331,7 +331,7 @@ class Processor(object):
             self.save_reflections(observed, self.params.output.strong_filename)
 
         if self.verbose:
-            print("\nSpotfinding time = {.2f} seconds".format(time.time() - st))
+            print("\nSpotfinding time = {:<.2f} seconds".format(time.time() - st))
         return observed
 
     @staticmethod
