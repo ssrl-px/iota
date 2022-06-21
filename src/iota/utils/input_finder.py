@@ -321,17 +321,16 @@ class InputFinder(object):
 
     def _get_hdf5_entry_count(self, path):
         import h5py
-
         if os.path.exists(path):
-            try:
-                with h5py.File(path, "r") as f:
-                    data_items = [k for k in f["entry"]["data"] if "data" in k]
-                    print (data_items)
-                    n_images = 0
-                    for item in data_items:
-                        n_images += f['entry/data'][item].shape[0]
-            except KeyError as e:
+            with h5py.File(path, "r") as f:
+                data_items = [k for k in f["entry"]["data"] if "data" in k]
+                print (data_items)
                 n_images = 0
+                for item in data_items:
+                    try:
+                        n_images += f['entry/data'][item].shape[0]
+                    except Exception:
+                        pass
         else:
             n_images = 0
         return n_images
