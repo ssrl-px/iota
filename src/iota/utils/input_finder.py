@@ -323,12 +323,15 @@ class InputFinder(object):
         import h5py
 
         if os.path.exists(path):
-            with h5py.File(path, "r") as f:
-                data_items = [k for k in f["entry"]["data"] if "data" in k]
-                print (data_items)
+            try:
+                with h5py.File(path, "r") as f:
+                    data_items = [k for k in f["entry"]["data"] if "data" in k]
+                    print (data_items)
+                    n_images = 0
+                    for item in data_items:
+                        n_images += f['entry/data'][item].shape[0]
+            except KeyError as e:
                 n_images = 0
-                for item in data_items:
-                    n_images += f['entry/data'][item].shape[0]
         else:
             n_images = 0
         return n_images
