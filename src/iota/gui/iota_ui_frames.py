@@ -1236,26 +1236,26 @@ class ProcessingTab(IOTABasePanel):
                 spt = None
                 res = None
 
-                # # Strong reflections
-                # if self.info.stats["strong"]["lst"]:
-                # idx, filenames, img_idx, spt = zip(
-                # *self.info.stats["strong"]["lst"]
-                # )
-                # self.nsref_x = np.append(
-                # self.nsref_x, np.array(idx).astype(np.double)
-                # )
-                # self.nsref_y = np.append(
-                # self.nsref_y, np.array(spt).astype(np.double)
-                # )
+                # Strong reflections
+                if self.info.stats["strong"]["lst"]:
+                idx, filenames, img_idx, spt = zip(
+                *self.info.stats["strong"]["lst"]
+                )
+                self.nsref_x = np.append(
+                self.nsref_x, np.array(idx).astype(np.double)
+                )
+                self.nsref_y = np.append(
+                self.nsref_y, np.array(spt).astype(np.double)
+                )
 
-                # Image scores (hacked into 'nsref')
-                # TODO: make into option (?)
-                if self.info.stats["score"]["lst"]:
-                    idx, filenames, img_idx, spt = zip(*self.info.stats["score"]["lst"])
-                    self.nsref_x = np.append(self.nsref_x,
-                                             np.array(idx).astype(np.double))
-                    self.nsref_y = np.append(self.nsref_y,
-                                             np.array(spt).astype(np.double))
+                # # Image scores (hacked into 'nsref')
+                # # TODO: make into option (?)
+                # if self.info.stats["score"]["lst"]:
+                #     idx, filenames, img_idx, spt = zip(*self.info.stats["score"]["lst"])
+                #     self.nsref_x = np.append(self.nsref_x,
+                #                              np.array(idx).astype(np.double))
+                #     self.nsref_y = np.append(self.nsref_y,
+                #                              np.array(spt).astype(np.double))
 
                 # Resolution
                 if self.info.stats["res"]["lst"]:
