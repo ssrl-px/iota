@@ -189,6 +189,7 @@ advanced
     .expert_level = 1
   reference_geometry = None
     .type = path
+    .style = path:file permissions:read
     .help = Detector geometry from ensemble refinement
     .alias = Reference Geometry
     .expert_level = 1

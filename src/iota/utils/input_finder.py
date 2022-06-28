@@ -180,8 +180,8 @@ class InputFinder(object):
 
         try:
             if (
-                Counter(content_test).most_common(1)[0][0]
-                or content_test.count(True) / content_test.count(False) >= 0.5
+                    Counter(content_test).most_common(1)[0][0]
+                    or content_test.count(True) / content_test.count(False) >= 0.5
             ):
                 return "file list"
             else:
@@ -321,10 +321,10 @@ class InputFinder(object):
 
     def _get_hdf5_entry_count(self, path):
         import h5py
+
         if os.path.exists(path):
             with h5py.File(path, "r") as f:
                 data_items = [k for k in f["entry"]["data"] if "data" in k]
-                print (data_items)
                 n_images = 0
                 for item in data_items:
                     try:
@@ -338,19 +338,32 @@ class InputFinder(object):
     def _pair_with_types(self, input_list, filter_results=True, filter_type="image"):
         # Create list of filepaths paired with file types; remove any filenames
         # with "_tmp" in them (#TODO: need a better check for incomplete images)
-        input_pairs = [
-            (fp, self.identify_file_type(fp)) for fp in input_list if not "_tmp" in fp
-        ]
 
-        # No matter what, check filter non-master hdf5 files
-        checked_pairs = []
-        for ip in input_pairs:
-            if "hdf5" in ip[1]:
-                if self._check_for_master_hdf5(path=ip[0]):
-                    checked_pairs.append(ip)
+        # check unique filenames only (collapses expanded multi-image formats)
+        if isinstance(input_list[0], list) or isinstance(input_list[0], tuple):
+            filenames, _ = zip(*input_list)
+        else:
+            filenames = input_list
+        unique_filenames = set(filenames)
+
+        # construct a types dictionary with unique filename as key
+        types_dict = {fn: self.identify_file_type(fn) for fn in unique_filenames}
+
+        # check and filter non-master hdf5 files
+        filtered_types_dict = {}
+        for fn, ftype in types_dict.items():
+            if "hdf5" in ftype:
+                if self._check_for_master_hdf5(path=fn):
+                    filtered_types_dict.update({fn: ftype})
             else:
-                checked_pairs.append(ip)
-        input_pairs = checked_pairs
+                filtered_types_dict.update({fn: ftype})
+
+                # Construct input pairs with appropriate file types
+        input_pairs = []
+        for fp in input_list:
+            if "_tmp" not in fp:
+                key = fp[0] if (isinstance(fp, list) or isinstance(fp, tuple)) else fp
+                input_pairs.append([fp, filtered_types_dict[key]])
 
         if filter_results:
             if filter_type == "self" or filter_type is None:
@@ -379,7 +392,7 @@ class InputFinder(object):
         return input_list
 
     def get_input_from_multi_image(
-        self, path, double_check_type=False, expand_multiple=True
+            self, path, double_check_type=False, expand_multiple=True
     ):
         if double_check_type:
             filetype = self.identify_file_type(filepath=path)
@@ -407,13 +420,13 @@ class InputFinder(object):
         return input_list, filetype
 
     def get_input_from_folder(
-        self,
-        path,
-        as_string=False,
-        ignore_ext=None,
-        ext_only=None,
-        last=None,
-        min_back=None,
+            self,
+            path,
+            as_string=False,
+            ignore_ext=None,
+            ext_only=None,
+            last=None,
+            min_back=None,
     ):
         """Runs the 'find' command to recursively get a list of filepaths. Has
         a few advangages over os.walk():
@@ -460,13 +473,13 @@ class InputFinder(object):
         return filepaths
 
     def get_input(
-        self,
-        path,
-        filter_results=True,
-        filter_type="image",
-        last=None,
-        min_back=None,
-        expand_multiple=False,
+            self,
+            path,
+            filter_results=True,
+            filter_type="image",
+            last=None,
+            min_back=None,
+            expand_multiple=False,
     ):
         """Obtain list of files (or single file) from any input; obtain file
         type in input.
@@ -560,14 +573,14 @@ class InputFinder(object):
         return input_list, input_type, input_count
 
     def make_input_list(
-        self,
-        paths,
-        filter_results=False,
-        filter_type=None,
-        last=None,
-        min_back=None,
-        expand_multiple=False,
-        as_tuple=False,
+            self,
+            paths,
+            filter_results=False,
+            filter_type=None,
+            last=None,
+            min_back=None,
+            expand_multiple=False,
+            as_tuple=False,
     ):
         """Makes input list from multiple entries.
 
@@ -683,10 +696,11 @@ class InputFinder(object):
                 input_dict["imagepaths"] = list(set(input_dict["imagepaths"]))
             if input_dict["objectpaths"]:
                 input_dict["objectpaths"] = list(set(input_dict["objectpaths"]))
-
         return input_dict
 
 
 class InputError(Exception):
     def __init__(self, termination):
         Exception.__init__(self, termination)
+
+# --> end

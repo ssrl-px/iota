@@ -10,18 +10,24 @@ Description : IOTA Processor base class
 import time
 import copy
 from threading import Thread
+import numpy as np
 
 from dxtbx.model.experiment_list import ExperimentList, ExperimentListFactory as ExLF
 from libtbx.easy_mp import parallel_map
 from libtbx.phil import parse
 from libtbx.utils import Abort, Sorry
 
+from cctbx import uctbx, sgtbx, crystal
+from cctbx.miller import index_generator
+
 from dials.array_family import flex
 from dials.command_line.refine_bravais_settings import (
     phil_scope as sg_scope,
     bravais_lattice_to_space_group_table,
 )
-from dials.algorithms.indexing.bravais_settings import refined_settings_from_refined_triclinic
+from dials.algorithms.indexing.bravais_settings import \
+    refined_settings_from_refined_triclinic
+from dials.algorithms.spot_finding import per_image_analysis
 
 from iota.utils import utils
 
@@ -724,6 +730,7 @@ class Processor(object):
         """Save the reflections to file."""
         reflections.as_file(filename)
 
+
 class ProcessingBase(Thread):
     """Base class for submitting processing jobs to multiple cores."""
 
@@ -854,7 +861,7 @@ class ProcessingBase(Thread):
 
     @classmethod
     def for_single_image(
-        cls, info, params, action_code="spotfinding", verbose=False, *args, **kwargs
+            cls, info, params, action_code="spotfinding", verbose=False, *args, **kwargs
     ):
 
         from iota.init.image_import import ImageImporter
@@ -875,3 +882,214 @@ class ProcessingBase(Thread):
         )
 
         return cls(*args, **kwargs)
+
+
+class ImageScorer(object):
+    def __init__(self, experiments, observed):
+        self.experiments = experiments
+        self.observed = observed
+
+        # extract reflections and map to reciprocal space
+        self.refl = observed.select(observed["id"] == 0)
+        self.refl.centroid_px_to_mm([experiments[0]])
+        self.refl.map_centroids_to_reciprocal_space([experiments[0]])
+
+        # calculate d-spacings
+        self.ref_d_star_sq = flex.pow2(self.refl["rlp"].norms())
+        self.d_spacings = uctbx.d_star_sq_as_d(self.ref_d_star_sq)
+        self.d_min = flex.min(self.d_spacings)
+
+        # initialize desired parameters (so that can back out without having to
+        # re-run functions)
+        self.n_ice_rings = 0
+        self.mean_spot_shape_ratio = 1
+        self.n_overloads = self.count_overloads()
+        self.hres = 99.9
+        self.n_spots = 0
+
+    def filter_by_resolution(self, refl, d_min, d_max):
+        d_min = float(d_min) if d_min is not None else 0.1
+        d_max = float(d_max) if d_max is not None else 99
+
+        d_star_sq = flex.pow2(refl["rlp"].norms())
+        d_spacings = uctbx.d_star_sq_as_d(d_star_sq)
+        filter = flex.bool(len(d_spacings), False)
+        filter = filter | (d_spacings >= d_min) & (d_spacings <= d_max)
+        return filter
+
+    def calculate_stats(self):
+        # Only accept "good" spots based on specific parameters, if selected
+
+        # 1. No ice
+        # todo: make optional
+        ice_sel = per_image_analysis.ice_rings_selection(self.refl)
+        spots_no_ice = self.refl.select(~ice_sel)
+
+        # 2. Falls between 40 - 4.5A
+        # todo: make optional
+        res_lim_sel = self.filter_by_resolution(
+            refl=spots_no_ice,
+            d_min=4.5,
+            d_max=40)
+        good_spots = spots_no_ice.select(res_lim_sel)
+
+        # Saturation / distance are already filtered by the spotfinder
+        self.n_spots = good_spots.size()
+
+        # Estimate resolution by spots that aren't ice (susceptible to poor ice ring
+        # location)
+        if self.n_spots > 10:
+            self.hres = per_image_analysis.estimate_resolution_limit(spots_no_ice)
+        else:
+            self.hres = 99.9
+
+    def count_overloads(self):
+        """ A function to determine the number of overloaded spots """
+        overloads = [i for i in self.observed.is_overloaded(self.experiments) if i]
+        return len(overloads)
+
+    def count_ice_rings(self, width=0.002):
+        """ A function to find and count ice rings (modeled after
+        dials.algorithms.integration.filtering.PowderRingFilter, with some alterations:
+            1. Hard-coded with ice unit cell / space group
+            2. Returns spot counts vs. water diffraction resolution "bin"
+
+        Rather than finding ice rings themselves (which may be laborious and time
+        consuming), this method relies on counting the number of found spots that land
+        in regions of water diffraction. A weakness of this approach is that if any spot
+        filtering or spot-finding parameters are applied by prior methods, not all ice
+        rings may be found. This is acceptable, since the purpose of this method is to
+        determine if water and protein diffraction occupy the same resolutions.
+        """
+        ice_start = time.time()
+
+        unit_cell = uctbx.unit_cell((4.498, 4.498, 7.338, 90, 90, 120))
+        space_group = sgtbx.space_group_info(number=194).group()
+
+        # Correct unit cell
+        unit_cell = space_group.average_unit_cell(unit_cell)
+
+        half_width = width / 2
+        d_min = uctbx.d_star_sq_as_d(uctbx.d_as_d_star_sq(self.d_min) + half_width)
+
+        # Generate a load of indices
+        generator = index_generator(unit_cell, space_group.type(), False, d_min)
+        indices = generator.to_array()
+
+        # Compute d spacings and sort by resolution
+        d_star_sq = flex.sorted(unit_cell.d_star_sq(indices))
+        d = uctbx.d_star_sq_as_d(d_star_sq)
+        dd = list(zip(d_star_sq, d))
+
+        # identify if spots fall within ice ring areas
+        results = []
+        for ds2, d_res in dd:
+            result = [i for i in (flex.abs(self.ref_d_star_sq - ds2) < half_width) if i]
+            results.append((d_res, len(result)))
+
+        possible_ice = [r for r in results if r[1] / len(self.observed) * 100 >= 5]
+
+        self.n_ice_rings = len(possible_ice)  # output in info
+
+        return self.n_ice_rings
+
+    def spot_elongation(self):
+        """ Calculate how elongated spots are on average (i.e. shoebox axis ratio).
+            Only using x- and y-axes for this calculation, assuming stills and z = 1
+        :return: elong_mean = mean elongation ratio
+                 elong_median = median elongation ratio
+                 elong_std = standard deviation of elongation ratio
+        """
+        e_start = time.time()
+        axes = [self.observed[i]["shoebox"].size() for i in range(len(self.observed))]
+
+        elong = [np.max((x, y)) / np.min((x, y)) for z, y, x in axes]
+        elong_mean = np.mean(elong)
+        elong_median = np.median(elong)
+        elong_std = np.std(elong)
+
+        # for output reporting
+        self.mean_spot_shape_ratio = elong_mean
+
+        return elong_mean, elong_median, elong_std
+
+    def find_max_intensity(self):
+        """ Determine maximum intensity among reflections between 15 and 4 A
+        :return: max_intensity = maximum intensity between 15 and 4 A
+        """
+        max_start = time.time()
+
+        sel_inbounds = flex.bool(len(self.d_spacings), False)
+        sel_inbounds = sel_inbounds | (self.d_spacings >= 4) & (self.d_spacings <= 15)
+        refl_inbounds = self.refl.select(sel_inbounds)
+        intensities = [
+            refl_inbounds[i]["intensity.sum.value"] for i in range(len(refl_inbounds))
+        ]
+
+        if intensities:
+            return np.max(intensities)
+        else:
+            return 0
+
+    def calculate_score(self):
+        score = 0
+
+        # Calculate # of spots and resolution here
+        self.calculate_stats()
+
+        # calculate score by resolution using heuristic
+        res_score = [
+            (20, 1),
+            (8, 2),
+            (5, 3),
+            (4, 4),
+            (3.2, 5),
+            (2.7, 7),
+            (2.4, 8),
+            (2.0, 10),
+            (1.7, 12),
+            (1.5, 14),
+        ]
+        if self.hres > 20:
+            score -= 2
+        else:
+            increment = 0
+            for res, inc in res_score:
+                if self.hres < res:
+                    increment = inc
+            score += increment
+
+        # calculate "diffraction strength" from maximum pixel value
+        max_I = self.find_max_intensity()
+        if max_I >= 40000:
+            score += 2
+        elif 40000 > max_I >= 15000:
+            score += 1
+
+        # evaluate ice ring presence
+        n_ice_rings = self.count_ice_rings(width=0.04)
+        if n_ice_rings >= 4:
+            score -= 3
+        elif 4 > n_ice_rings >= 2:
+            score -= 2
+        elif n_ice_rings == 1:
+            score -= 1
+
+        # bad spot penalty, good spot boost
+        e_mean, e_median, e_std = self.spot_elongation()
+        if e_mean > 2.0:
+            score -= 2
+        if e_std > 1.0:
+            score -= 2
+        if e_median < 1.35 and e_std < 0.4:
+            score += 2
+
+        if score <= 0:
+            if self.hres > 20:
+                score = 0
+            else:
+                score = 1
+
+        return score
+
+# --> end

@@ -455,7 +455,11 @@ class MainWindow(IOTABaseFrame):
             int_path = selected[1]
 
             # Recover info object
-            info = ProcInfo.from_folder(path=int_path)
+            info_file = os.path.join(int_path, 'proc.info')
+            if os.path.isfile(info_file):
+                info = ProcInfo.from_json(info_file)
+            else:
+                info = ProcInfo.from_folder(path=int_path)
 
             if hasattr(info, "paramfile"):
                 self.load_script(filepath=info.paramfile)
@@ -620,7 +624,8 @@ class MainWindow(IOTABaseFrame):
         # Pass input from IOTA PHIL through Input Finder to resolve wildcards, etc.
         if self.gparams.input is not None:
             inputs = [self.gparams.input.pop(i) for i in range(len(self.gparams.input))]
-            phil_input_dict = iota.threads.iota_threads.ginp.process_mixed_input(paths=inputs)
+            phil_input_dict = iota.threads.iota_threads.ginp.process_mixed_input(
+                paths=inputs)
             if input_dict:
                 input_dict.update(phil_input_dict)
             else:
@@ -654,8 +659,13 @@ class MainWindow(IOTABaseFrame):
                 self.gparams.input = input_list_file
             else:
                 for path in input_dict["imagepaths"]:
-                    if path not in self.gparams.input:
-                        self.gparams.input.append(path)
+                    files_in_path = [f for f in input_dict["imagefiles"] if path in f]
+                    if len(files_in_path) == 1:
+                        if path not in self.gparams.input:
+                            self.gparams.input.append(files_in_path[0])
+                    else:
+                        if path not in self.gparams.input:
+                            self.gparams.input.append(path)
 
         # update n_processors
         if self.gparams.mp.n_processors <= 1:
@@ -1226,17 +1236,26 @@ class ProcessingTab(IOTABasePanel):
                 spt = None
                 res = None
 
-                # Strong reflections
-                if self.info.stats["strong"]["lst"]:
-                    idx, filenames, img_idx, spt = zip(
-                        *self.info.stats["strong"]["lst"]
-                    )
-                    self.nsref_x = np.append(
-                        self.nsref_x, np.array(idx).astype(np.double)
-                    )
-                    self.nsref_y = np.append(
-                        self.nsref_y, np.array(spt).astype(np.double)
-                    )
+                # # Strong reflections
+                # if self.info.stats["strong"]["lst"]:
+                # idx, filenames, img_idx, spt = zip(
+                # *self.info.stats["strong"]["lst"]
+                # )
+                # self.nsref_x = np.append(
+                # self.nsref_x, np.array(idx).astype(np.double)
+                # )
+                # self.nsref_y = np.append(
+                # self.nsref_y, np.array(spt).astype(np.double)
+                # )
+
+                # Image scores (hacked into 'nsref')
+                # TODO: make into option (?)
+                if self.info.stats["score"]["lst"]:
+                    idx, filenames, img_idx, spt = zip(*self.info.stats["score"]["lst"])
+                    self.nsref_x = np.append(self.nsref_x,
+                                             np.array(idx).astype(np.double))
+                    self.nsref_y = np.append(self.nsref_y,
+                                             np.array(spt).astype(np.double))
 
                 # Resolution
                 if self.info.stats["res"]["lst"]:
@@ -1423,7 +1442,7 @@ class ProcessingTab(IOTABasePanel):
                         start = int(min(img_limits))
                         end = int(max(img_limits))
                         if start <= len(self.proc_fnames) and end <= len(
-                            self.proc_fnames
+                                self.proc_fnames
                         ):
                             filenames.extend(self.proc_fnames[start:end])
                     else:
@@ -1439,7 +1458,8 @@ class ProcessingTab(IOTABasePanel):
         if filenames:
             file_string = " ".join(filenames)
             viewer = self.gparams.gui.image_viewer
-            viewer = iota.threads.iota_threads.ImageViewerThread(self, viewer=viewer, file_string=file_string)
+            viewer = iota.threads.iota_threads.ImageViewerThread(self, viewer=viewer,
+                                                                 file_string=file_string)
             viewer.start()
 
     def onArrow(self, e):
@@ -1971,7 +1991,7 @@ class SummaryTab(IOTABaseScrolledPanel):
             self.gparams.analysis.clustering.threshold)
         cluster_dlg.cluster_limit.ctr.SetValue(
             self.gparams.analysis.clustering.limit)
-        if self.gparams.analysis.clustering.n_images and\
+        if self.gparams.analysis.clustering.n_images and \
                 self.gparams.analysis.clustering.n_images > 0:
             cluster_dlg.cluster_n_images.ctr.SetValue(
                 self.gparams.analysis.clustering.n_images
@@ -2120,7 +2140,7 @@ class SummaryTab(IOTABaseScrolledPanel):
     def onPlotHeatmap(self, e):
         if self.info.final_objects is not None:
             self.initialize_standalone_plot()
-            self.show_plot()    # show first to properly size
+            self.show_plot()  # show first to properly size
             self.plot.plot_spotfinding_heatmap()
 
     def onPlotBeamXY(self, e):
@@ -2452,7 +2472,8 @@ class ProcWindow(IOTABaseFrame):
             self.finish_process()
 
         # Instantiate and start submit thread
-        self.proc_thread = iota.threads.iota_threads.JobSubmitThread(self, params=self.gparams)
+        self.proc_thread = iota.threads.iota_threads.JobSubmitThread(self,
+                                                                     params=self.gparams)
         self.proc_thread.name = "IOTAJobSubmitThread"
         self.proc_thread.start()
 
@@ -2527,7 +2548,9 @@ class ProcWindow(IOTABaseFrame):
         self.running_prime = True
         pg = ut.makenone(self.chart_tab.pg_uc.pg.GetValue())
         uc = ut.makenone(self.chart_tab.pg_uc.uc.GetValue())
-        self.prime_thread = iota.threads.analysis_threads.PRIMEThread(self, self.info, self.gparams, pg, uc)
+        self.prime_thread = iota.threads.analysis_threads.PRIMEThread(self, self.info,
+                                                                      self.gparams, pg,
+                                                                      uc)
         self.prime_thread.start()
 
     def onFinishedPRIME(self, e):
@@ -2558,8 +2581,8 @@ class ProcWindow(IOTABaseFrame):
             sw_means = np.mean(self.plotter_time) + np.mean(self.obj_reader_time)
         timer_adjustment = np.ceil(sw_means * 5 / 1000) * 1000
         if not (
-            np.isnan(timer_adjustment)
-            or timer_adjustment == self.proc_timer.GetInterval()
+                np.isnan(timer_adjustment)
+                or timer_adjustment == self.proc_timer.GetInterval()
         ):
             self.adjust_timer(new_interval=timer_adjustment)
 
@@ -2572,7 +2595,7 @@ class ProcWindow(IOTABaseFrame):
             self.status_txt.SetForegroundColour("red")
             self.status_txt.SetLabel("Aborting...")
             self.run_aborted = not (
-                hasattr(self, "proc_thread") and self.proc_thread.is_alive()
+                    hasattr(self, "proc_thread") and self.proc_thread.is_alive()
             )
             if not self.run_aborted:
                 self.proc_thread.abort()
@@ -2604,10 +2627,11 @@ class ProcWindow(IOTABaseFrame):
 
                 # Instantiate and start processing thread
                 if not (
-                    hasattr(self, "object_reader") and self.object_reader.is_alive()
+                        hasattr(self, "object_reader") and self.object_reader.is_alive()
                 ):
                     self.obj_sw = wx.StopWatch()
-                    self.object_reader = iota.threads.iota_threads.ObjectReaderThread(self, info=self.info)
+                    self.object_reader = iota.threads.iota_threads.ObjectReaderThread(
+                        self, info=self.info)
                     self.object_reader.name = "IOTAObjectReader"
                     self.object_reader.start()
 
@@ -2729,9 +2753,9 @@ class ProcWindow(IOTABaseFrame):
 
         # Final analysis and display summary
         if (
-            not self.run_aborted
-            and len(self.info.categories["integrated"][0]) > 0
-            and len(self.info.categories["not_processed"][0]) == 0
+                not self.run_aborted
+                and len(self.info.categories["integrated"][0]) > 0
+                and len(self.info.categories["not_processed"][0]) == 0
         ):
             self.set_tool_state(tool=self.tb_btn_resume, enable=False)
             self.summary_tab = SummaryTab(self.proc_nb, self.info, self.gparams)
@@ -2775,6 +2799,5 @@ class ProcWindow(IOTABaseFrame):
                 print_tag=True,
             )
         self.display_log()
-
 
 # -- end

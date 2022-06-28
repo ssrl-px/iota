@@ -28,7 +28,7 @@ from dials.command_line.refine_bravais_settings import (
     bravais_lattice_to_space_group_table,
 )
 
-from iota.base.processor import phil_scope, Processor
+from iota.base.processor import phil_scope, Processor, ImageScorer
 import iota.utils.utils as util
 
 cctbx_str = """
@@ -137,7 +137,7 @@ class IOTAImageProcessor(Processor):
     """
 
     def __init__(
-        self, iparams, write_pickle=True, write_logs=True, last_stage="integrate"
+            self, iparams, write_pickle=True, write_logs=True, last_stage="integrate"
     ):
         """Constructor.
 
@@ -376,9 +376,9 @@ class IOTAImageProcessor(Processor):
                 observed = None
             else:
                 if (
-                    self.iparams.data_selection.image_triage
-                    and len(observed)
-                    >= self.iparams.data_selection.image_triage.minimum_Bragg_peaks
+                        self.iparams.data_selection.image_triage
+                        and len(observed)
+                        >= self.iparams.data_selection.image_triage.minimum_Bragg_peaks
                 ):
                     msg = " FOUND {} SPOTS - IMAGE ACCEPTED!".format(len(observed))
                     print("{:-^100}\n\n".format(msg))
@@ -394,6 +394,20 @@ class IOTAImageProcessor(Processor):
             self.write_int_log(
                 path=img_object.int_log, output=output, dials_log=self.dials_log
             )
+
+        # Calculate score
+        # TODO: make this an optional thing
+        try:
+            scorer = ImageScorer(
+                experiments=img_object.experiments,
+                observed=observed,
+            )
+            img_object.final['score'] = scorer.calculate_score()
+        except Exception as e:
+            e_scr = str(e)
+            img_object.final['score'] = -999
+        if img_object.final['score'] == -999:
+            return self.error_handler(e_scr, "scoring", img_object, output)
 
         # Finish if spotfinding is the last processing stage
         if "spotfind" in self.last_stage or "spf" in self.last_stage:
@@ -654,7 +668,7 @@ class Selector(object):
     search."""
 
     def __init__(
-        self, frame, uc_tol=0, xsys=None, pg=None, uc=None, min_ref=0, min_res=None
+            self, frame, uc_tol=0, xsys=None, pg=None, uc=None, min_ref=0, min_res=None
     ):
 
         obs = frame["observations"][0]
@@ -687,12 +701,12 @@ class Selector(object):
             delta_beta = abs(self.obs_uc[4] - user_uc[4])
             delta_gamma = abs(self.obs_uc[5] - user_uc[5])
             uc_check = (
-                delta_a <= user_uc[0] * self.uc_tol
-                and delta_b <= user_uc[1] * self.uc_tol
-                and delta_c <= user_uc[2] * self.uc_tol
-                and delta_alpha <= user_uc[3] * self.uc_tol
-                and delta_beta <= user_uc[4] * self.uc_tol
-                and delta_gamma <= user_uc[5] * self.uc_tol
+                    delta_a <= user_uc[0] * self.uc_tol
+                    and delta_b <= user_uc[1] * self.uc_tol
+                    and delta_c <= user_uc[2] * self.uc_tol
+                    and delta_alpha <= user_uc[3] * self.uc_tol
+                    and delta_beta <= user_uc[4] * self.uc_tol
+                    and delta_gamma <= user_uc[5] * self.uc_tol
             )
         else:
             uc_check = True
@@ -710,16 +724,16 @@ class Selector(object):
         if self.pg or self.xsys:
             obs_sym = crystal.symmetry(space_group_symbol=self.obs_pg)
             obs_pg = (
-                obs_sym.space_group().conventional_centring_type_symbol()
-                + obs_sym.space_group().point_group_type()
+                    obs_sym.space_group().conventional_centring_type_symbol()
+                    + obs_sym.space_group().point_group_type()
             )
             obs_cs = obs_sym.space_group().crystal_system()
 
             if self.pg:
                 fil_sym = crystal.symmetry(space_group_symbol=self.pg)
                 fil_pg = (
-                    fil_sym.space_group().conventional_centring_type_symbol()
-                    + fil_sym.space_group().point_group_type()
+                        fil_sym.space_group().conventional_centring_type_symbol()
+                        + fil_sym.space_group().point_group_type()
                 )
                 if fil_pg != obs_pg:
                     e.append(
@@ -742,3 +756,5 @@ class Selector(object):
             error = None
 
         return fail, error
+
+# --> end

@@ -1,5 +1,13 @@
-IOTA v1.5.3 - bugfixes to various UI elements
+IOTA v1.6.0 - Image scorer and HDF5 speedup
 
-- bugfixes to wx.EXPAND flags w/ alignment (removed alignment flags)
-- removed wildcard item from FileDialog
-- a few random Python3 compatibility stragglers
+- Implemented image scorer from Interceptor (eventually will keep it in IOTA sources)
+- Code to show image scores instead of strong spots in processing tab (commented)
+- Significant speed up of importing HDF5 input
+  - unique list of filenames (collapses expanded multi-image input lists)
+  - types dictionary with unique filepaths
+  - HDF5 master file test once per filepath
+- Bugfixes:
+  - Reference geography browsing dialog is a file dialog now (UI)
+  - Run recovery now imports single filenames into input window if only one file per
+  path exists (still a problem if a selection of files from folder was read in
+  initially; will thus import the entire folder)

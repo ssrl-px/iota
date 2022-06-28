@@ -375,6 +375,7 @@ def generate_stat_containers(info, params):
         ("res", "Resolution"),
         ("lres", "Low Resolution"),
         ("strong", "Number of spots"),
+        ("score", "Image score"),
         ("mos", "Mosaicity"),
         ("wavelength", "X-ray Wavelength"),
         ("distance", "Detector Distance"),

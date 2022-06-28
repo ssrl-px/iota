@@ -8,6 +8,7 @@ Description : IOTA command-line module.
 """
 import time
 import datetime
+import hdf5plugin
 
 import argparse
 from contextlib import contextmanager
