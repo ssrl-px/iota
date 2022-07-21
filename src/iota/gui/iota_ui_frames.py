@@ -1237,7 +1237,7 @@ class ProcessingTab(IOTABasePanel):
                 res = None
 
                 # Strong reflections
-                if self.info.stats["strong"]["lst"]:
+            if self.info.stats["strong"]["lst"]:
                 idx, filenames, img_idx, spt = zip(
                 *self.info.stats["strong"]["lst"]
                 )
