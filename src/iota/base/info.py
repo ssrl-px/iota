@@ -300,9 +300,9 @@ class ProcInfo(object):
     def _make_serializable(self, info_dict):
         if isinstance(info_dict, basestring):
             return str(info_dict)
-        elif isinstance(info_dict, collections.Mapping):
+        elif isinstance(info_dict, collections.abc.Mapping):
             return dict(map(self._make_serializable, info_dict.items()))
-        elif isinstance(info_dict, collections.Iterable):
+        elif isinstance(info_dict, collections.abc.Iterable):
             return type(info_dict)(map(self._make_serializable, info_dict))
         else:
             if type(info_dict).__module__ == "numpy":

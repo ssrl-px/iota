@@ -905,9 +905,9 @@ class ProcessingTab(IOTABasePanel):
         view_bmp = bitmaps.fetch_custom_icon_bitmap("image_viewer16")
         r_bmp = bitmaps.fetch_icon_bitmap("actions", "1rightarrow", size=16)
         l_bmp = bitmaps.fetch_icon_bitmap("actions", "1leftarrow", size=16)
-        self.btn_right = btn.GenBitmapButton(self, bitmap=r_bmp)
-        self.btn_left = btn.GenBitmapButton(self, bitmap=l_bmp)
-        self.btn_viewer = btn.GenBitmapButton(self, bitmap=view_bmp)
+        self.btn_right = btn.GenBitmapButton(parent=self.int_panel, bitmap=r_bmp)
+        self.btn_left = btn.GenBitmapButton(parent=self.int_panel, bitmap=l_bmp)
+        self.btn_viewer = btn.GenBitmapButton(parent=self.int_panel, bitmap=view_bmp)
         self.info_sizer.Add(self.info_txt, pos=(0, 1), flag=wx.EXPAND)
         self.info_sizer.Add(self.btn_left, pos=(0, 2))
         self.info_sizer.Add(self.btn_right, pos=(0, 3))
@@ -2563,6 +2563,7 @@ class ProcWindow(IOTABaseFrame):
         self.chart_tab.btn_run_analysis.Enable()
 
     def adjust_timer(self, new_interval):
+        new_interval = int(new_interval)
         self.proc_timer.Stop()
         self.proc_timer.Start(new_interval)
         print("IOTA: TIMER SET TO {} SECONDS".format(new_interval / 1000))

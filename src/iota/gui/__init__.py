@@ -131,9 +131,9 @@ class IOTAWindowMixin(object):
             self.SetSize(self.GetEffectiveMinSize())
         elif type(set_size).__name__ in ("list", "tuple"):
             assert len(set_size) == 2
-            self.SetSize(wx.Size(set_size[0], set_size[1]))
+            self.SetSize(wx.Size(int(set_size[0]), int(set_size[1])))
         elif type(set_size).__name__ == "Size":
-            self.SetSize(set_size)
+            self.SetSize(int(set_size))
         elif type(set_size).__name__ == "str":
             disp_geom = self.get_display()
 
@@ -164,14 +164,14 @@ class IOTAWindowMixin(object):
 
             if set_size.lower() == "figure":
                 # Initial figure should be square, with side = 2/3 of display height
-                size = wx.Size(disp_geom[3] * 2 / 3, disp_geom[3] * 2 / 3)
+                size = wx.Size(int(disp_geom[3] * 2 / 3), int(disp_geom[3] * 2 / 3))
             elif set_size.lower() == "v_default":
-                size = wx.Size(win_w, -1)
+                size = wx.Size(int(win_w), -1)
             elif set_size.lower() == "h_default":
-                size = wx.Size(-1, win_h)
+                size = wx.Size(-1, int(win_h))
             elif set_size.lower() in ("full", "fit"):
                 win_w, win_h = disp_geom[2:]
-                size = wx.Size(win_w, win_h)
+                size = wx.Size(int(win_w), int(win_h))
             elif set_size.lower() == "dialog":
                 # For dialogs, a) restrict window size to 2/3 screen height and 1/3
                 # screen width; b) if height was reduced, pad the width to
@@ -185,9 +185,9 @@ class IOTAWindowMixin(object):
                 else:
                     dlg_h = win_h
                 dlg_w = dw if dw <= win_w else win_w
-                size = wx.Size(dlg_w, dlg_h)
+                size = wx.Size(int(dlg_w), int(dlg_h))
             else:
-                size = wx.Size(win_w, win_h)
+                size = wx.Size(int(win_w), int(win_h))
             self.SetSize(size)
 
     def set_relative_position(self):
