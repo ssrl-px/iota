@@ -684,7 +684,7 @@ class Processor(object):
 
     def construct_frame(self, integrated, exeriments):
         # Construct frame
-        from xfel.command_line.frame_extractor import ConstructFrame
+        from serialtbx.util.construct_frame import ConstructFrame
 
         self.frame = ConstructFrame(integrated, experiments[0]).make_frame()
         self.frame["pixel_size"] = experiments[0].detector[0].get_pixel_size()[0]
