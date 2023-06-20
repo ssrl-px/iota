@@ -8,11 +8,11 @@ import libtbx.load_env
 iota_dir = libtbx.env.find_in_repositories(relative_path="iota", test=os.path.exists)
 
 # Run setup.py
+import subprocess
 import sys
-import procrunner
 
-result = procrunner.run(
-    [sys.executable, "setup.py", "develop"], working_directory=iota_dir
+result = subprocess.run(
+    [sys.executable, "setup.py", "develop"], cwd=iota_dir
 )
 if result.returncode:
     exit("Error during IOTA configuration")
