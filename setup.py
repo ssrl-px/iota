@@ -34,7 +34,7 @@ setuptools.setup(
         "libtbx.precommit": ["iota = iota"],
     },
     scripts=[],
-    tests_require=["mock", "procrunner", "pytest"],
+    tests_require=["mock", "pytest"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: BSD License",
