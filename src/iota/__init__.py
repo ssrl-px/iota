@@ -9,7 +9,7 @@ Description : IOTA initialization module (also contains app info)
 
 from datetime import datetime
 
-iota_version = "1.7.0"
+iota_version = "1.7.1"
 now = "{:%A, %b %d, %Y. %I:%M %p}".format(datetime.now())
 
 # For GUI
