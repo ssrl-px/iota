@@ -172,11 +172,17 @@ class InputFinder(object):
         with open(path, "r") as tf:
             contents = tf.readlines()
         contents = [i.replace("\n", "") for i in contents][:1000]
-        content_test = [
-            os.path.isfile(i.replace(" ", ""))
-            for item in contents
-            for i in item.split(",")
-        ]
+
+        content_test = []
+        for c in contents:
+            if "(" in c:
+                c = c[1:-1].split(',')[0].replace("'", "")
+            content_test.append(os.path.isfile(c))
+        # content_test = [
+        #     os.path.isfile(i.replace(" ", ""))
+        #     for item in contents
+        #     for i in item.split(",")
+        # ]
 
         try:
             if (
@@ -371,7 +377,7 @@ class InputFinder(object):
             input_pairs = [i for i in input_pairs if filter_type in i[1]]
         return input_pairs
 
-    def get_input_from_list_file(self, path, double_check_type=False):
+    def get_input_from_list_file(self, path, double_check_type=False, expand_multiple=True):
         # Double check file type if requested (only 'file list' accepted)
         if double_check_type:
             filetype = self.identify_file_type(filepath=path)
@@ -379,16 +385,18 @@ class InputFinder(object):
                 raise InputError(
                     "IOTA INPUT ERROR: {} is not an image list file!" "".format(path)
                 )
+        if expand_multiple:
+            # Open and read file
+            with open(path, "r") as f:
+                input_list = [i.rstrip("\n") for i in f.readlines()]
+                if len(input_list) == 0:
+                    raise InputError("IOTA INPUT ERROR: {} is an empty file!".format(path))
 
-        # Open and read file
-        with open(path, "r") as f:
-            input_list = [i.rstrip("\n") for i in f.readlines()]
-            if len(input_list) == 0:
-                raise InputError("IOTA INPUT ERROR: {} is an empty file!".format(path))
-
-        # If list is comma-delimited, return as list of tuples
-        if "," in input_list[0]:
-            input_list = [i.split(",") for i in input_list]
+            # If list is comma-delimited, return as list of tuples
+            if "," in input_list[0]:
+                input_list = [i.split(",") for i in input_list]
+        else:
+            input_list = [path]
         return input_list
 
     def get_input_from_multi_image(
@@ -409,7 +417,7 @@ class InputFinder(object):
     def get_input_from_file(self, path, expand_multiple=True):
         filetype = self.identify_file_type(filepath=path)
         if filetype == "file list":
-            input_list = self.get_input_from_list_file(path)
+            input_list = self.get_input_from_list_file(path=path, expand_multiple=expand_multiple)
         elif "hdf5" in filetype:
             input_list = self.get_input_from_multi_image(
                 path=path, expand_multiple=expand_multiple
@@ -542,7 +550,7 @@ class InputFinder(object):
                             exp_input_list.append((item[0], 0))
                     input_list = [(str(il[0]), il[1]) for il in sorted(exp_input_list)]
                 else:
-                    input_list = [(str(il[0]), il[1]) for il in sorted(input_list)]
+                    input_list = [(str(il), 0) for il in sorted(input_list)]
                 input_count = len(input_list)
             else:
                 input_list = [str(il) for il in sorted(input_list)]
@@ -565,10 +573,17 @@ class InputFinder(object):
                 else:
                     input_count = self._get_hdf5_entry_count(path=input_list[0])
             else:
-                input_count = 1
+                if "list" in input_type.lower():
+                    with open(input_list[0], 'r') as f:
+                        contents = f.readlines()
+                        input_count = len(contents)
+                else:
+                    input_count = 1
 
         else:
             input_count = 0
+
+        print ("DEBUG: INPUT: ", input_type, input_count)
 
         return input_list, input_type, input_count
 
@@ -623,11 +638,12 @@ class InputFinder(object):
 
         return sorted(input_list), total_count
 
-    def process_mixed_input(self, paths):
+    def process_mixed_input(self, paths, expand_multiple=True):
         input_dict = dict(
             paramfile=None,
             imagefiles=[],
             imagepaths=[],
+            listfiles=[],
             objectfiles=[],
             objectpaths=[],
             neither=[],
@@ -643,49 +659,27 @@ class InputFinder(object):
         for path in raw_paths:
             paths.extend(glob(path))
 
+        param_paths = None
         for path in paths:
             path = os.path.abspath(path)
             if os.path.exists(path):
+                # extract input from paramfile
                 if "IOTA settings" in self.get_file_type(path):
                     input_dict["paramfile"] = path
 
-                    # If there's a paramfile, get data from it first (will always be
-                    # imagefiles, never objects!)
+                    # If there's a paramfile, get data from it to sort later
                     from iota.init.iota_input import get_input_phil
-
                     phil, _ = get_input_phil(paramfile=input_dict["paramfile"])
                     prm = phil.extract()
-                    input_dict["imagefiles"].extend(self.make_input_list(prm.input)[0])
-                    input_dict["imagepaths"].extend(prm.input)
+                    param_paths = prm.input
                 else:
-                    contents, ctype, _ = self.get_input(path, filter_type="self")
-                    if not contents:
-                        continue
-                    if ctype is None:
-                        ctype = ""
-                    if type(contents) == str:
-                        contents = [contents]
-                    if "object" in ctype:
-                        input_dict["objectfiles"].extend(contents)
-                        if "folder" in ctype:
-                            input_dict["objectpaths"].append(os.path.abspath(path))
-                        else:
-                            input_dict["objectpaths"].append(
-                                os.path.abspath(os.path.dirname(path))
-                            )
-                    elif "image" in ctype:
-                        input_dict["imagefiles"].extend(contents)
-                        if "folder" in ctype:
-                            input_dict["imagepaths"].append(os.path.abspath(path))
-                        else:
-                            input_dict["imagepaths"].append(
-                                os.path.abspath(os.path.dirname(path))
-                            )
-                    else:
-                        input_dict["neither"].extend(contents)
-                        input_dict["badpaths"].append(path)
+                    input_dict.update(self.sort_paths(path, input_dict, expand_multiple=expand_multiple))
             else:
                 input_dict["badpaths"].append(path)
+
+            if param_paths is not None:
+                for path in param_paths:
+                    input_dict.update(self.sort_paths(path, input_dict, expand_multiple=expand_multiple))
 
             # Make paths unique
             if input_dict["imagefiles"]:
@@ -698,6 +692,33 @@ class InputFinder(object):
                 input_dict["objectpaths"] = list(set(input_dict["objectpaths"]))
         return input_dict
 
+    def sort_paths(self, path, input_dict, expand_multiple=True):
+        contents, ctype, _ = self.get_input(path, filter_type="self", expand_multiple=expand_multiple)
+        if contents:
+            if ctype is None:
+                ctype = ""
+            if type(contents) == str:
+                contents = [contents]
+            if "object" in ctype:
+                input_dict["objectfiles"].extend(contents)
+                if "folder" in ctype:
+                    input_dict["objectpaths"].append(os.path.abspath(path))
+                else:
+                    input_dict["objectpaths"].append(
+                        os.path.abspath(os.path.dirname(path))
+                    )
+            elif "image" in ctype:
+                input_dict["imagefiles"].extend(contents)
+                if "folder" in ctype:
+                    input_dict["imagepaths"].append(os.path.abspath(path))
+                else:
+                    input_dict["imagepaths"].append(
+                        os.path.abspath(os.path.dirname(path))
+                    )
+            else:
+                input_dict["neither"].extend(contents)
+                input_dict["badpaths"].append(path)
+        return input_dict
 
 class InputError(Exception):
     def __init__(self, termination):

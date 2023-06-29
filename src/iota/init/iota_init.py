@@ -67,37 +67,37 @@ def initialize_new_run(phil, input_dict=None, target_phil=None):
             os.makedirs(int_base)
 
         # Create input list file and populate param input line
+        input_list_file = None
         if input_dict:
-            if len(input_dict["imagepaths"]) >= 25:
+            if len(input_dict["imagepaths"]) + len(input_dict["imagefiles"]) >= 25:
                 input_list_file = os.path.join(int_base, "input.lst")
                 with open(input_list_file, "w") as lf:
                     for f in input_dict["imagefiles"]:
                         lf.write("{}\n".format(f))
                     params.input = [input_list_file]
-            else:
-                # If there are too many imagefiles, re-constitute the "glob" format
-                # by matching filepaths and replacing non-matching characters with
-                # asterisks
-                if len(input_dict["imagefiles"]) >= 25:
-                    input_paths = []
-                    for path in input_dict["imagepaths"]:
-                        fileset = [
-                            os.path.basename(i)
-                            for i in input_dict["imagefiles"]
-                            if path in i
-                        ]
-                        zips = [list(set(i)) for i in zip(*fileset)]
-                        chars = [i[0] if len(i) == 1 else "*" for i in zips]
-                        fname = "".join(chars)
-                        while "*" * 2 in fname:
-                            fname = fname.replace("*" * 2, "*")
-                        input_paths.append(os.path.join(path, fname))
-                    params.input = input_paths
-                else:
-                    params.input = input_dict["imagefiles"]
-                input_list_file = None
-        else:
-            input_list_file = None
+            # else:
+            #     # If there are too many imagefiles, re-constitute the "glob" format
+            #     # by matching filepaths and replacing non-matching characters with
+            #     # asterisks
+            #     if len(input_dict["imagefiles"]) >= 25:
+            #         input_paths = []
+            #         for path in input_dict["imagepaths"]:
+            #             fileset = [
+            #                 os.path.basename(i)
+            #                 for i in input_dict["imagefiles"]
+            #                 if path in i
+            #             ]
+            #             zips = [list(set(i)) for i in zip(*fileset)]
+            #             chars = [i[0] if len(i) == 1 else "*" for i in zips]
+            #             fname = "".join(chars)
+            #             while "*" * 2 in fname:
+            #                 fname = fname.replace("*" * 2, "*")
+            #             input_paths.append(os.path.join(path, fname))
+            #         params.input = input_paths
+            #     else:
+            #         params.input = input_dict["imagefiles"]
+            #     input_list_file = None
+
 
         # Generate default backend PHIL, write to file, and update params
         target_fp = os.path.join(int_base, "target.phil")
@@ -181,6 +181,7 @@ def initialize_processing(paramfile, run_no):
     # Generate input list and input base
     if not hasattr(info, "input_list"):
         info.generate_input_list(params=params)
+
     filepath_list = []
     for item in info.input_list:
         if isinstance(item, list) or isinstance(item, tuple):

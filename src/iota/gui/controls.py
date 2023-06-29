@@ -1062,8 +1062,7 @@ class OptionCtrl(CtrlBase):
                 item.SetValue(str(value))
             self.ctrl_box.Add(
                 item,
-                proportion=1,
-                flag=wx.ALIGN_RIGHT | wx.EXPAND,
+                wx.SizerFlags().Expand(),
             )
 
         cols = 1
@@ -1103,7 +1102,7 @@ class OptionCtrl(CtrlBase):
                     self.ctrl_box.AddGrowableCol(col)
             opt_box.AddGrowableCol(cols - 1)
 
-        opt_box.Add(self.ctrl_box, flag=wx.EXPAND)
+        opt_box.Add(self.ctrl_box, wx.SizerFlags().Expand())
         self.SetSizer(opt_box)
         self.Layout()
 
@@ -1473,6 +1472,7 @@ class FileListCtrl(CustomListCtrl):
             path,
             filter_results=(self._input_filter is not None),
             filter_type=self._input_filter,
+            expand_multiple=True
         )
         if os.path.isdir(path):
             type_choices.extend(self._folder_types)

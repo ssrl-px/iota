@@ -2336,7 +2336,10 @@ class PHILBaseChoiceCtrl(PHILDefPanel):
         self._options = None
 
         # Set choice control
-        self.is_multi = phil_object.type.multi
+        try:
+            self.is_multi = phil_object.type.multi
+        except AttributeError:
+            self.is_multi = False
         if self.is_multi:
             self.ctr = ct.MultiChoiceCtrl(self, size=ctrl_size)
         else:

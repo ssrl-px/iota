@@ -1,4 +1,5 @@
 from __future__ import division, print_function, absolute_import
+from glob import glob
 
 import iota.threads.analysis_threads
 import iota.threads.iota_threads
@@ -621,51 +622,77 @@ class MainWindow(IOTABaseFrame):
         # Update gparams here, to include new stuff from PHIL
         self.gparams = self.iota_index.get_python_object(make_copy=True)
 
-        # Pass input from IOTA PHIL through Input Finder to resolve wildcards, etc.
         if self.gparams.input is not None:
             inputs = [self.gparams.input.pop(i) for i in range(len(self.gparams.input))]
-            phil_input_dict = iota.threads.iota_threads.ginp.process_mixed_input(
-                paths=inputs)
-            if input_dict:
-                input_dict.update(phil_input_dict)
-            else:
-                input_dict = phil_input_dict
 
-        # Read input OR update from window params
-        if input_dict:
-            if messages:
-                msg_string = "IOTA Reported the following error(s):{}\n\n" "".format(
-                    "\n".join(messages)
-                )
-                wx.MessageBox(
-                    caption="IOTA Errors!",
-                    message=msg_string,
-                    style=wx.OK | wx.ICON_ERROR,
-                )
+        inputs = [glob(i) for i in inputs]
 
-            if len(input_dict["imagepaths"]) > 10:
-                n_input = len(
-                    [
-                        i
-                        for i in os.listdir(self.gparams.output)
-                        if i.startswith("input_")
-                    ]
-                )
-                input_fn = "input_{:04d}.lst".format(n_input + 1)
-                input_list_file = os.path.join(self.gparams.output, input_fn)
-                with open(input_list_file, "w") as lf:
-                    for f in input_dict["imagefiles"]:
-                        lf.write("{}\n".format(f))
-                self.gparams.input = input_list_file
-            else:
-                for path in input_dict["imagepaths"]:
-                    files_in_path = [f for f in input_dict["imagefiles"] if path in f]
-                    if len(files_in_path) == 1:
-                        if path not in self.gparams.input:
-                            self.gparams.input.append(files_in_path[0])
-                    else:
-                        if path not in self.gparams.input:
-                            self.gparams.input.append(path)
+        flattened_inputs = []
+        for inp in inputs:
+                if len(inp) <= 10:
+                    flattened_inputs.extend(inp)
+                elif len(inp) >= 10:
+                    n_input = len(
+                        [
+                            i
+                            for i in os.listdir(self.gparams.output)
+                            if i.startswith("input_")
+                        ]
+                    )
+                    input_fn = "input_{:04d}.lst".format(n_input + 1)
+                    input_list_file = os.path.join(self.gparams.output, input_fn)
+                    with open(input_list_file, "w") as lf:
+                        for f in input_dict["imagefiles"]:
+                            lf.write("{}\n".format(f))
+                    flattened_inputs.append(input_list_file)
+        self.gparams.input = flattened_inputs
+
+        # # Pass input from IOTA PHIL through Input Finder to resolve wildcards, etc.
+        # if self.gparams.input is not None:
+        #     inputs = [self.gparams.input.pop(i) for i in range(len(self.gparams.input))]
+        #     phil_input_dict = iota.threads.iota_threads.ginp.process_mixed_input(
+        #         paths=inputs
+        #         )
+        #     if input_dict:
+        #         input_dict.update(phil_input_dict)
+        #     else:
+        #         input_dict = phil_input_dict
+        #
+        # # Read input OR update from window params
+        # if input_dict:
+        #     if messages:
+        #         msg_string = "IOTA Reported the following error(s):{}\n\n" "".format(
+        #             "\n".join(messages)
+        #         )
+        #         wx.MessageBox(
+        #             caption="IOTA Errors!",
+        #             message=msg_string,
+        #             style=wx.OK | wx.ICON_ERROR,
+        #         )
+        #
+        #     if len(input_dict["imagefiles"]) > 10:
+        #         n_input = len(
+        #             [
+        #                 i
+        #                 for i in os.listdir(self.gparams.output)
+        #                 if i.startswith("input_")
+        #             ]
+        #         )
+        #         input_fn = "input_{:04d}.lst".format(n_input + 1)
+        #         input_list_file = os.path.join(self.gparams.output, input_fn)
+        #         with open(input_list_file, "w") as lf:
+        #             for f in input_dict["imagefiles"]:
+        #                 lf.write("{}\n".format(f))
+        #         self.gparams.input = input_list_file
+        #     else:
+        #         for path in input_dict["imagepaths"]:
+        #             files_in_path = [f for f in input_dict["imagefiles"] if path in f]
+        #             if len(files_in_path) == 1:
+        #                 if path not in self.gparams.input:
+        #                     self.gparams.input.append(files_in_path[0])
+        #             else:
+        #                 if path not in self.gparams.input:
+        #                     self.gparams.input.append(path)
 
         # update n_processors
         if self.gparams.mp.n_processors <= 1:
@@ -1036,8 +1063,9 @@ class ProcessingTab(IOTABasePanel):
             checkbox_label="Space Group: ",
             label_size=wx.DefaultSize,
             ctrl_size=wx.DefaultSize,
+            expand_cols=(0, 1),
         )
-        hkl_sizer.Add(self.hkl_sg, flag=wx.ALIGN_CENTER)
+        hkl_sizer.Add(self.hkl_sg, wx.SizerFlags().Expand().TripleBorder(wx.LEFT | wx.RIGHT))
 
         # Proc Tab bindings
         self.Bind(wx.EVT_TEXT_ENTER, self.onSGTextEnter, self.hkl_sg.sg)
@@ -1230,10 +1258,10 @@ class ProcessingTab(IOTABasePanel):
         # Extract data and make arrays:
         try:
             if self.info.stats:
-                idx = None
-                filenames = None
-                img_idx = 0
-                spt = None
+                # idx = None
+                # filenames = None
+                # img_idx = 0
+                # spt = None
                 res = None
 
                 # Strong reflections
@@ -1273,33 +1301,36 @@ class ProcessingTab(IOTABasePanel):
         except ValueError as e:
             print("IOTA PLOTTING (PROC) ERROR: ", e)
         else:
-            # Resolution per frame
-            res_m = np.isfinite(self.res_y)
-            self.res_chart.set_xdata(self.res_x[res_m])
-            self.res_chart.set_ydata(self.res_y[res_m])
-            self.res_med.set_ydata(res_median)
+            try:
+                # Resolution per frame
+                res_m = np.isfinite(self.res_y)
+                self.res_chart.set_xdata(self.res_x[res_m])
+                self.res_chart.set_ydata(self.res_y[res_m])
+                self.res_med.set_ydata(res_median)
 
-            self.res_axes.set_xlim(0, np.nanmax(self.res_x) + 2)
-            res_ymax = np.nanmax(self.res_y) * 1.1
-            res_ymin = np.nanmin(self.res_y) * 0.9
-            if res_ymin == res_ymax:
-                res_ymax = res_ymin + 1
-            self.res_axes.set_ylim(bottom=res_ymin, top=res_ymax)
-            self.res_axes.draw_artist(self.res_chart)
+                self.res_axes.set_xlim(0, np.nanmax(self.res_x) + 2)
+                res_ymax = np.nanmax(self.res_y) * 1.1
+                res_ymin = np.nanmin(self.res_y) * 0.9
+                if res_ymin == res_ymax:
+                    res_ymax = res_ymin + 1
+                self.res_axes.set_ylim(bottom=res_ymin, top=res_ymax)
+                self.res_axes.draw_artist(self.res_chart)
 
-            # Plot strong reflections per frame
-            self.nsref_chart.set_xdata(self.nsref_x)
-            self.nsref_chart.set_ydata(self.nsref_y)
-            self.nsref_med.set_ydata(nsref_median)
+                # Plot strong reflections per frame
+                self.nsref_chart.set_xdata(self.nsref_x)
+                self.nsref_chart.set_ydata(self.nsref_y)
+                self.nsref_med.set_ydata(nsref_median)
 
-            self.nsref_axes.set_xlim(0, np.nanmax(self.nsref_x) + 2)
-            nsref_ymax = np.nanmax(self.nsref_y) * 1.25 + 10
-            if nsref_ymax == 0:
-                nsref_ymax = 100
-            self.nsref_axes.set_ylim(bottom=0, top=nsref_ymax)
-            self.nsref_axes.draw_artist(self.nsref_chart)
+                self.nsref_axes.set_xlim(0, np.nanmax(self.nsref_x) + 2)
+                nsref_ymax = np.nanmax(self.nsref_y) * 1.25 + 10
+                if nsref_ymax == 0:
+                    nsref_ymax = 100
+                self.nsref_axes.set_ylim(bottom=0, top=nsref_ymax)
+                self.nsref_axes.draw_artist(self.nsref_chart)
 
-            self._update_canvas(canvas=self.int_canvas)
+                self._update_canvas(canvas=self.int_canvas)
+            except TypeError:
+                pass
 
     def draw_b_factors(self):
         self.wp_axes.clear()
@@ -1325,12 +1356,12 @@ class ProcessingTab(IOTABasePanel):
         self.hkl_axes.set_xticks([])
         self.hkl_axes.set_yticks([])
 
-        try:
-            self.hkl_colorbar.remove()
-        except AttributeError:
-            pass
-        except KeyError:
-            pass
+        # try:
+        #     self.hkl_colorbar.remove()
+        # except AttributeError:
+        #     pass
+        # except KeyError:
+        #     pass
 
         try:
             hkl_slice = self.info.get_hkl_slice(
@@ -1393,19 +1424,26 @@ class ProcessingTab(IOTABasePanel):
                 ymax += 0.00001
             self.hkl_axes.set_xlim(left=-xmax, right=xmax)
             self.hkl_axes.set_ylim(bottom=-ymax, top=ymax)
-        except ValueError:
+        except ValueError as e:
+            print ("WARNING: ", str(e))
             pass
 
         vmax = 2 if np.max(freq) <= 2 else np.max(freq)
         norm = colors.Normalize(vmin=1, vmax=vmax)
-        self.hkl_colorbar = self.hkl_figure.colorbar(
-            hkl_scatter,
-            ax=self.hkl_axes,
-            cmap="jet",
-            norm=norm,
-            orientation="vertical",
-            aspect=40,
-        )
+
+        if hasattr(self, "hkl_colorbar"):
+            self.hkl_colorbar.update_normal(hkl_scatter)
+        else:
+            self.hkl_colorbar = self.hkl_figure.colorbar(
+                mappable=hkl_scatter,
+                ax=self.hkl_axes,
+                location='right',
+                panchor=False,
+                anchor=(0,0),
+                cmap="jet",
+                norm=norm,
+                # aspect=40,
+            )
 
         self._update_canvas(canvas=self.hkl_canvas)
 

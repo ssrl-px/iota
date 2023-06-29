@@ -180,9 +180,7 @@ class IOTAImageProcessor(Processor):
         beamX = self.iparams.image_import.beam_center.x
         beamY = self.iparams.image_import.beam_center.y
         if beamX != 0 or beamY != 0:
-            self.params.geometry.detector.slow_fast_beam_centre = "{} {}".format(
-                beamY, beamX
-            )
+            self.params.geometry.detector.fast_slow_beam_centre = "{} {}".format(beamX, beamY)
         if self.iparams.image_import.distance != 0:
             self.params.geometry.detector.distance = self.iparams.image_import.distance
         if self.iparams.image_import.mask is not None:
@@ -206,6 +204,10 @@ class IOTAImageProcessor(Processor):
             sigma = sigma if sigma else 1
             self.params.significance_filter.enable = True
             self.params.significance_filter.isigi_cutoff = sigma
+
+        # refresh PHIL
+        tmp_dials_phil = phil_scope.format(python_object=self.params)
+        self.params = tmp_dials_phil.extract()
 
         # Load reference geometry
         self.reference_detector = None
@@ -357,12 +359,17 @@ class IOTAImageProcessor(Processor):
 
         # Write full params to file (DEBUG)
         if self.write_logs:
-            param_string = phil_scope.format(python_object=self.params).as_str()
-            full_param_dir = os.path.dirname(self.iparams.cctbx_xfel.target)
-            full_param_fn = "full_" + os.path.basename(self.iparams.cctbx_xfel.target)
-            full_param_file = os.path.join(full_param_dir, full_param_fn)
-            with open(full_param_file, "w") as ftarg:
-                ftarg.write(param_string)
+            pass
+            # TODO: figure out how to handle a goddamn tuple in a PHIL now
+            # with util.Capturing() as param_lines:
+            #     phil_scope.format(python_object=self.params).show()
+            # param_string = "\n".join(param_lines)
+            # # param_string = phil_scope.format(python_object=self.params).as_str()
+            # full_param_dir = os.path.dirname(self.iparams.cctbx_xfel.target)
+            # full_param_fn = "full_" + os.path.basename(self.iparams.cctbx_xfel.target)
+            # full_param_file = os.path.join(full_param_dir, full_param_fn)
+            # with open(full_param_file, "w") as ftarg:
+            #     ftarg.write(param_string)
 
         # **** SPOTFINDING **** #
         with util.Capturing() as output:
