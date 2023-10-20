@@ -254,6 +254,19 @@ dials_phil_str = """
       }
     }
   }
+  lepage_max_delta = 5
+    .type = float
+  nproc = Auto
+    .type = int(value_min=1)
+  cc_n_bins = None
+    .type = int(value_min=1)
+    .help = "Number of resolution bins to use for calculation of correlation coefficients"
+  best_monoclinic_beta = True
+    .type = bool
+    .help = "If True, then for monoclinic centered cells, I2 will be preferred over C2 if"
+          "it gives a less oblique cell (i.e. smaller beta angle)."
+
+  include scope dials.algorithms.refinement.refiner.phil_scope
 """
 
 program_defaults_phil_str = """
@@ -458,7 +471,7 @@ class Processor(object):
             )
             possible_bravais_settings = {s["bravais"] for s in refined_settings}
             bravais_lattice_to_space_group_table(possible_bravais_settings)
-        except Exception:
+        except Exception as err:
             for expt in experiments:
                 expt.crystal = crystal_P1
             return None
