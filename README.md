@@ -1,4 +1,4 @@
-> Deprecation notice: this is a deprecated repository. Please see the SSRL MC group [software page](https://smb.slac.stanford.edu/facilities/software/) for updated software lists and staff contact. 
+> Deprecation notice: this is a deprecated repository. Please see the SSRL MC group [software page](https://smb.slac.stanford.edu/facilities/software/) and [RnD](https://smb.slac.stanford.edu/research/developments/) for updated software lists and staff contact. 
 
 # IOTA: Integration Optimization, Triage and Analysis
 
